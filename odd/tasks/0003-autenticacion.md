@@ -30,7 +30,7 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - [ ] Inicio de sesión con matrícula (alumno) o correo (vinculación) y cierre de sesión (RF-03)
 - [x] Activación: verificar matrícula → confirmar nombre → crear contraseña (RF-02); matrícula no precargada → "Tu matrícula no está registrada; acude a vinculación" — `POST /api/auth/activar/verificar` y `POST /api/auth/activar`
 - [x] `GET /api/me`: perfil y expediente activo
-- [ ] Restablecer contraseña: vinculación genera una temporal y el alumno debe cambiarla al entrar (RF-04)
+- [x] Restablecer contraseña: vinculación genera una temporal y el alumno debe cambiarla al entrar (RF-04) — `POST /api/alumnos/:id/restablecer-contrasena` y `POST /api/me/cambiar-contrasena`
 - [ ] Administrador crea usuarios de vinculación con su oficina (RN-03b)
 
 ### Middlewares
@@ -68,3 +68,7 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - Ojo para cuando se haga la importación (RF-01): cada alumno debe crearse con `User` (`username` = matrícula, correo de relleno) más `Alumno`, y **sin** cuenta `credential`.
 - `GET /api/me` devuelve `{ usuario, alumno, expedienteActivo }`. El expediente activo es el que está en `PENDIENTE`, `EN_PROCESO` o `SUSPENDIDO` (índice `un_expediente_activo`, specs 8.3). El correo de relleno `.invalid` se devuelve como `null`. La ruta funciona aunque haya cambio de contraseña pendiente, para que la app pueda leer `debeCambiar`. Las horas acumuladas no van acá: van en el panel del alumno.
 - `GET /api/me` no recibe datos ni restringe por rol, así que no le aplican las pruebas de "validación inválida" ni de "rol incorrecto (403)". En su lugar se prueban el 401 y el 403 por cuenta inactiva.
+- Restablecer contraseña (decisión del 2026-11-07, opción 1): cualquier usuario de vinculación del plantel, o el admin, puede restablecer a cualquier alumno, sin importar la oficina. Es soporte, no administración del expediente, y RN-03b habla de expedientes. Un alumno de otro plantel recibe 404.
+- Al restablecer: se genera una contraseña de 10 caracteres sin símbolos que se confundan (0/O/o, 1/I/l), se devuelve **una sola vez** con `Cache-Control: no-store`, se pone `debeCambiar = true`, se cierran todas las sesiones del alumno y queda en `AuditLog` (`RESTABLECER_CONTRASENA`, con quién lo hizo). Si el alumno nunca se activó, se le crea la cuenta: así vinculación resuelve en persona el caso "el nombre no coincide".
+- Cambiar contraseña: ruta propia `POST /api/me/cambiar-contrasena` en lugar de `/change-password` de Better Auth, para apagar `debeCambiar` en la misma transacción. Mantiene la sesión actual, cierra las demás y queda en `AuditLog` (`CAMBIAR_CONTRASENA`).
+- `disabledPaths` en `lib/auth.ts` apaga las rutas de Better Auth que no corresponden a este proyecto: registro, cambio y restablecimiento de contraseña por correo, `/update-user` (los nombres vienen de Edumedia), `/is-username-available` (revelaría qué matrículas existen), borrado de usuario y cuentas sociales.

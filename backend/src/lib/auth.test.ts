@@ -120,6 +120,21 @@ describe('Better Auth', () => {
     expect(statuses[10]).toBe(429);
   });
 
+  it.each([
+    ['/change-password', 'replaced by POST /api/me/cambiar-contrasena (clears debeCambiar)'],
+    ['/update-user', 'names come from Edumedia'],
+    ['/is-username-available', 'would reveal which control numbers exist'],
+    ['/request-password-reset', 'resets go through vinculación (RF-04)'],
+  ])('disables %s (%s)', async (path) => {
+    const res = await request(app)
+      .post(`/api/auth${path}`)
+      .set('Origin', ORIGIN)
+      .set('X-Forwarded-For', nextIp())
+      .send({ username: MATRICULA, email: 'x@example.com', name: 'X' });
+
+    expect(res.status).toBe(404);
+  });
+
   it('client cannot set the role through the API (input: false)', async () => {
     const res = await request(app)
       .post('/api/auth/sign-up/email')

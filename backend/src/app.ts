@@ -5,6 +5,7 @@ import { auth } from './lib/auth.js';
 import { requireTrustedOrigin } from './middleware/requireTrustedOrigin.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { activacionRouter } from './modules/activacion/activacion.routes.js';
+import { alumnosRouter } from './modules/alumnos/alumnos.routes.js';
 import { meRouter } from './modules/me/me.routes.js';
 
 // Builds the Express app without listening, so tests can import it.
@@ -31,6 +32,7 @@ export function createApp() {
   });
 
   app.use('/api/me', meRouter);
+  app.use('/api/alumnos', alumnosRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

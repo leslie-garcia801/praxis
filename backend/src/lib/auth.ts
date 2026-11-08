@@ -28,6 +28,22 @@ export const auth = betterAuth({
   // Students sign in with their control number; vinculación staff with their email (RF-03).
   plugins: [username()],
 
+  // Built-in routes this app must not expose.
+  disabledPaths: [
+    '/sign-up/email', // no open registration (RF-02)
+    '/change-password', // replaced by POST /api/me/cambiar-contrasena, which clears debeCambiar (RF-04)
+    '/request-password-reset', // resets go through vinculación (RF-04); there is no email reset
+    '/reset-password',
+    '/update-user', // names come from Edumedia; users cannot edit their profile here
+    '/change-email',
+    '/delete-user',
+    '/delete-user/callback',
+    '/update-session',
+    '/is-username-available', // would reveal which control numbers exist
+    '/link-social',
+    '/unlink-account',
+  ],
+
   user: {
     additionalFields: {
       // Server-managed fields: input: false prevents clients from setting them.
