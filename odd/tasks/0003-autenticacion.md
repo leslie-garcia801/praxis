@@ -24,7 +24,7 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - [x] Variables `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `FRONTEND_ORIGIN` obligatorias en `env.ts`
 
 ### Datos base
-- [ ] Seed: plantel CBTIS 258 y primer usuario administrador
+- [x] Seed: plantel CBTIS 258 y primer usuario administrador (`pnpm db:seed`, variables `SEED_ADMIN_*`)
 
 ### Rutas
 - [ ] Inicio de sesión con matrícula (alumno) o correo (vinculación) y cierre de sesión (RF-03)
@@ -55,3 +55,4 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - El plugin `username` no revisa el origen en `/sign-in/username` si la petición no trae cookie (`/sign-in/email` sí lo hace). Por eso `middleware/requireTrustedOrigin.ts` va antes del manejador y rechaza con 403 `ORIGEN_NO_PERMITIDO`.
 - Límite de intentos: 10 por minuto por IP y por ruta de inicio de sesión, guardado en memoria. Es corto a propósito porque los alumnos pueden compartir la IP de la escuela (NAT). Pendiente de confirmar con vinculación; si Railway escala a más de una instancia, hay que pasarlo a `storage: "database"`.
 - En pruebas, `test/setup.ts` define valores no secretos para las variables de Better Auth si `.env.test` no las trae.
+- El seed (`src/scripts/seedBase.ts`) se puede correr varias veces: si el plantel o el admin ya existen, no los toca y nunca reinicia la contraseña. El admin se crea con `debeCambiar = true` y queda registrado en `AuditLog` (`CREAR_ADMIN`), sin la contraseña.

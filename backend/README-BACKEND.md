@@ -58,9 +58,12 @@ Archivo `.env` (nunca se sube a git). Plantilla en `.env.example`.
 | --- | --- | --- |
 | `DATABASE_URL` | Sí | Conexión a PostgreSQL (`app_dev` en desarrollo) |
 | `PORT` | No (3000) | Puerto de la API |
-| `BETTER_AUTH_SECRET` | En iteración 1 | Secreto de sesiones, al menos 32 caracteres aleatorios |
-| `BETTER_AUTH_URL` | En iteración 1 | URL pública por donde entra el navegador (dominio de Vercel) |
-| `FRONTEND_ORIGIN` | En iteración 1 | Origen permitido de la PWA |
+| `BETTER_AUTH_SECRET` | Sí | Secreto de sesiones, al menos 32 caracteres aleatorios |
+| `BETTER_AUTH_URL` | Sí | URL pública por donde entra el navegador (dominio de Vercel) |
+| `FRONTEND_ORIGIN` | Sí | Origen permitido de la PWA; las peticiones de otro origen a `/api/auth/*` reciben 403 |
+| `SEED_ADMIN_EMAIL` | Solo para el seed | Correo del primer administrador |
+| `SEED_ADMIN_PASSWORD` | Solo para el seed | Contraseña inicial, al menos 12 caracteres; se pide cambiarla al entrar |
+| `SEED_ADMIN_NOMBRE` | No (`Administrador`) | Nombre visible del primer administrador |
 | `RESEND_API_KEY`, `MAIL_FROM` | En iteración 4 | Envío de correos al supervisor |
 | `APP_TIMEZONE` | No | Fijo en `America/Monterrey` (RN-15) |
 
@@ -86,6 +89,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 | `pnpm prisma migrate dev --name <nombre>` | Crea una migración nueva a partir de cambios en `schema.prisma` |
 | `pnpm prisma migrate deploy` | Aplica las migraciones pendientes |
 | `pnpm prisma studio` | Explorador visual de la base en el navegador |
+| `pnpm db:seed` | Crea el plantel CBTIS 258 y el primer administrador (se puede repetir; no sobrescribe nada) |
+| `node dist/scripts/seed.js` | El mismo seed en Railway, con la versión compilada |
 
 ## Probar la API a mano
 

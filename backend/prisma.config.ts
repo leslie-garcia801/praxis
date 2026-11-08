@@ -8,6 +8,8 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
+    // Run by `prisma migrate reset` and `prisma db seed`; needs SEED_ADMIN_* variables.
+    seed: 'tsx src/scripts/seed.ts',
   },
   datasource: {
     url: process.env.DATABASE_URL ?? '',
