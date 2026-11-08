@@ -34,10 +34,11 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - [ ] Administrador crea usuarios de vinculación con su oficina (RN-03b)
 
 ### Middlewares
-- [ ] `requireSession` (401), `requireRol` (403), `requireOficina` (RN-03b)
+- [x] `requireSession` (401), `requireRol` (403), `requireOficina` (RN-03b)
 
 ### Pruebas
-- [ ] `test/setup.ts` limpia tablas; `test/factories.ts`
+- [ ] `test/setup.ts` limpia tablas (por ahora cada archivo borra su propio plantel con `borrarPlantel`)
+- [x] `test/factories.ts`: `crearPlantel`, `crearUsuario`, `iniciarSesion`, `borrarPlantel`
 - [ ] Cada ruta: caso feliz, validación inválida, sin sesión (401) y rol incorrecto (403)
 - [ ] `pnpm test` y `pnpm typecheck` en verde
 
@@ -56,3 +57,6 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - Límite de intentos: 10 por minuto por IP y por ruta de inicio de sesión, guardado en memoria. Es corto a propósito porque los alumnos pueden compartir la IP de la escuela (NAT). Pendiente de confirmar con vinculación; si Railway escala a más de una instancia, hay que pasarlo a `storage: "database"`.
 - En pruebas, `test/setup.ts` define valores no secretos para las variables de Better Auth si `.env.test` no las trae.
 - El seed (`src/scripts/seedBase.ts`) se puede correr varias veces: si el plantel o el admin ya existen, no los toca y nunca reinicia la contraseña. El admin se crea con `debeCambiar = true` y queda registrado en `AuditLog` (`CREAR_ADMIN`), sin la contraseña.
+- Middlewares en `src/middleware/auth.ts`. `requireSession` responde 403 `CUENTA_INACTIVA` si `activo = false` y 403 `DEBE_CAMBIAR_CONTRASENA` si `debeCambiar = true`, salvo en las rutas montadas con `requireSession({ permitirCambioPendiente: true })` (RF-04). `getAuth(req)` entrega el usuario ya tipado.
+- La regla RN-03b es lógica pura en `src/domain/oficinas.ts`: `puedeAdministrarTipo` para un recurso y `alcanceOficina` para filtrar listas (RF-23).
+- Pendiente: hoy un usuario inactivo todavía puede iniciar sesión, solo que no pasa ninguna ruta protegida. Conviene bloquearlo desde Better Auth (`databaseHooks.session.create.before`) al hacer las rutas.
