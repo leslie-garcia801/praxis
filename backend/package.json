@@ -21,6 +21,8 @@
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
+    "argon2": "^0.45.2",
+    "better-auth": "^1.7.18",
     "express": "^5.3.0",
     "pg": "^8.23.1",
     "zod": "^4.6.7"
@@ -44,7 +46,8 @@
     "onlyBuiltDependencies": [
       "@prisma/engines",
       "prisma",
-      "esbuild"
+      "esbuild",
+      "argon2"
     ]
   }
 }
