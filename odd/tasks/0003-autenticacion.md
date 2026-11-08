@@ -29,7 +29,7 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 ### Rutas
 - [ ] Inicio de sesión con matrícula (alumno) o correo (vinculación) y cierre de sesión (RF-03)
 - [x] Activación: verificar matrícula → confirmar nombre → crear contraseña (RF-02); matrícula no precargada → "Tu matrícula no está registrada; acude a vinculación" — `POST /api/auth/activar/verificar` y `POST /api/auth/activar`
-- [ ] `GET /api/me`: perfil y expediente activo
+- [x] `GET /api/me`: perfil y expediente activo
 - [ ] Restablecer contraseña: vinculación genera una temporal y el alumno debe cambiarla al entrar (RF-04)
 - [ ] Administrador crea usuarios de vinculación con su oficina (RN-03b)
 
@@ -66,3 +66,5 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - Las rutas de activación tienen su propio límite (`middleware/rateLimit.ts`, 10 por minuto por IP), porque Better Auth no las cubre. Pendiente: sumar un límite por matrícula contra intentos repartidos entre muchas IP.
 - `POST /api/auth/activar` no inicia sesión: el frontend llama después a `/api/auth/sign-in/username`.
 - Ojo para cuando se haga la importación (RF-01): cada alumno debe crearse con `User` (`username` = matrícula, correo de relleno) más `Alumno`, y **sin** cuenta `credential`.
+- `GET /api/me` devuelve `{ usuario, alumno, expedienteActivo }`. El expediente activo es el que está en `PENDIENTE`, `EN_PROCESO` o `SUSPENDIDO` (índice `un_expediente_activo`, specs 8.3). El correo de relleno `.invalid` se devuelve como `null`. La ruta funciona aunque haya cambio de contraseña pendiente, para que la app pueda leer `debeCambiar`. Las horas acumuladas no van acá: van en el panel del alumno.
+- `GET /api/me` no recibe datos ni restringe por rol, así que no le aplican las pruebas de "validación inválida" ni de "rol incorrecto (403)". En su lugar se prueban el 401 y el 403 por cuenta inactiva.
