@@ -51,10 +51,59 @@ export async function crearUsuario({
   });
 }
 
-// Deletes a test campus and its users (sessions and accounts cascade).
+type CrearAlumnoInput = {
+  plantelId: string;
+  matricula: string;
+  nombre?: string;
+  apellidoPaterno?: string;
+  apellidoMaterno?: string | null;
+};
+
+// A student as left by the import (RF-01): user + alumno, no password yet (not activated).
+export async function crearAlumnoPrecargado({
+  plantelId,
+  matricula,
+  nombre = 'Ana María',
+  apellidoPaterno = 'López',
+  apellidoMaterno = 'García',
+}: CrearAlumnoInput) {
+  const id = randomUUID();
+  const carrera = await prisma.carrera.create({ data: { nombre: `${CARRERA_PRUEBA} ${randomUUID()}` } });
+  return prisma.user.create({
+    data: {
+      id,
+      name: [nombre, apellidoPaterno, apellidoMaterno].filter(Boolean).join(' '),
+      email: `${matricula}@alumno.praxis.invalid`,
+      username: matricula,
+      displayUsername: matricula,
+      plantelId,
+      alumno: {
+        create: {
+          nombre,
+          apellidoPaterno,
+          apellidoMaterno,
+          carreraId: carrera.id,
+          semestre: 5,
+          grupo: 'A',
+          turno: 'MATUTINO',
+        },
+      },
+    },
+    include: { alumno: true },
+  });
+}
+
+const CARRERA_PRUEBA = 'Carrera de prueba';
+
+// Deletes a test campus with its users, students and audit entries (sessions and accounts cascade).
 export async function borrarPlantel(plantelId: string) {
+  const usuarios = await prisma.user.findMany({ where: { plantelId }, select: { id: true } });
+  const ids = usuarios.map((u) => u.id);
+  await prisma.auditLog.deleteMany({ where: { entidadId: { in: ids } } });
+  await prisma.alumno.deleteMany({ where: { usuarioId: { in: ids } } });
   await prisma.user.deleteMany({ where: { plantelId } });
   await prisma.plantel.deleteMany({ where: { id: plantelId } });
+  await prisma.carrera.deleteMany({ where: { nombre: { startsWith: CARRERA_PRUEBA }, alumnos: { none: {} } } });
 }
 
 // Each sign-in uses its own client IP so the sign-in rate limiter never interferes with tests.

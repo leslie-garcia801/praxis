@@ -4,6 +4,7 @@ import { env } from './config/env.js';
 import { auth } from './lib/auth.js';
 import { requireTrustedOrigin } from './middleware/requireTrustedOrigin.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { activacionRouter } from './modules/activacion/activacion.routes.js';
 
 // Builds the Express app without listening, so tests can import it.
 export function createApp() {
@@ -13,10 +14,16 @@ export function createApp() {
   // Requests arrive through the Vercel rewrite proxy (RNF-05).
   app.set('trust proxy', 1);
 
-  // Better Auth parses its own body, so it is mounted BEFORE express.json().
-  app.all('/api/auth/*splat', requireTrustedOrigin([env.FRONTEND_ORIGIN]), toNodeHandler(auth));
+  const trustedOrigin = requireTrustedOrigin([env.FRONTEND_ORIGIN]);
+  const json = express.json({ limit: '1mb' });
 
-  app.use(express.json({ limit: '1mb' }));
+  // Own public routes under /api/auth (specs §9) go before Better Auth's catch-all.
+  app.use('/api/auth/activar', trustedOrigin, json, activacionRouter);
+
+  // Better Auth parses its own body, so it is mounted BEFORE express.json().
+  app.all('/api/auth/*splat', trustedOrigin, toNodeHandler(auth));
+
+  app.use(json);
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });

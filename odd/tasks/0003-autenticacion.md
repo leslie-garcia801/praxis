@@ -28,7 +28,7 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 
 ### Rutas
 - [ ] Inicio de sesión con matrícula (alumno) o correo (vinculación) y cierre de sesión (RF-03)
-- [ ] Activación: verificar matrícula → confirmar nombre → crear contraseña (RF-02); matrícula no precargada → "Tu matrícula no está registrada; acude a vinculación"
+- [x] Activación: verificar matrícula → confirmar nombre → crear contraseña (RF-02); matrícula no precargada → "Tu matrícula no está registrada; acude a vinculación" — `POST /api/auth/activar/verificar` y `POST /api/auth/activar`
 - [ ] `GET /api/me`: perfil y expediente activo
 - [ ] Restablecer contraseña: vinculación genera una temporal y el alumno debe cambiarla al entrar (RF-04)
 - [ ] Administrador crea usuarios de vinculación con su oficina (RN-03b)
@@ -60,3 +60,9 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - Middlewares en `src/middleware/auth.ts`. `requireSession` responde 403 `CUENTA_INACTIVA` si `activo = false` y 403 `DEBE_CAMBIAR_CONTRASENA` si `debeCambiar = true`, salvo en las rutas montadas con `requireSession({ permitirCambioPendiente: true })` (RF-04). `getAuth(req)` entrega el usuario ya tipado.
 - La regla RN-03b es lógica pura en `src/domain/oficinas.ts`: `puedeAdministrarTipo` para un recurso y `alcanceOficina` para filtrar listas (RF-23).
 - Pendiente: hoy un usuario inactivo todavía puede iniciar sesión, solo que no pasa ninguna ruta protegida. Conviene bloquearlo desde Better Auth (`databaseHooks.session.create.before`) al hacer las rutas.
+- Activación (decisión del 2026-11-07): el alumno **escribe** su nombre y primer apellido, y el servidor los compara sin distinguir mayúsculas, acentos ni ñ/n (`domain/nombres.ts`). El servidor nunca devuelve el nombre guardado, para que la ruta pública no sirva para sacar nombres de alumnos menores (RNF-07). Se rechazó mostrar el nombre enmascarado.
+- Orden de las validaciones: primero si la matrícula existe (404), después el nombre (400) y recién entonces si la cuenta está inactiva (403) o ya activada (409). Así, quien no conoce el nombre no puede saber si la cuenta ya está activada.
+- "Activada" quiere decir que existe una cuenta `credential` con contraseña. Al activar se bloquea la fila con `SELECT … FOR UPDATE` para que dos activaciones al mismo tiempo no creen dos contraseñas.
+- Las rutas de activación tienen su propio límite (`middleware/rateLimit.ts`, 10 por minuto por IP), porque Better Auth no las cubre. Pendiente: sumar un límite por matrícula contra intentos repartidos entre muchas IP.
+- `POST /api/auth/activar` no inicia sesión: el frontend llama después a `/api/auth/sign-in/username`.
+- Ojo para cuando se haga la importación (RF-01): cada alumno debe crearse con `User` (`username` = matrícula, correo de relleno) más `Alumno`, y **sin** cuenta `credential`.
