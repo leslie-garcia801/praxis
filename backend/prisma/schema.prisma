@@ -1,0 +1,323 @@
+// Data model based on docs/specs.md section 8.2.
+// SQL constraints from section 8.3 live in the migration SQL (they cannot be declared here).
+// All instants are stored as timestamptz in UTC (RN-15).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  ALUMNO
+  VINCULACION
+  ADMIN
+}
+
+enum Turno {
+  MATUTINO
+  VESPERTINO
+}
+
+enum TipoPrograma {
+  SERVICIO_SOCIAL
+  PRACTICAS
+}
+
+enum EstadoExpediente {
+  PENDIENTE
+  EN_PROCESO
+  SUSPENDIDO
+  FINALIZADO
+  CANCELADO
+}
+
+enum EstadoAsistencia {
+  ABIERTA
+  CERRADA
+  INCOMPLETA
+}
+
+enum EstadoValidacion {
+  BORRADOR
+  ENVIADA
+  VALIDADA
+  RECHAZADA
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+model Plantel {
+  id            String        @id @default(uuid())
+  nombre        String
+  usuarios      User[]
+  instituciones Institucion[]
+}
+
+// ---------------------------------------------------------------------------
+// Better Auth core tables (user, session, account, verification).
+// The spec's `Usuario` maps to `user` with additional fields.
+// Passwords live in `account.password` (managed by Better Auth).
+// ---------------------------------------------------------------------------
+
+model User {
+  id              String        @id
+  name            String
+  email           String        @unique
+  emailVerified   Boolean       @default(false)
+  image           String?
+  createdAt       DateTime      @default(now()) @db.Timestamptz
+  updatedAt       DateTime      @updatedAt @db.Timestamptz
+  // username plugin: student control number (matrícula, 14 digits)
+  username        String?       @unique
+  displayUsername String?
+  // Spec fields (Usuario)
+  plantelId       String
+  plantel         Plantel       @relation(fields: [plantelId], references: [id])
+  rol             Rol           @default(ALUMNO)
+  oficina         TipoPrograma? // scope of a VINCULACION user; null = both (RN-03b)
+  debeCambiar     Boolean       @default(false)
+  activo          Boolean       @default(true)
+  sessions        Session[]
+  accounts        Account[]
+  alumno          Alumno?
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime @db.Timestamptz
+  token     String   @unique
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz
+  refreshTokenExpiresAt DateTime? @db.Timestamptz
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @db.Timestamptz
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @db.Timestamptz
+  createdAt  DateTime @default(now()) @db.Timestamptz
+  updatedAt  DateTime @updatedAt @db.Timestamptz
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ---------------------------------------------------------------------------
+// Domain
+// ---------------------------------------------------------------------------
+
+model Carrera {
+  id            String               @id @default(uuid())
+  nombre        String               @unique
+  alumnos       Alumno[]
+  instituciones InstitucionCarrera[]
+}
+
+model Alumno {
+  id              String       @id @default(uuid())
+  usuarioId       String       @unique
+  usuario         User         @relation(fields: [usuarioId], references: [id])
+  nombre          String
+  apellidoPaterno String
+  apellidoMaterno String?
+  // No CURP, age, sex or affiliation number: they live in Edumedia (RNF-07)
+  carreraId       String
+  carrera         Carrera      @relation(fields: [carreraId], references: [id])
+  semestre        Int
+  grupo           String
+  turno           Turno
+  expedientes     Expediente[]
+}
+
+model Institucion {
+  id              String               @id @default(uuid())
+  plantelId       String
+  plantel         Plantel              @relation(fields: [plantelId], references: [id])
+  nombre          String
+  rfc             String?
+  giro            String?
+  calle           String
+  numExterior     String?
+  numInterior     String?
+  colonia         String?
+  codigoPostal    String?
+  municipio       String
+  estado          String               @default("Nuevo León")
+  esPlantel       Boolean              @default(false)
+  telefono        String?
+  correo          String?
+  representante   String?
+  horarioAtencion String?
+  turnos          Turno[]
+  aceptaServicio  Boolean              @default(true)
+  aceptaPracticas Boolean              @default(true)
+  cupo            Int?
+  activa          Boolean              @default(true)
+  qrTokenHash     String               @unique
+  codigoCorto     String               @unique
+  carreras        InstitucionCarrera[]
+  supervisores    Supervisor[]
+  expedientes     Expediente[]
+  actualizadoEn   DateTime             @updatedAt @db.Timestamptz
+
+  @@unique([plantelId, rfc])
+  @@index([municipio, colonia])
+}
+
+model InstitucionCarrera {
+  institucionId String
+  carreraId     String
+  institucion   Institucion @relation(fields: [institucionId], references: [id])
+  carrera       Carrera     @relation(fields: [carreraId], references: [id])
+
+  @@id([institucionId, carreraId])
+}
+
+model Supervisor {
+  id              String       @id @default(uuid())
+  institucionId   String
+  institucion     Institucion  @relation(fields: [institucionId], references: [id])
+  titulo          String?
+  nombre          String
+  apellidoPaterno String
+  apellidoMaterno String?
+  puesto          String?
+  departamento    String?
+  correo          String
+  telefono        String?
+  extension       String?
+  confirmado      Boolean      @default(false)
+  expedientes     Expediente[]
+
+  @@index([institucionId])
+}
+
+model Expediente {
+  id                  String           @id @default(uuid())
+  alumnoId            String
+  alumno              Alumno           @relation(fields: [alumnoId], references: [id])
+  tipo                TipoPrograma
+  semestre            Int
+  institucionId       String?
+  institucion         Institucion?     @relation(fields: [institucionId], references: [id])
+  supervisorId        String?
+  supervisor          Supervisor?      @relation(fields: [supervisorId], references: [id])
+  departamento        String?
+  fechaInicio         DateTime?        @db.Date
+  fechaTermino        DateTime?        @db.Date
+  diasPactados        Int[]            @default([]) // 1 = Monday … 7 = Sunday
+  horaEntrada         String? // "08:00"
+  horaSalida          String? // "12:00"
+  programa            String?
+  subprograma         String?
+  metaHoras           Int
+  minutosTransferidos Int              @default(0)
+  motivoTransferencia String?
+  estado              EstadoExpediente @default(PENDIENTE)
+  creadoEn            DateTime         @default(now()) @db.Timestamptz
+  asistencias         Asistencia[]
+  semanas             SemanaBitacora[]
+
+  @@index([alumnoId])
+  @@index([institucionId])
+}
+
+model Asistencia {
+  id                  String                @id // client-generated UUID (idempotency)
+  expedienteId        String
+  expediente          Expediente            @relation(fields: [expedienteId], references: [id])
+  entrada             DateTime              @db.Timestamptz
+  salida              DateTime?             @db.Timestamptz
+  minutosAcreditables Int?
+  estado              EstadoAsistencia      @default(ABIERTA)
+  sinConexion         Boolean               @default(false)
+  recibidoEn          DateTime              @default(now()) @db.Timestamptz
+  semanaId            String?
+  semana              SemanaBitacora?       @relation(fields: [semanaId], references: [id])
+  correcciones        SolicitudCorreccion[]
+
+  @@index([expedienteId, entrada])
+}
+
+model SemanaBitacora {
+  id           String           @id @default(uuid())
+  expedienteId String
+  expediente   Expediente       @relation(fields: [expedienteId], references: [id])
+  semanaInicio DateTime         @db.Date // Monday
+  actividades  String?
+  estado       EstadoValidacion @default(BORRADOR)
+  tokenHash    String?          @unique
+  tokenExpira  DateTime?        @db.Timestamptz
+  validadoPor  String? // "supervisor" or VINCULACION user id
+  validadoEn   DateTime?        @db.Timestamptz
+  comentario   String?
+  asistencias  Asistencia[]
+
+  @@unique([expedienteId, semanaInicio])
+}
+
+model SolicitudCorreccion {
+  id           String          @id @default(uuid())
+  asistenciaId String
+  asistencia   Asistencia      @relation(fields: [asistenciaId], references: [id])
+  entradaNueva DateTime        @db.Timestamptz
+  salidaNueva  DateTime        @db.Timestamptz
+  motivo       String
+  estado       EstadoSolicitud @default(PENDIENTE)
+  resueltoPor  String?
+  creadoEn     DateTime        @default(now()) @db.Timestamptz
+
+  @@index([asistenciaId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  usuarioId String?
+  accion    String
+  entidad   String
+  entidadId String
+  antes     Json?
+  despues   Json?
+  fecha     DateTime @default(now()) @db.Timestamptz
+
+  @@index([entidad, entidadId])
+}

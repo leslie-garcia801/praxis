@@ -1,0 +1,22 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vercel/
+backend/src/generated/
+frontend/dev-dist/
+frontend/test-results/
+frontend/playwright-report/
+.codegraph/
+
+!.env.test.example
+
+# Edumedia sample forms contain personal data: keep them local only
+docs/*.pdf
+
+# Local AI tooling cache
+.atl/
