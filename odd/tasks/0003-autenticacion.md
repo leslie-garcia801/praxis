@@ -31,7 +31,7 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - [x] Activación: verificar matrícula → confirmar nombre → crear contraseña (RF-02); matrícula no precargada → "Tu matrícula no está registrada; acude a vinculación" — `POST /api/auth/activar/verificar` y `POST /api/auth/activar`
 - [x] `GET /api/me`: perfil y expediente activo
 - [x] Restablecer contraseña: vinculación genera una temporal y el alumno debe cambiarla al entrar (RF-04) — `POST /api/alumnos/:id/restablecer-contrasena` y `POST /api/me/cambiar-contrasena`
-- [ ] Administrador crea usuarios de vinculación con su oficina (RN-03b)
+- [x] Administrador crea usuarios de vinculación con su oficina (RN-03b) — `POST /api/usuarios`
 
 ### Middlewares
 - [x] `requireSession` (401), `requireRol` (403), `requireOficina` (RN-03b)
@@ -72,3 +72,4 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - Al restablecer: se genera una contraseña de 10 caracteres sin símbolos que se confundan (0/O/o, 1/I/l), se devuelve **una sola vez** con `Cache-Control: no-store`, se pone `debeCambiar = true`, se cierran todas las sesiones del alumno y queda en `AuditLog` (`RESTABLECER_CONTRASENA`, con quién lo hizo). Si el alumno nunca se activó, se le crea la cuenta: así vinculación resuelve en persona el caso "el nombre no coincide".
 - Cambiar contraseña: ruta propia `POST /api/me/cambiar-contrasena` en lugar de `/change-password` de Better Auth, para apagar `debeCambiar` en la misma transacción. Mantiene la sesión actual, cierra las demás y queda en `AuditLog` (`CAMBIAR_CONTRASENA`).
 - `disabledPaths` en `lib/auth.ts` apaga las rutas de Better Auth que no corresponden a este proyecto: registro, cambio y restablecimiento de contraseña por correo, `/update-user` (los nombres vienen de Edumedia), `/is-username-available` (revelaría qué matrículas existen), borrado de usuario y cuentas sociales.
+- `POST /api/usuarios` (solo ADMIN) crea un usuario `VINCULACION` en el plantel del admin. `oficina` es obligatoria (`PRACTICAS`, `SERVICIO_SOCIAL` o `null` para ambas), para que se elija a propósito. Genera una contraseña temporal que se muestra una vez (`no-store`) y deja `debeCambiar = true`, igual que RF-04. Correo duplicado → 409 `CORREO_EN_USO`, también si dos peticiones llegan al mismo tiempo (P2002). Queda en `AuditLog` (`CREAR_USUARIO`). Por ahora no hay listado, edición ni desactivación de usuarios: se agregan cuando se haga la pantalla del admin.

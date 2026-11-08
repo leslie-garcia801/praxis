@@ -7,6 +7,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { activacionRouter } from './modules/activacion/activacion.routes.js';
 import { alumnosRouter } from './modules/alumnos/alumnos.routes.js';
 import { meRouter } from './modules/me/me.routes.js';
+import { usuariosRouter } from './modules/usuarios/usuarios.routes.js';
 
 // Builds the Express app without listening, so tests can import it.
 export function createApp() {
@@ -33,6 +34,7 @@ export function createApp() {
 
   app.use('/api/me', meRouter);
   app.use('/api/alumnos', alumnosRouter);
+  app.use('/api/usuarios', usuariosRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
