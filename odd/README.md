@@ -48,4 +48,4 @@ Decisiones tomadas y pendientes.
 | # | Tarea | Estado |
 | --- | --- | --- |
 | 0001 | [Andamiaje del proyecto](tasks/0001-andamiaje.md) | Terminada |
-| 0002 | [Dominio: cálculo de horas](tasks/0002-dominio-horas.md) | Pendiente |
+| 0002 | [Dominio: cálculo de horas](tasks/0002-dominio-horas.md) | Terminada |
