@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | En progreso |
+| Estado | Terminada |
 | Iteración | 1 (specs §14) |
 | Specs | F-01, RF-02, RF-03, RF-04, RN-03b, RNF-05, RNF-06, RNF-07 |
 | Proyecto | backend |
@@ -27,7 +27,7 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - [x] Seed: plantel CBTIS 258 y primer usuario administrador (`pnpm db:seed`, variables `SEED_ADMIN_*`)
 
 ### Rutas
-- [ ] Inicio de sesión con matrícula (alumno) o correo (vinculación) y cierre de sesión (RF-03)
+- [x] Inicio de sesión con matrícula (alumno) o correo (vinculación) y cierre de sesión (RF-03) — rutas de Better Auth, con pruebas en `lib/auth.test.ts` y `scripts/seedBase.test.ts`
 - [x] Activación: verificar matrícula → confirmar nombre → crear contraseña (RF-02); matrícula no precargada → "Tu matrícula no está registrada; acude a vinculación" — `POST /api/auth/activar/verificar` y `POST /api/auth/activar`
 - [x] `GET /api/me`: perfil y expediente activo
 - [x] Restablecer contraseña: vinculación genera una temporal y el alumno debe cambiarla al entrar (RF-04) — `POST /api/alumnos/:id/restablecer-contrasena` y `POST /api/me/cambiar-contrasena`
@@ -37,10 +37,10 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - [x] `requireSession` (401), `requireRol` (403), `requireOficina` (RN-03b)
 
 ### Pruebas
-- [ ] `test/setup.ts` limpia tablas (por ahora cada archivo borra su propio plantel con `borrarPlantel`)
+- [x] `test/setup.ts` limpia tablas al comienzo de cada archivo de pruebas (`test/db.ts`)
 - [x] `test/factories.ts`: `crearPlantel`, `crearUsuario`, `iniciarSesion`, `borrarPlantel`
-- [ ] Cada ruta: caso feliz, validación inválida, sin sesión (401) y rol incorrecto (403)
-- [ ] `pnpm test` y `pnpm typecheck` en verde
+- [x] Cada ruta: caso feliz, validación inválida, sin sesión (401) y rol incorrecto (403), cuando aplican (ver notas de la activación y de `/api/me`)
+- [x] `pnpm test` (166 pruebas), `pnpm typecheck` y `pnpm lint` en verde
 
 ## Fuera de alcance
 
@@ -73,3 +73,5 @@ Configurar Better Auth en la API para que los alumnos entren con su número de c
 - Cambiar contraseña: ruta propia `POST /api/me/cambiar-contrasena` en lugar de `/change-password` de Better Auth, para apagar `debeCambiar` en la misma transacción. Mantiene la sesión actual, cierra las demás y queda en `AuditLog` (`CAMBIAR_CONTRASENA`).
 - `disabledPaths` en `lib/auth.ts` apaga las rutas de Better Auth que no corresponden a este proyecto: registro, cambio y restablecimiento de contraseña por correo, `/update-user` (los nombres vienen de Edumedia), `/is-username-available` (revelaría qué matrículas existen), borrado de usuario y cuentas sociales.
 - `POST /api/usuarios` (solo ADMIN) crea un usuario `VINCULACION` en el plantel del admin. `oficina` es obligatoria (`PRACTICAS`, `SERVICIO_SOCIAL` o `null` para ambas), para que se elija a propósito. Genera una contraseña temporal que se muestra una vez (`no-store`) y deja `debeCambiar = true`, igual que RF-04. Correo duplicado → 409 `CORREO_EN_USO`, también si dos peticiones llegan al mismo tiempo (P2002). Queda en `AuditLog` (`CREAR_USUARIO`). Por ahora no hay listado, edición ni desactivación de usuarios: se agregan cuando se haga la pantalla del admin.
+- Limpieza de la base en pruebas: `test/setup.ts` vacía `app_test` (`TRUNCATE` de todas las tablas, menos `_prisma_migrations`) **al comienzo de cada archivo**, no antes de cada prueba. Dentro de un archivo, las pruebas comparten los datos que arman en `beforeAll`; limpiar antes de cada prueba obligaría a repetir argon2 y el inicio de sesión en todas. `assertTestDatabase` se niega a borrar si el nombre de la base no termina en `_test`.
+- Las rutas de activación son públicas: no les aplican 401 ni 403 por rol. Se prueban el 403 por origen no permitido y el límite de intentos.

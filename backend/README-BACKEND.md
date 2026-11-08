@@ -172,6 +172,7 @@ pnpm prisma migrate diff --from-config-datasource --to-schema prisma/schema.pris
 - Las pruebas de rutas usan **Supertest** sobre `app.ts` y una base **real** (`app_test`), sin mocks de Prisma. Así también se prueban las restricciones SQL.
 - Toda regla de negocio tiene una prueba que la nombra: `it('RN-04: acredita máximo 300 minutos por día')`.
 - Toda ruta nueva prueba: caso feliz, validación inválida, sin sesión (401) y rol incorrecto (403).
+- `test/setup.ts` vacía `app_test` al comienzo de **cada archivo** de pruebas, y solo si el nombre de la base termina en `_test`. Dentro de un archivo, las pruebas comparten los datos que arman con `test/factories.ts`.
 
 ## Problemas comunes
 

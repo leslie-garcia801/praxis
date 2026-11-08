@@ -83,6 +83,24 @@ describe('Better Auth', () => {
     expect(session).toMatch(/Max-Age=2592000/);
   });
 
+  it('RF-03: signing out ends the session', async () => {
+    const login = await request(app)
+      .post('/api/auth/sign-in/username')
+      .set('Origin', ORIGIN)
+      .set('X-Forwarded-For', nextIp())
+      .send({ username: MATRICULA, password: PASSWORD });
+    const cookie = ([] as string[])
+      .concat(login.headers['set-cookie'] ?? [])
+      .map((c) => c.split(';')[0])
+      .join('; ');
+    expect((await request(app).get('/api/me').set('Cookie', cookie)).status).toBe(200);
+
+    const res = await request(app).post('/api/auth/sign-out').set('Origin', ORIGIN).set('Cookie', cookie);
+
+    expect(res.status).toBe(200);
+    expect((await request(app).get('/api/me').set('Cookie', cookie)).status).toBe(401);
+  });
+
   it('RF-03: rejects a wrong password', async () => {
     const res = await request(app)
       .post('/api/auth/sign-in/username')
