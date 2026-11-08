@@ -53,7 +53,7 @@ Las rutas solo validan entrada (Zod) y llaman al servicio. La lógica de negocio
 
 ## Better Auth
 
-- Adaptador de Prisma. Mantén las tablas que Better Auth necesita (user, session, account, verification) generadas con su CLI; el `Usuario` de las specs se mapea a su tabla `user` con campos adicionales (`rol`, `oficina`, `plantelId`, `debeCambiar`).
+- Adaptador de Prisma. Mantén los modelos que Better Auth necesita (`User`, `Session`, `Account`, `Verification`); el adaptador usa el nombre del modelo, así que las tablas siguen nuestra convención (`users`, `sessions`, `accounts`, `verifications`). El `Usuario` de las specs se mapea a la tabla `users` con campos adicionales (`rol`, `oficina`, `plantelId`, `debeCambiar`).
 - Plugin `username` para que el alumno inicie sesión con su **número de control**; vinculación entra con correo.
 - Plugin de administración o lógica propia para que vinculación restablezca contraseñas (RF-04).
 - Monta el manejador con `toNodeHandler(auth)` en `/api/auth/*` **antes** de `express.json()`.
@@ -68,6 +68,7 @@ Las rutas solo validan entrada (Zod) y llaman al servicio. La lógica de negocio
 
 ## Base de datos
 
+- Convención de nombres en PostgreSQL: minúsculas y snake_case para todo identificador (tablas, columnas, tipos enum, índices, restricciones); tablas en plural. Los modelos de Prisma conservan su nombre y se mapean con `@map` / `@@map`. En `$queryRaw` usa los nombres de la base (`users`, `plantel_id`), no los del modelo.
 - El esquema parte de specs 8.2. Las restricciones de 8.3 (`EXCLUDE` contra traslapes, `CHECK`, índices parciales) se agregan editando el SQL de la migración; no se pueden declarar en `schema.prisma`.
 - Para consultas de totales o reportes complejos usa `prisma.$queryRaw` o TypedSQL.
 - Toda escritura importante registra un `AuditLog` (RF-29), dentro de la misma transacción.

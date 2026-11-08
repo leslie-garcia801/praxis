@@ -47,7 +47,7 @@ export async function activarCuenta(input: ActivarInput): Promise<void> {
 
   await prisma.$transaction(async (tx) => {
     // Lock the user row so two concurrent activations cannot both create a password.
-    await tx.$queryRaw`SELECT id FROM "user" WHERE username = ${input.matricula} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM users WHERE username = ${input.matricula} FOR UPDATE`;
     const user = await verificarIdentidad(tx, input);
 
     if (email && email !== user.email) {

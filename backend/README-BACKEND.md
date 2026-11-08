@@ -147,7 +147,8 @@ Las rutas solo validan la entrada y llaman al servicio. La lógica de negocio vi
 
 ## Base de datos
 
-- El esquema parte de la sección 8.2 de las specs. Las tablas `user`, `session`, `account` y `verification` son las que exige Better Auth.
+- El esquema parte de la sección 8.2 de las specs. Las tablas `users`, `sessions`, `accounts` y `verifications` son las que exige Better Auth.
+- Convención de nombres en PostgreSQL: todo identificador (tablas, columnas, tipos enum, índices y restricciones) va en minúsculas y snake_case; las tablas van en plural (`alumnos`, `semanas_bitacora`). Los modelos y campos de Prisma conservan su nombre en TypeScript y se mapean con `@map` / `@@map`. Así el SQL escrito a mano no necesita comillas y se evita `user`, que es palabra reservada.
 - Las restricciones que Prisma no puede declarar están en el SQL de la migración inicial:
 
 | Restricción | Evita |

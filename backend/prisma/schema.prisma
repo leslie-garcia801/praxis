@@ -1,6 +1,10 @@
 // Data model based on docs/specs.md section 8.2.
 // SQL constraints from section 8.3 live in the migration SQL (they cannot be declared here).
 // All instants are stored as timestamptz in UTC (RN-15).
+//
+// Database naming convention: every identifier in PostgreSQL (tables, columns, enum types,
+// indexes, constraints) is lowercase snake_case; tables are plural. Prisma models and fields
+// keep their TypeScript names and are mapped with @map / @@map.
 
 generator client {
   provider            = "prisma-client"
@@ -17,16 +21,22 @@ enum Rol {
   ALUMNO
   VINCULACION
   ADMIN
+
+  @@map("rol")
 }
 
 enum Turno {
   MATUTINO
   VESPERTINO
+
+  @@map("turno")
 }
 
 enum TipoPrograma {
   SERVICIO_SOCIAL
   PRACTICAS
+
+  @@map("tipo_programa")
 }
 
 enum EstadoExpediente {
@@ -35,12 +45,16 @@ enum EstadoExpediente {
   SUSPENDIDO
   FINALIZADO
   CANCELADO
+
+  @@map("estado_expediente")
 }
 
 enum EstadoAsistencia {
   ABIERTA
   CERRADA
   INCOMPLETA
+
+  @@map("estado_asistencia")
 }
 
 enum EstadoValidacion {
@@ -48,12 +62,16 @@ enum EstadoValidacion {
   ENVIADA
   VALIDADA
   RECHAZADA
+
+  @@map("estado_validacion")
 }
 
 enum EstadoSolicitud {
   PENDIENTE
   APROBADA
   RECHAZADA
+
+  @@map("estado_solicitud")
 }
 
 model Plantel {
@@ -61,84 +79,88 @@ model Plantel {
   nombre        String
   usuarios      User[]
   instituciones Institucion[]
+
+  @@map("planteles")
 }
 
 // ---------------------------------------------------------------------------
-// Better Auth core tables (user, session, account, verification).
-// The spec's `Usuario` maps to `user` with additional fields.
-// Passwords live in `account.password` (managed by Better Auth).
+// Better Auth core tables (users, sessions, accounts, verifications).
+// The adapter works with the Prisma model names (user, session, account,
+// verification), so the table names are free to follow our convention.
+// The spec's `Usuario` maps to `users` with additional fields.
+// Passwords live in `accounts.password` (managed by Better Auth).
 // ---------------------------------------------------------------------------
 
 model User {
   id              String        @id
   name            String
   email           String        @unique
-  emailVerified   Boolean       @default(false)
+  emailVerified   Boolean       @default(false) @map("email_verified")
   image           String?
-  createdAt       DateTime      @default(now()) @db.Timestamptz
-  updatedAt       DateTime      @updatedAt @db.Timestamptz
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
   // username plugin: student control number (matrícula, 14 digits)
   username        String?       @unique
-  displayUsername String?
+  displayUsername String?       @map("display_username")
   // Spec fields (Usuario)
-  plantelId       String
+  plantelId       String        @map("plantel_id")
   plantel         Plantel       @relation(fields: [plantelId], references: [id])
   rol             Rol           @default(ALUMNO)
   oficina         TipoPrograma? // scope of a VINCULACION user; null = both (RN-03b)
-  debeCambiar     Boolean       @default(false)
+  debeCambiar     Boolean       @default(false) @map("debe_cambiar")
   activo          Boolean       @default(true)
   sessions        Session[]
   accounts        Account[]
   alumno          Alumno?
 
-  @@map("user")
+  @@map("users")
 }
 
 model Session {
   id        String   @id
-  expiresAt DateTime @db.Timestamptz
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
   token     String   @unique
-  createdAt DateTime @default(now()) @db.Timestamptz
-  updatedAt DateTime @updatedAt @db.Timestamptz
-  ipAddress String?
-  userAgent String?
-  userId    String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("session")
+  @@map("sessions")
 }
 
 model Account {
   id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime? @db.Timestamptz
-  refreshTokenExpiresAt DateTime? @db.Timestamptz
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz
   scope                 String?
   password              String?
-  createdAt             DateTime  @default(now()) @db.Timestamptz
-  updatedAt             DateTime  @updatedAt @db.Timestamptz
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   @@index([userId])
-  @@map("account")
+  @@map("accounts")
 }
 
 model Verification {
   id         String   @id
   identifier String
   value      String
-  expiresAt  DateTime @db.Timestamptz
-  createdAt  DateTime @default(now()) @db.Timestamptz
-  updatedAt  DateTime @updatedAt @db.Timestamptz
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@index([identifier])
-  @@map("verification")
+  @@map("verifications")
 }
 
 // ---------------------------------------------------------------------------
@@ -150,76 +172,82 @@ model Carrera {
   nombre        String               @unique
   alumnos       Alumno[]
   instituciones InstitucionCarrera[]
+
+  @@map("carreras")
 }
 
 model Alumno {
   id              String       @id @default(uuid())
-  usuarioId       String       @unique
+  usuarioId       String       @unique @map("usuario_id")
   usuario         User         @relation(fields: [usuarioId], references: [id])
   nombre          String
-  apellidoPaterno String
-  apellidoMaterno String?
+  apellidoPaterno String       @map("apellido_paterno")
+  apellidoMaterno String?      @map("apellido_materno")
   // No CURP, age, sex or affiliation number: they live in Edumedia (RNF-07)
-  carreraId       String
+  carreraId       String       @map("carrera_id")
   carrera         Carrera      @relation(fields: [carreraId], references: [id])
   semestre        Int
   grupo           String
   turno           Turno
   expedientes     Expediente[]
+
+  @@map("alumnos")
 }
 
 model Institucion {
   id              String               @id @default(uuid())
-  plantelId       String
+  plantelId       String               @map("plantel_id")
   plantel         Plantel              @relation(fields: [plantelId], references: [id])
   nombre          String
   rfc             String?
   giro            String?
   calle           String
-  numExterior     String?
-  numInterior     String?
+  numExterior     String?              @map("num_exterior")
+  numInterior     String?              @map("num_interior")
   colonia         String?
-  codigoPostal    String?
+  codigoPostal    String?              @map("codigo_postal")
   municipio       String
   estado          String               @default("Nuevo León")
-  esPlantel       Boolean              @default(false)
+  esPlantel       Boolean              @default(false) @map("es_plantel")
   telefono        String?
   correo          String?
   representante   String?
-  horarioAtencion String?
+  horarioAtencion String?              @map("horario_atencion")
   turnos          Turno[]
-  aceptaServicio  Boolean              @default(true)
-  aceptaPracticas Boolean              @default(true)
+  aceptaServicio  Boolean              @default(true) @map("acepta_servicio")
+  aceptaPracticas Boolean              @default(true) @map("acepta_practicas")
   cupo            Int?
   activa          Boolean              @default(true)
-  qrTokenHash     String               @unique
-  codigoCorto     String               @unique
+  qrTokenHash     String               @unique @map("qr_token_hash")
+  codigoCorto     String               @unique @map("codigo_corto")
   carreras        InstitucionCarrera[]
   supervisores    Supervisor[]
   expedientes     Expediente[]
-  actualizadoEn   DateTime             @updatedAt @db.Timestamptz
+  actualizadoEn   DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz
 
   @@unique([plantelId, rfc])
   @@index([municipio, colonia])
+  @@map("instituciones")
 }
 
 model InstitucionCarrera {
-  institucionId String
-  carreraId     String
+  institucionId String      @map("institucion_id")
+  carreraId     String      @map("carrera_id")
   institucion   Institucion @relation(fields: [institucionId], references: [id])
   carrera       Carrera     @relation(fields: [carreraId], references: [id])
 
   @@id([institucionId, carreraId])
+  @@map("instituciones_carreras")
 }
 
 model Supervisor {
   id              String       @id @default(uuid())
-  institucionId   String
+  institucionId   String       @map("institucion_id")
   institucion     Institucion  @relation(fields: [institucionId], references: [id])
   titulo          String?
   nombre          String
-  apellidoPaterno String
-  apellidoMaterno String?
+  apellidoPaterno String       @map("apellido_paterno")
+  apellidoMaterno String?      @map("apellido_materno")
   puesto          String?
   departamento    String?
   correo          String
@@ -229,95 +257,101 @@ model Supervisor {
   expedientes     Expediente[]
 
   @@index([institucionId])
+  @@map("supervisores")
 }
 
 model Expediente {
   id                  String           @id @default(uuid())
-  alumnoId            String
+  alumnoId            String           @map("alumno_id")
   alumno              Alumno           @relation(fields: [alumnoId], references: [id])
   tipo                TipoPrograma
   semestre            Int
-  institucionId       String?
+  institucionId       String?          @map("institucion_id")
   institucion         Institucion?     @relation(fields: [institucionId], references: [id])
-  supervisorId        String?
+  supervisorId        String?          @map("supervisor_id")
   supervisor          Supervisor?      @relation(fields: [supervisorId], references: [id])
   departamento        String?
-  fechaInicio         DateTime?        @db.Date
-  fechaTermino        DateTime?        @db.Date
-  diasPactados        Int[]            @default([]) // 1 = Monday … 7 = Sunday
-  horaEntrada         String? // "08:00"
-  horaSalida          String? // "12:00"
+  fechaInicio         DateTime?        @map("fecha_inicio") @db.Date
+  fechaTermino        DateTime?        @map("fecha_termino") @db.Date
+  diasPactados        Int[]            @default([]) @map("dias_pactados") // 1 = Monday … 7 = Sunday
+  horaEntrada         String?          @map("hora_entrada") // "08:00"
+  horaSalida          String?          @map("hora_salida") // "12:00"
   programa            String?
   subprograma         String?
-  metaHoras           Int
-  minutosTransferidos Int              @default(0)
-  motivoTransferencia String?
+  metaHoras           Int              @map("meta_horas")
+  minutosTransferidos Int              @default(0) @map("minutos_transferidos")
+  motivoTransferencia String?          @map("motivo_transferencia")
   estado              EstadoExpediente @default(PENDIENTE)
-  creadoEn            DateTime         @default(now()) @db.Timestamptz
+  creadoEn            DateTime         @default(now()) @map("creado_en") @db.Timestamptz
   asistencias         Asistencia[]
   semanas             SemanaBitacora[]
 
   @@index([alumnoId])
   @@index([institucionId])
+  @@map("expedientes")
 }
 
 model Asistencia {
   id                  String                @id // client-generated UUID (idempotency)
-  expedienteId        String
+  expedienteId        String                @map("expediente_id")
   expediente          Expediente            @relation(fields: [expedienteId], references: [id])
   entrada             DateTime              @db.Timestamptz
   salida              DateTime?             @db.Timestamptz
-  minutosAcreditables Int?
+  minutosAcreditables Int?                  @map("minutos_acreditables")
   estado              EstadoAsistencia      @default(ABIERTA)
-  sinConexion         Boolean               @default(false)
-  recibidoEn          DateTime              @default(now()) @db.Timestamptz
-  semanaId            String?
+  sinConexion         Boolean               @default(false) @map("sin_conexion")
+  recibidoEn          DateTime              @default(now()) @map("recibido_en") @db.Timestamptz
+  semanaId            String?               @map("semana_id")
   semana              SemanaBitacora?       @relation(fields: [semanaId], references: [id])
   correcciones        SolicitudCorreccion[]
 
   @@index([expedienteId, entrada])
+  @@map("asistencias")
 }
 
 model SemanaBitacora {
   id           String           @id @default(uuid())
-  expedienteId String
+  expedienteId String           @map("expediente_id")
   expediente   Expediente       @relation(fields: [expedienteId], references: [id])
-  semanaInicio DateTime         @db.Date // Monday
+  semanaInicio DateTime         @map("semana_inicio") @db.Date // Monday
   actividades  String?
   estado       EstadoValidacion @default(BORRADOR)
-  tokenHash    String?          @unique
-  tokenExpira  DateTime?        @db.Timestamptz
-  validadoPor  String? // "supervisor" or VINCULACION user id
-  validadoEn   DateTime?        @db.Timestamptz
+  tokenHash    String?          @unique @map("token_hash")
+  tokenExpira  DateTime?        @map("token_expira") @db.Timestamptz
+  validadoPor  String?          @map("validado_por") // "supervisor" or VINCULACION user id
+  validadoEn   DateTime?        @map("validado_en") @db.Timestamptz
   comentario   String?
   asistencias  Asistencia[]
 
   @@unique([expedienteId, semanaInicio])
+  @@map("semanas_bitacora")
 }
 
 model SolicitudCorreccion {
   id           String          @id @default(uuid())
-  asistenciaId String
+  asistenciaId String          @map("asistencia_id")
   asistencia   Asistencia      @relation(fields: [asistenciaId], references: [id])
-  entradaNueva DateTime        @db.Timestamptz
-  salidaNueva  DateTime        @db.Timestamptz
+  entradaNueva DateTime        @map("entrada_nueva") @db.Timestamptz
+  salidaNueva  DateTime        @map("salida_nueva") @db.Timestamptz
   motivo       String
   estado       EstadoSolicitud @default(PENDIENTE)
-  resueltoPor  String?
-  creadoEn     DateTime        @default(now()) @db.Timestamptz
+  resueltoPor  String?         @map("resuelto_por")
+  creadoEn     DateTime        @default(now()) @map("creado_en") @db.Timestamptz
 
   @@index([asistenciaId])
+  @@map("solicitudes_correccion")
 }
 
 model AuditLog {
   id        String   @id @default(uuid())
-  usuarioId String?
+  usuarioId String?  @map("usuario_id")
   accion    String
   entidad   String
-  entidadId String
+  entidadId String   @map("entidad_id")
   antes     Json?
   despues   Json?
   fecha     DateTime @default(now()) @db.Timestamptz
 
   @@index([entidad, entidadId])
+  @@map("audit_logs")
 }
