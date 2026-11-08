@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { APIError } from 'better-auth/api';
 import { username } from 'better-auth/plugins';
 import { env } from '../config/env.js';
 import { hashPassword, verifyPassword } from './password.js';
@@ -52,6 +53,25 @@ export const auth = betterAuth({
       oficina: { type: 'string', required: false, input: false },
       debeCambiar: { type: 'boolean', required: false, defaultValue: false, input: false },
       activo: { type: 'boolean', required: false, defaultValue: true, input: false },
+    },
+  },
+
+  databaseHooks: {
+    session: {
+      create: {
+        // Runs after the password check: a deactivated account gets no session. Only someone who
+        // knows the password learns the account is deactivated. requireSession also rejects
+        // sessions of accounts deactivated later.
+        before: async (session) => {
+          const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { activo: true } });
+          if (!user?.activo) {
+            throw new APIError('FORBIDDEN', {
+              code: 'CUENTA_INACTIVA',
+              message: 'Tu cuenta está desactivada. Acude a vinculación.',
+            });
+          }
+        },
+      },
     },
   },
 

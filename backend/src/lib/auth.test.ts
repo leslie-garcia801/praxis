@@ -93,6 +93,37 @@ describe('Better Auth', () => {
     expect(res.status).toBe(401);
   });
 
+  describe('deactivated accounts', () => {
+    const signIn = (password: string) =>
+      request(app)
+        .post('/api/auth/sign-in/username')
+        .set('Origin', ORIGIN)
+        .set('X-Forwarded-For', nextIp())
+        .send({ username: MATRICULA, password });
+
+    beforeAll(async () => {
+      await prisma.user.update({ where: { id: userId }, data: { activo: false } });
+    });
+
+    afterAll(async () => {
+      await prisma.user.update({ where: { id: userId }, data: { activo: true } });
+    });
+
+    it('cannot sign in, and no session is created', async () => {
+      const sesionesAntes = await prisma.session.count({ where: { userId } });
+
+      const res = await signIn(PASSWORD);
+
+      expect(res.status).toBe(403);
+      expect(res.body).toMatchObject({ code: 'CUENTA_INACTIVA', message: expect.stringMatching(/desactivada/) });
+      expect(await prisma.session.count({ where: { userId } })).toBe(sesionesAntes);
+    });
+
+    it('a wrong password still answers 401, so the status is not revealed without the password', async () => {
+      expect((await signIn('otra-clave')).status).toBe(401);
+    });
+  });
+
   it('RF-03: rejects requests from an untrusted origin', async () => {
     const res = await request(app)
       .post('/api/auth/sign-in/username')
