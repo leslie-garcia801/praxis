@@ -6,6 +6,7 @@ import { requireTrustedOrigin } from './middleware/requireTrustedOrigin.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { activacionRouter } from './modules/activacion/activacion.routes.js';
 import { alumnosRouter } from './modules/alumnos/alumnos.routes.js';
+import { importacionesRouter } from './modules/importaciones/importaciones.routes.js';
 import { meRouter } from './modules/me/me.routes.js';
 import { usuariosRouter } from './modules/usuarios/usuarios.routes.js';
 
@@ -35,6 +36,7 @@ export function createApp() {
   app.use('/api/me', meRouter);
   app.use('/api/alumnos', alumnosRouter);
   app.use('/api/usuarios', usuariosRouter);
+  app.use('/api/importaciones', importacionesRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

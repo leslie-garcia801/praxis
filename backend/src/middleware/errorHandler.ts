@@ -34,10 +34,18 @@ function toApiError(err: unknown): { status: number; body: ApiErrorBody } {
   }
 
   // Malformed JSON body from express.json()
-  if (isBodyParserError(err)) {
+  if (isBodyParserError(err, 'entity.parse.failed')) {
     return {
       status: 400,
       body: { error: { code: 'INVALID_JSON', message: 'El cuerpo de la petición no es JSON válido.' } },
+    };
+  }
+
+  // express.raw() / express.json() over their size limit
+  if (isBodyParserError(err, 'entity.too.large')) {
+    return {
+      status: 413,
+      body: { error: { code: 'PAYLOAD_TOO_LARGE', message: 'El archivo o los datos enviados superan el tamaño permitido.' } },
     };
   }
 
@@ -47,11 +55,11 @@ function toApiError(err: unknown): { status: number; body: ApiErrorBody } {
   };
 }
 
-function isBodyParserError(err: unknown): boolean {
+function isBodyParserError(err: unknown, type: string): boolean {
   return (
     typeof err === 'object' &&
     err !== null &&
     'type' in err &&
-    (err as { type?: unknown }).type === 'entity.parse.failed'
+    (err as { type?: unknown }).type === type
   );
 }
