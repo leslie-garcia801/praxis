@@ -1,4 +1,5 @@
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Link, type RouteObject } from 'react-router';
+import { ImportarAlumnosPage } from './features/importaciones/components/ImportarAlumnosPage';
 import { PlaceholderPage } from './components/PlaceholderPage';
 import { ActivarPage } from './features/auth/components/ActivarPage';
 import { CambiarContrasenaPage } from './features/auth/components/CambiarContrasenaPage';
@@ -39,10 +40,14 @@ export const routes: RouteObject[] = [
         path: '/vinculacion',
         element: (
           <PlaceholderPage title="Panel de vinculación">
+            <Link to="/vinculacion/importar/alumnos" className="text-primary underline underline-offset-4">
+              Importar alumnos
+            </Link>
             <SignOutButton />
           </PlaceholderPage>
         ),
       },
+      { path: '/vinculacion/importar/alumnos', element: <ImportarAlumnosPage /> },
     ],
   },
   // Public: the supervisor opens it from an email link (RF-21).
