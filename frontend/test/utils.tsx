@@ -15,5 +15,7 @@ export function renderApp(path: string) {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-  return { router, queryClient, user: userEvent.setup() };
+  // delay: null types without a timer between keystrokes. The default (delay: 0) yields to the
+  // event loop on every key, which made multi-step forms exceed the 5 s timeout on a loaded machine.
+  return { router, queryClient, user: userEvent.setup({ delay: null }) };
 }
