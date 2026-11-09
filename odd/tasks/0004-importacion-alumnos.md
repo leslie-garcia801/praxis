@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | Completada |
+| Estado | Terminada |
 | Iteración | 1 (specs §14) |
 | Specs | F-02, RF-01, RN-01, RN-02, RN-03, RN-03a, RN-03b, RF-29, RNF-07 |
 | Proyecto | backend |

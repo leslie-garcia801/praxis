@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | En curso |
+| Estado | Terminada |
 | Iteración | 1 (specs §14) |
 | Specs | F-01, RF-02, RF-03, RF-04, RN-03b, RNF-05, RNF-07, pantallas §10 (alumno 1 y 8) |
 | Proyecto | frontend |
@@ -30,12 +30,12 @@ Pantallas para que el alumno active su cuenta e inicie sesión con su matrícula
 
 ### Pruebas
 - [x] Vitest + React Testing Library + MSW por pantalla y guarda
-- [ ] Playwright: activar cuenta en iPhone 13 y Pixel 7
+- [x] Playwright: activar cuenta en iPhone 13 y Pixel 7
 
 ## Notas
 
 - El aviso de privacidad es **provisional** (specs §13, pregunta 7): vive en un solo componente para reemplazarlo cuando el plantel tenga el texto oficial.
-- Playwright (`e2e/activar.spec.ts`, iPhone 13 y Pixel 7): escrito y listado con `playwright test --list`, **no ejecutado**: faltan los navegadores (`pnpm exec playwright install`) y las variables `E2E_STAFF_EMAIL` / `E2E_STAFF_PASSWORD` (usuario ADMIN/VINCULACION que ya cambió su contraseña temporal). Los datos se crean con la API real (`e2e/helpers/seedAlumno.ts`: inicia sesión como personal e importa un alumno por CSV, RF-01). Sin backend o sin variables, la prueba se omite con un mensaje.
+- Playwright (`e2e/activar.spec.ts`, iPhone 13 y Pixel 7): ejecutado el 2026-11-08, 4 pruebas en verde. Requiere los navegadores (`pnpm exec playwright install`), backend y frontend corriendo, y las variables `E2E_STAFF_EMAIL` / `E2E_STAFF_PASSWORD` (usuario ADMIN/VINCULACION que ya cambió su contraseña temporal). Los datos se crean con la API real (`e2e/helpers/seedAlumno.ts`: inicia sesión como personal e importa un alumno por CSV, RF-01). Sin backend o sin variables, la prueba se omite con un mensaje.
 - Las guardas viven en `features/auth/components/guards.tsx` y son la única fuente de redirecciones: después de iniciar sesión, activar o cambiar la contraseña solo se refresca `['me']` y la guarda lleva al usuario a su destino.
 - `GET /api/me` con 401, o con 403 `CUENTA_INACTIVA`, se trata como "sin sesión". Otros errores muestran "Reintentar".
 - `/cambiar-contrasena` solo es accesible con `debeCambiar = true` (no hay pantalla voluntaria de cambio); sin él redirige al inicio del rol.

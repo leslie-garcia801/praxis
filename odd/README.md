@@ -50,3 +50,5 @@ Decisiones tomadas y pendientes.
 | 0001 | [Andamiaje del proyecto](tasks/0001-andamiaje.md) | Terminada |
 | 0002 | [Dominio: cálculo de horas](tasks/0002-dominio-horas.md) | Terminada |
 | 0003 | [Autenticación y usuarios por oficina](tasks/0003-autenticacion.md) | Terminada |
+| 0004 | [Importación de alumnos](tasks/0004-importacion-alumnos.md) | Terminada |
+| 0005 | [Pantallas de acceso](tasks/0005-pantallas-acceso.md) | Terminada |
