@@ -1,26 +1,21 @@
-import { render, screen } from '@testing-library/react';
-import { createMemoryRouter, RouterProvider } from 'react-router';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { routes } from './router';
-
-function renderAt(path: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
-  render(<RouterProvider router={router} />);
-}
+import { renderApp } from '../test/utils';
 
 describe('router', () => {
-  it('redirects the root to the sign-in screen', async () => {
-    renderAt('/');
+  it('redirects the root to the sign-in screen when there is no session', async () => {
+    const { router } = renderApp('/');
     expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/entrar');
   });
 
-  it('renders the supervisor validation route with a token', async () => {
-    renderAt('/validar/abc123');
+  it('renders the supervisor validation route with a token, without a session', async () => {
+    renderApp('/validar/abc123');
     expect(await screen.findByRole('heading', { name: 'Validar semanas' })).toBeInTheDocument();
   });
 
   it('shows a not-found screen for unknown paths', async () => {
-    renderAt('/no-existe');
+    renderApp('/no-existe');
     expect(await screen.findByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument();
   });
 });

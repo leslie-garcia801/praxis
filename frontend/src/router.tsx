@@ -1,13 +1,51 @@
-import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
+import { createBrowserRouter, type RouteObject } from 'react-router';
 import { PlaceholderPage } from './components/PlaceholderPage';
+import { ActivarPage } from './features/auth/components/ActivarPage';
+import { CambiarContrasenaPage } from './features/auth/components/CambiarContrasenaPage';
+import { HomeRedirect, PublicOnly, RequirePendingChange, RequireRole } from './features/auth/components/guards';
+import { LoginPage } from './features/auth/components/LoginPage';
+import { SignOutButton } from './features/auth/components/SignOutButton';
 
 // Routes by role: /alumno, /vinculacion, /validar/:token (see frontend/CLAUDE.md).
 // Screens are added iteration by iteration (docs/specs.md section 14).
 export const routes: RouteObject[] = [
-  { path: '/', element: <Navigate to="/entrar" replace /> },
-  { path: '/entrar', element: <PlaceholderPage title="Iniciar sesión" /> },
-  { path: '/alumno', element: <PlaceholderPage title="Mi avance" /> },
-  { path: '/vinculacion', element: <PlaceholderPage title="Panel de vinculación" /> },
+  { path: '/', element: <HomeRedirect /> },
+  {
+    // Signed-in users are redirected away from these.
+    element: <PublicOnly />,
+    children: [
+      { path: '/entrar', element: <LoginPage /> },
+      { path: '/activar', element: <ActivarPage /> },
+    ],
+  },
+  { element: <RequirePendingChange />, children: [{ path: '/cambiar-contrasena', element: <CambiarContrasenaPage /> }] },
+  {
+    element: <RequireRole roles={['ALUMNO']} />,
+    children: [
+      {
+        path: '/alumno',
+        element: (
+          <PlaceholderPage title="Mi avance">
+            <SignOutButton />
+          </PlaceholderPage>
+        ),
+      },
+    ],
+  },
+  {
+    element: <RequireRole roles={['VINCULACION', 'ADMIN']} />,
+    children: [
+      {
+        path: '/vinculacion',
+        element: (
+          <PlaceholderPage title="Panel de vinculación">
+            <SignOutButton />
+          </PlaceholderPage>
+        ),
+      },
+    ],
+  },
+  // Public: the supervisor opens it from an email link (RF-21).
   { path: '/validar/:token', element: <PlaceholderPage title="Validar semanas" /> },
   { path: '*', element: <PlaceholderPage title="Página no encontrada" /> },
 ];
