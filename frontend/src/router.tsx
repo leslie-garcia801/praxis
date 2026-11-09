@@ -6,6 +6,8 @@ import { CambiarContrasenaPage } from './features/auth/components/CambiarContras
 import { HomeRedirect, PublicOnly, RequirePendingChange, RequireRole } from './features/auth/components/guards';
 import { LoginPage } from './features/auth/components/LoginPage';
 import { SignOutButton } from './features/auth/components/SignOutButton';
+import { AdminLink } from './features/usuarios/components/AdminLink';
+import { CrearUsuarioPage } from './features/usuarios/components/CrearUsuarioPage';
 
 // Routes by role: /alumno, /vinculacion, /validar/:token (see frontend/CLAUDE.md).
 // Screens are added iteration by iteration (docs/specs.md section 14).
@@ -43,12 +45,17 @@ export const routes: RouteObject[] = [
             <Link to="/vinculacion/importar/alumnos" className="text-primary underline underline-offset-4">
               Importar alumnos
             </Link>
+            <AdminLink />
             <SignOutButton />
           </PlaceholderPage>
         ),
       },
       { path: '/vinculacion/importar/alumnos', element: <ImportarAlumnosPage /> },
     ],
+  },
+  {
+    element: <RequireRole roles={['ADMIN']} />,
+    children: [{ path: '/vinculacion/usuarios/nuevo', element: <CrearUsuarioPage /> }],
   },
   // Public: the supervisor opens it from an email link (RF-21).
   { path: '/validar/:token', element: <PlaceholderPage title="Validar semanas" /> },
