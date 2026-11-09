@@ -8,6 +8,7 @@ async function main() {
   const result = await seedBase(prisma, { admin });
 
   console.log(`Plantel: ${result.plantelCreado ? 'creado' : 'ya existía'}`);
+  console.log(`Carreras nuevas: ${result.carrerasCreadas}`);
   console.log(`Administrador ${admin.email}: ${result.adminCreado ? 'creado' : 'ya existía (sin cambios)'}`);
 }
 

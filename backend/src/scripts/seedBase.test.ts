@@ -2,7 +2,7 @@ import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../app.js';
 import { prisma } from '../lib/prisma.js';
-import { PLANTEL_NOMBRE, seedBase } from './seedBase.js';
+import { CARRERAS, PLANTEL_NOMBRE, seedBase } from './seedBase.js';
 
 const ADMIN = {
   email: 'Admin.Seed@cbtis258.edu.mx',
@@ -18,6 +18,7 @@ async function cleanup() {
     await prisma.user.delete({ where: { id: user.id } });
   }
   await prisma.plantel.deleteMany({ where: { nombre: PLANTEL_NOMBRE } });
+  await prisma.carrera.deleteMany({ where: { nombre: { in: [...CARRERAS] } } });
 }
 
 describe('seedBase', () => {
@@ -31,7 +32,7 @@ describe('seedBase', () => {
   it('creates the CBTIS 258 campus and the first administrator', async () => {
     const result = await seedBase(prisma, { admin: ADMIN });
 
-    expect(result).toEqual({ plantelCreado: true, adminCreado: true });
+    expect(result).toEqual({ plantelCreado: true, adminCreado: true, carrerasCreadas: CARRERAS.length });
 
     const admin = await prisma.user.findUniqueOrThrow({
       where: { email: ADMIN_EMAIL },
@@ -41,6 +42,33 @@ describe('seedBase', () => {
     expect(admin.plantel.nombre).toBe(PLANTEL_NOMBRE);
     expect(admin.accounts).toHaveLength(1);
     expect(admin.accounts[0]).toMatchObject({ providerId: 'credential', accountId: admin.id });
+  });
+
+  it('creates the campus career catalog', async () => {
+    await seedBase(prisma, { admin: ADMIN });
+
+    const carreras = await prisma.carrera.findMany({ where: { nombre: { in: [...CARRERAS] } } });
+    expect(carreras.map((c) => c.nombre).sort()).toEqual([...CARRERAS].sort());
+    expect(CARRERAS).toEqual([
+      'Programación',
+      'Inteligencia Artificial',
+      'Ciberseguridad',
+      'Logística',
+      'Contabilidad',
+      'Hospedaje',
+      'Alimentos y Bebidas',
+      'Mecánica Industrial',
+    ]);
+  });
+
+  it('adds missing careers on re-run without duplicating existing ones', async () => {
+    await seedBase(prisma, { admin: ADMIN });
+    await prisma.carrera.delete({ where: { nombre: 'Hospedaje' } });
+
+    const second = await seedBase(prisma, { admin: ADMIN });
+
+    expect(second.carrerasCreadas).toBe(1);
+    expect(await prisma.carrera.count({ where: { nombre: { in: [...CARRERAS] } } })).toBe(CARRERAS.length);
   });
 
   it('RNF-06: stores the admin password with argon2id, never in plain text', async () => {
@@ -66,7 +94,7 @@ describe('seedBase', () => {
 
     const second = await seedBase(prisma, { admin: { ...ADMIN, password: 'Otra-Clave-Distinta' } });
 
-    expect(second).toEqual({ plantelCreado: false, adminCreado: false });
+    expect(second).toEqual({ plantelCreado: false, adminCreado: false, carrerasCreadas: 0 });
     expect(await prisma.plantel.count({ where: { nombre: PLANTEL_NOMBRE } })).toBe(1);
     expect(await prisma.user.count({ where: { email: ADMIN_EMAIL } })).toBe(1);
     const after = await prisma.account.findFirstOrThrow({ where: { user: { email: ADMIN_EMAIL } } });

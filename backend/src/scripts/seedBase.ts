@@ -5,7 +5,19 @@ import type { SeedAdmin } from './seedEnv.js';
 
 export const PLANTEL_NOMBRE = 'CBTIS 258';
 
-export type SeedResult = { plantelCreado: boolean; adminCreado: boolean };
+// Official career catalog of the campus. Student imports must reference one of these (RF-01).
+export const CARRERAS = [
+  'Programación',
+  'Inteligencia Artificial',
+  'Ciberseguridad',
+  'Logística',
+  'Contabilidad',
+  'Hospedaje',
+  'Alimentos y Bebidas',
+  'Mecánica Industrial',
+] as const;
+
+export type SeedResult = { plantelCreado: boolean; adminCreado: boolean; carrerasCreadas: number };
 
 // Base data every environment needs. Safe to run repeatedly: existing rows are left untouched,
 // so re-running never resets the admin password.
@@ -13,10 +25,15 @@ export async function seedBase(prisma: PrismaClient, { admin }: { admin: SeedAdm
   const existingPlantel = await prisma.plantel.findFirst({ where: { nombre: PLANTEL_NOMBRE } });
   const plantel = existingPlantel ?? (await prisma.plantel.create({ data: { nombre: PLANTEL_NOMBRE } }));
 
+  const { count: carrerasCreadas } = await prisma.carrera.createMany({
+    data: CARRERAS.map((nombre) => ({ nombre })),
+    skipDuplicates: true,
+  });
+
   // Better Auth normalizes emails to lowercase on sign-in.
   const email = admin.email.trim().toLowerCase();
   const existingAdmin = await prisma.user.findUnique({ where: { email } });
-  if (existingAdmin) return { plantelCreado: !existingPlantel, adminCreado: false };
+  if (existingAdmin) return { plantelCreado: !existingPlantel, adminCreado: false, carrerasCreadas };
 
   const passwordHash = await hashPassword(admin.password);
   const userId = randomUUID();
@@ -47,5 +64,5 @@ export async function seedBase(prisma: PrismaClient, { admin }: { admin: SeedAdm
     }),
   ]);
 
-  return { plantelCreado: !existingPlantel, adminCreado: true };
+  return { plantelCreado: !existingPlantel, adminCreado: true, carrerasCreadas };
 }
