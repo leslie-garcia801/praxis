@@ -54,3 +54,4 @@ Decisiones tomadas y pendientes.
 | 0005 | [Pantallas de acceso](tasks/0005-pantallas-acceso.md) | Terminada |
 | 0006 | [Pantalla de importación de alumnos](tasks/0006-importacion-alumnos-frontend.md) | Terminada |
 | 0007 | [Pantalla para crear usuarios de vinculación](tasks/0007-usuarios-vinculacion-frontend.md) | Terminada |
+| 0008 | [Catálogo de instituciones](tasks/0008-catalogo-instituciones.md) | Terminada |

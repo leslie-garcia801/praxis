@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Express } from 'express';
 import request from 'supertest';
+import type { Prisma } from '../src/generated/prisma/client.js';
 import type { EstadoExpediente, Rol, TipoPrograma } from '../src/generated/prisma/enums.js';
 import { hashPassword } from '../src/lib/password.js';
 import { prisma } from '../src/lib/prisma.js';
@@ -103,7 +104,19 @@ export async function crearAlumnoPrecargado({
 
 const CARRERA_PRUEBA = 'Carrera de prueba';
 
-export async function crearInstitucion({ plantelId, nombre = 'Institución de prueba' }: { plantelId: string; nombre?: string }) {
+export async function crearCarreraPrueba(nombre = 'Programación') {
+  return prisma.carrera.create({ data: { nombre: `${CARRERA_PRUEBA} ${nombre} ${randomUUID()}` } });
+}
+
+type CrearInstitucionInput = {
+  plantelId: string;
+  nombre?: string;
+  // Any other column (municipio, cupo, activa, ...); wins over the defaults.
+  datos?: Partial<Omit<Prisma.InstitucionUncheckedCreateInput, 'plantelId' | 'nombre' | 'carreras'>>;
+  carreraIds?: string[];
+};
+
+export async function crearInstitucion({ plantelId, nombre = 'Institución de prueba', datos = {}, carreraIds = [] }: CrearInstitucionInput) {
   const id = randomUUID();
   return prisma.institucion.create({
     data: {
@@ -113,7 +126,9 @@ export async function crearInstitucion({ plantelId, nombre = 'Institución de pr
       calle: 'Av. Principal 100',
       municipio: 'Monterrey',
       qrTokenHash: `hash-${id}`,
-      codigoCorto: id.slice(0, 8),
+      codigoCorto: id.slice(0, 6).toUpperCase(),
+      ...datos,
+      carreras: { create: carreraIds.map((carreraId) => ({ carreraId })) },
     },
   });
 }
@@ -154,10 +169,14 @@ export async function borrarPlantel(plantelId: string) {
   await prisma.auditLog.deleteMany({ where: { entidadId: { in: ids } } });
   await prisma.expediente.deleteMany({ where: { alumno: { usuarioId: { in: ids } } } });
   await prisma.alumno.deleteMany({ where: { usuarioId: { in: ids } } });
+  const instituciones = await prisma.institucion.findMany({ where: { plantelId }, select: { id: true } });
+  const institucionIds = instituciones.map((i) => i.id);
+  await prisma.auditLog.deleteMany({ where: { entidadId: { in: institucionIds } } });
+  await prisma.institucionCarrera.deleteMany({ where: { institucionId: { in: institucionIds } } });
   await prisma.institucion.deleteMany({ where: { plantelId } });
   await prisma.user.deleteMany({ where: { plantelId } });
   await prisma.plantel.deleteMany({ where: { id: plantelId } });
-  await prisma.carrera.deleteMany({ where: { nombre: { startsWith: CARRERA_PRUEBA }, alumnos: { none: {} } } });
+  await prisma.carrera.deleteMany({ where: { nombre: { startsWith: CARRERA_PRUEBA }, alumnos: { none: {} }, instituciones: { none: {} } } });
 }
 
 // Each sign-in uses its own client IP so the sign-in rate limiter never interferes with tests.
