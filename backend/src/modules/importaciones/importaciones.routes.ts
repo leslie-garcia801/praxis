@@ -2,6 +2,11 @@ import express, { Router, type Request } from 'express';
 import { AppError } from '../../lib/errors.js';
 import { getAuth, requireRol, requireSession } from '../../middleware/auth.js';
 import { confirmarAlumnos, plantillaAlumnos, previsualizarAlumnos } from './alumnos.service.js';
+import {
+  confirmarInstituciones,
+  plantillaInstituciones,
+  previsualizarInstituciones,
+} from './instituciones.service.js';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
@@ -38,4 +43,22 @@ importacionesRouter.post('/alumnos/preview', archivo, async (req, res) => {
 
 importacionesRouter.post('/alumnos/confirmar', archivo, async (req, res) => {
   res.status(201).json(await confirmarAlumnos(getAuth(req).user, cuerpoArchivo(req)));
+});
+
+importacionesRouter.get('/instituciones/plantilla', (_req, res) => {
+  res
+    .status(200)
+    .set({
+      'Content-Type': XLSX_MIME,
+      'Content-Disposition': 'attachment; filename="plantilla-instituciones.xlsx"',
+    })
+    .send(plantillaInstituciones());
+});
+
+importacionesRouter.post('/instituciones/preview', archivo, async (req, res) => {
+  res.json(await previsualizarInstituciones(getAuth(req).user, cuerpoArchivo(req)));
+});
+
+importacionesRouter.post('/instituciones/confirmar', archivo, async (req, res) => {
+  res.status(201).json(await confirmarInstituciones(getAuth(req).user, cuerpoArchivo(req)));
 });
