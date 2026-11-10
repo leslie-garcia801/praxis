@@ -1,36 +1,22 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api';
 import {
   confirmarAlumnos,
-  isReporte,
-  MAX_BYTES,
   previewAlumnos,
   type FilaReporte,
   type ReporteImportacion,
   type ResultadoImportacion,
 } from '../api';
-
-const GENERIC_MESSAGE = 'No se pudo completar la solicitud. Intenta de nuevo.';
+import { isReporte, MAX_BYTES, messageOf, TOO_BIG_MESSAGE } from '../archivo';
+import { AccionesVistaPrevia, Alert, Dato, Errores, PasoSubir } from './piezas';
 
 type Paso =
   | { name: 'subir' }
   | { name: 'vista-previa'; reporte: ReporteImportacion }
   | { name: 'resultado'; resultado: ResultadoImportacion };
-
-function messageOf(error: unknown): string {
-  return error instanceof ApiError ? error.message : GENERIC_MESSAGE;
-}
-
-function Alert({ children }: { children: React.ReactNode }) {
-  return (
-    <div role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-      {children}
-    </div>
-  );
-}
 
 // RF-01 / F-02: upload -> preview of every row -> confirm. The API decides what is valid; this only shows it.
 export function ImportarAlumnosPage() {
@@ -50,7 +36,7 @@ export function ImportarAlumnosPage() {
     onError: (e) => {
       setError(messageOf(e));
       // 422: nothing was written; show the fresh report so the user sees what to fix.
-      if (e instanceof ApiError && e.status === 422 && isReporte(e.details)) {
+      if (e instanceof ApiError && e.status === 422 && isReporte<ReporteImportacion>(e.details)) {
         setPaso({ name: 'vista-previa', reporte: e.details });
       }
     },
@@ -75,13 +61,15 @@ export function ImportarAlumnosPage() {
 
       {paso.name === 'subir' && (
         <PasoSubir
+          plural="alumnos"
+          templateHref="/api/importaciones/alumnos/plantilla"
           file={file}
           error={error}
           pending={preview.isPending}
           onFile={(f) => {
             setFile(f);
             setError(
-              f && f.size > MAX_BYTES ? 'El archivo pesa más de 2 MB. Divide la lista en archivos más pequeños.' : null,
+              f && f.size > MAX_BYTES ? TOO_BIG_MESSAGE : null,
             );
           }}
           onSubmit={() => {
@@ -111,71 +99,9 @@ export function ImportarAlumnosPage() {
   );
 }
 
-function PasoSubir({
-  file,
-  error,
-  pending,
-  onFile,
-  onSubmit,
-}: {
-  file: File | null;
-  error: string | null;
-  pending: boolean;
-  onFile: (file: File | null) => void;
-  onSubmit: () => void;
-}) {
-  const tooBig = file !== null && file.size > MAX_BYTES;
-  return (
-    <section aria-labelledby="subir-titulo" className="flex flex-col gap-4">
-      <h2 id="subir-titulo" className="text-lg font-semibold">
-        Subir archivo
-      </h2>
-      <p className="text-sm text-slate-700">
-        Usa la plantilla, llénala con tus alumnos y súbela en formato .xlsx o .csv (máximo 2 MB).
-      </p>
-      <a
-        href="/api/importaciones/alumnos/plantilla"
-        download
-        className={buttonVariants({ variant: 'outline', size: 'lg', className: 'h-11 w-fit px-4' })}
-      >
-        Descargar plantilla
-      </a>
-      <div className="flex flex-col gap-2">
-        <label htmlFor="archivo" className="text-sm font-medium">
-          Archivo de alumnos
-        </label>
-        <input
-          id="archivo"
-          type="file"
-          accept=".xlsx,.csv"
-          onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm file:mr-3 file:h-11 file:rounded-lg file:border file:border-border file:bg-background file:px-4"
-        />
-      </div>
-      {error && <Alert>{error}</Alert>}
-      <Button size="lg" className="h-11 w-full sm:w-fit sm:px-6" disabled={!file || tooBig || pending} onClick={onSubmit}>
-        {pending ? 'Revisando…' : 'Revisar archivo'}
-      </Button>
-    </section>
-  );
-}
-
 function estado(fila: FilaReporte): string {
   if (fila.errores.length > 0) return 'Con errores';
   return fila.accion === 'ACTUALIZAR' ? 'Actualizar' : 'Crear';
-}
-
-function Errores({ fila }: { fila: FilaReporte }) {
-  if (fila.errores.length === 0) return null;
-  return (
-    <ul className="mt-1 list-disc pl-5 text-sm text-destructive">
-      {fila.errores.map((e, i) => (
-        <li key={i}>
-          <span className="font-medium">{e.campo}:</span> {e.mensaje}
-        </li>
-      ))}
-    </ul>
-  );
 }
 
 function PasoVistaPrevia({
@@ -219,7 +145,7 @@ function PasoVistaPrevia({
               <span className="font-medium">Fila {fila.fila}</span> · {fila.matricula}
             </p>
             <p className={`text-sm font-semibold ${fila.errores.length > 0 ? 'text-destructive' : ''}`}>{estado(fila)}</p>
-            <Errores fila={fila} />
+            <Errores errores={fila.errores} />
           </li>
         ))}
       </ul>
@@ -240,36 +166,15 @@ function PasoVistaPrevia({
               <td className="py-2 pr-3">{fila.matricula}</td>
               <td className={`py-2 pr-3 font-semibold ${fila.errores.length > 0 ? 'text-destructive' : ''}`}>{estado(fila)}</td>
               <td className="py-2">
-                <Errores fila={fila} />
+                <Errores errores={fila.errores} />
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {bloqueada && (
-        <p className="text-sm text-slate-700">
-          No se importará nada hasta que corrijas el archivo: todas las filas deben estar sin errores.
-        </p>
-      )}
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button size="lg" className="h-11 sm:px-6" disabled={bloqueada || pending} onClick={onConfirm}>
-          {pending ? 'Importando…' : 'Confirmar importación'}
-        </Button>
-        <Button variant="outline" size="lg" className="h-11 sm:px-6" onClick={onBack} disabled={pending}>
-          Elegir otro archivo
-        </Button>
-      </div>
+      <AccionesVistaPrevia bloqueada={bloqueada} pending={pending} onConfirm={onConfirm} onBack={onBack} />
     </section>
-  );
-}
-
-function Dato({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-border p-3">
-      <dt className="text-sm text-slate-700">{label}</dt>
-      <dd className="text-2xl font-bold">{value}</dd>
-    </div>
   );
 }
 

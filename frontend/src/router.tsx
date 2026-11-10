@@ -1,4 +1,7 @@
 import { createBrowserRouter, Link, type RouteObject } from 'react-router';
+import { InstitucionFormPage } from './features/instituciones/components/InstitucionFormPage';
+import { InstitucionesPage } from './features/instituciones/components/InstitucionesPage';
+import { ImportarInstitucionesPage } from './features/importaciones/components/ImportarInstitucionesPage';
 import { ImportarAlumnosPage } from './features/importaciones/components/ImportarAlumnosPage';
 import { PlaceholderPage } from './components/PlaceholderPage';
 import { ActivarPage } from './features/auth/components/ActivarPage';
@@ -45,12 +48,22 @@ export const routes: RouteObject[] = [
             <Link to="/vinculacion/importar/alumnos" className="text-primary underline underline-offset-4">
               Importar alumnos
             </Link>
+            <Link to="/vinculacion/instituciones" className="text-primary underline underline-offset-4">
+              Instituciones
+            </Link>
+            <Link to="/vinculacion/importar/instituciones" className="text-primary underline underline-offset-4">
+              Importar instituciones
+            </Link>
             <AdminLink />
             <SignOutButton />
           </PlaceholderPage>
         ),
       },
       { path: '/vinculacion/importar/alumnos', element: <ImportarAlumnosPage /> },
+      { path: '/vinculacion/importar/instituciones', element: <ImportarInstitucionesPage /> },
+      { path: '/vinculacion/instituciones', element: <InstitucionesPage /> },
+      { path: '/vinculacion/instituciones/nueva', element: <InstitucionFormPage /> },
+      { path: '/vinculacion/instituciones/:id/editar', element: <InstitucionFormPage /> },
     ],
   },
   {

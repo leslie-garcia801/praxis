@@ -19,10 +19,21 @@ export class ApiError extends Error {
 
 const FALLBACK_MESSAGE = 'No se pudo completar la solicitud. Intenta de nuevo.';
 
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+function assertApiPath(path: string, caller: string) {
   if (!path.startsWith('/api/')) {
-    throw new Error(`apiFetch expects a relative /api path, received: ${path}`);
+    throw new Error(`${caller} expects a relative /api path, received: ${path}`);
   }
+}
+
+function toApiError(status: number, body: unknown): ApiError {
+  if (isApiErrorBody(body)) {
+    return new ApiError(status, body.error.code, body.error.message, body.error.details);
+  }
+  return new ApiError(status, 'UNKNOWN_ERROR', FALLBACK_MESSAGE);
+}
+
+export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  assertApiPath(path, 'apiFetch');
 
   const headers = new Headers(init.headers);
   if (init.body !== undefined && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
@@ -35,14 +46,43 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
   const body: unknown = await res.json().catch(() => undefined);
 
-  if (!res.ok) {
-    if (isApiErrorBody(body)) {
-      throw new ApiError(res.status, body.error.code, body.error.message, body.error.details);
-    }
-    throw new ApiError(res.status, 'UNKNOWN_ERROR', FALLBACK_MESSAGE);
-  }
+  if (!res.ok) throw toApiError(res.status, body);
 
   return body as T;
+}
+
+function filenameFrom(disposition: string | null): string {
+  const match = disposition?.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+  if (!match?.[1]) return 'descarga';
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+// Requests a file (any method) and saves it through a temporary object URL.
+// Returns the filename taken from Content-Disposition.
+export async function downloadFile(path: string, init: RequestInit = {}): Promise<string> {
+  assertApiPath(path, 'downloadFile');
+
+  const res = await fetch(path, { ...init, credentials: 'include' });
+
+  if (!res.ok) throw toApiError(res.status, await res.json().catch(() => undefined));
+
+  const filename = filenameFrom(res.headers.get('Content-Disposition'));
+  const url = URL.createObjectURL(await res.blob());
+  try {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.append(link);
+    link.click();
+    link.remove();
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+  return filename;
 }
 
 function isApiErrorBody(value: unknown): value is ApiErrorBody {

@@ -57,3 +57,4 @@ Decisiones tomadas y pendientes.
 | 0008 | [Catálogo de instituciones](tasks/0008-catalogo-instituciones.md) | Terminada |
 | 0009 | [Importación de instituciones](tasks/0009-importacion-instituciones.md) | Terminada |
 | 0010 | [QR imprimible por institución](tasks/0010-qr-imprimible.md) | Terminada |
+| 0011 | [Pantallas de instituciones](tasks/0011-instituciones-frontend.md) | Terminada |
