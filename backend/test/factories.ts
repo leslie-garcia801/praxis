@@ -133,12 +133,34 @@ export async function crearInstitucion({ plantelId, nombre = 'Institución de pr
   });
 }
 
+type CrearSupervisorInput = {
+  institucionId: string;
+  // Any other column (confirmado, puesto, telefono, ...); wins over the defaults.
+  datos?: Partial<Omit<Prisma.SupervisorUncheckedCreateInput, 'institucionId'>>;
+};
+
+export async function crearSupervisor({ institucionId, datos = {} }: CrearSupervisorInput) {
+  return prisma.supervisor.create({
+    data: {
+      institucionId,
+      nombre: 'Laura',
+      apellidoPaterno: 'Mendoza',
+      correo: `supervisor-${randomUUID()}@empresa.invalid`,
+      confirmado: true,
+      ...datos,
+    },
+  });
+}
+
 type CrearExpedienteInput = {
   alumnoId: string;
   tipo?: TipoPrograma;
   estado?: EstadoExpediente;
   institucionId?: string | null;
   fechaInicio?: Date | null;
+  semestre?: number;
+  // Any other column (supervisorId, fechaTermino, horaEntrada, ...); wins over the defaults.
+  datos?: Partial<Omit<Prisma.ExpedienteUncheckedCreateInput, 'alumnoId'>>;
 };
 
 export async function crearExpediente({
@@ -147,6 +169,8 @@ export async function crearExpediente({
   estado = 'EN_PROCESO',
   institucionId = null,
   fechaInicio = null,
+  semestre = 5,
+  datos = {},
 }: CrearExpedienteInput) {
   return prisma.expediente.create({
     data: {
@@ -155,8 +179,9 @@ export async function crearExpediente({
       estado,
       institucionId,
       fechaInicio,
-      semestre: 5,
+      semestre,
       metaHoras: tipo === 'SERVICIO_SOCIAL' ? 480 : 240,
+      ...datos,
     },
   });
 }
@@ -167,11 +192,17 @@ export async function borrarPlantel(plantelId: string) {
   const usuarios = await prisma.user.findMany({ where: { plantelId }, select: { id: true } });
   const ids = usuarios.map((u) => u.id);
   await prisma.auditLog.deleteMany({ where: { entidadId: { in: ids } } });
+  const expedientes = await prisma.expediente.findMany({ where: { alumno: { usuarioId: { in: ids } } }, select: { id: true } });
+  await prisma.auditLog.deleteMany({ where: { entidadId: { in: expedientes.map((e) => e.id) } } });
   await prisma.expediente.deleteMany({ where: { alumno: { usuarioId: { in: ids } } } });
   await prisma.alumno.deleteMany({ where: { usuarioId: { in: ids } } });
   const instituciones = await prisma.institucion.findMany({ where: { plantelId }, select: { id: true } });
   const institucionIds = instituciones.map((i) => i.id);
   await prisma.auditLog.deleteMany({ where: { entidadId: { in: institucionIds } } });
+  const supervisores = await prisma.supervisor.findMany({ where: { institucionId: { in: institucionIds } }, select: { id: true } });
+  await prisma.auditLog.deleteMany({ where: { entidadId: { in: supervisores.map((s) => s.id) } } });
+  await prisma.expediente.deleteMany({ where: { institucionId: { in: institucionIds } } });
+  await prisma.supervisor.deleteMany({ where: { institucionId: { in: institucionIds } } });
   await prisma.institucionCarrera.deleteMany({ where: { institucionId: { in: institucionIds } } });
   await prisma.institucion.deleteMany({ where: { plantelId } });
   await prisma.user.deleteMany({ where: { plantelId } });
