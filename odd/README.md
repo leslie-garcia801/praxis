@@ -56,3 +56,4 @@ Decisiones tomadas y pendientes.
 | 0007 | [Pantalla para crear usuarios de vinculación](tasks/0007-usuarios-vinculacion-frontend.md) | Terminada |
 | 0008 | [Catálogo de instituciones](tasks/0008-catalogo-instituciones.md) | Terminada |
 | 0009 | [Importación de instituciones](tasks/0009-importacion-instituciones.md) | Terminada |
+| 0010 | [QR imprimible por institución](tasks/0010-qr-imprimible.md) | Terminada |

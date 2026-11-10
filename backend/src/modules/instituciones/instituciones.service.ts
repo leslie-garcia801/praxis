@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { env } from '../../config/env.js';
 import { generarCredencialesQr } from '../../domain/qrInstitucion.js';
 import { normalizarNombre } from '../../domain/nombres.js';
+import { generarPdfQr, slugArchivo, urlQr } from '../../domain/qrPdf.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
@@ -190,5 +192,27 @@ export async function editarInstitucion(user: AuthUser, id: string, input: Edita
     // The RFC is the only unique column an edit can change.
     if (esViolacionUnica(err)) throw rfcDuplicado();
     throw err;
+  }
+}
+
+// RF-13: regenerates the QR. Only the token hash is stored (RNF-06), so the same sheet can never be reprinted:
+// every call replaces token and short code together, and the previous ones stop working (decision 2026-11-09).
+// `generar` is injectable so the collision retry can be tested. The URL is returned only so tests can check it; it is never persisted.
+export async function regenerarQrInstitucion(user: AuthUser, id: string, generar = generarCredencialesQr) {
+  for (let intento = 1; ; intento++) {
+    const { token, qrTokenHash, codigoCorto } = generar();
+    try {
+      const nombre = await prisma.$transaction(async (tx) => {
+        const actual = await tx.institucion.findFirst({ where: { id, plantelId: user.plantelId }, select: { nombre: true } });
+        if (!actual) throw AppError.notFound('La institución no existe.');
+        await tx.institucion.update({ where: { id }, data: { qrTokenHash, codigoCorto } });
+        await tx.auditLog.create({ data: { usuarioId: user.id, accion: 'REGENERAR_QR', entidad: 'Institucion', entidadId: id } });
+        return actual.nombre;
+      });
+      const url = urlQr(env.FRONTEND_ORIGIN, token);
+      return { pdf: await generarPdfQr({ nombre, url, codigoCorto }), url, archivo: `qr-${slugArchivo(nombre)}.pdf` };
+    } catch (err) {
+      if (!esViolacionUnica(err) || intento >= MAX_INTENTOS_QR) throw err;
+    }
   }
 }

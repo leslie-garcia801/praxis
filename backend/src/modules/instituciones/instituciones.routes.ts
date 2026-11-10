@@ -6,7 +6,7 @@ import {
   institucionIdParamsSchema,
   listarInstitucionesQuerySchema,
 } from './instituciones.schemas.js';
-import { crearInstitucion, editarInstitucion, listarInstituciones, obtenerInstitucion } from './instituciones.service.js';
+import { crearInstitucion, editarInstitucion, listarInstituciones, obtenerInstitucion, regenerarQrInstitucion } from './instituciones.service.js';
 
 export const institucionesRouter = Router();
 
@@ -31,4 +31,14 @@ institucionesRouter.patch('/:id', requireSession(), requireRol('VINCULACION', 'A
   const { id } = institucionIdParamsSchema.parse(req.params);
   const institucion = await editarInstitucion(getAuth(req).user, id, editarInstitucionSchema.parse(req.body));
   res.json({ institucion });
+});
+
+// RF-13: each call issues a new token and short code; the sheet is delivered as a PDF download.
+institucionesRouter.post('/:id/qr', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
+  const { id } = institucionIdParamsSchema.parse(req.params);
+  const { pdf, archivo } = await regenerarQrInstitucion(getAuth(req).user, id);
+  res
+    .status(200)
+    .set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${archivo}"`, 'Cache-Control': 'no-store' })
+    .send(pdf);
 });
