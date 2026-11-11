@@ -3,7 +3,11 @@ import { http, HttpResponse } from 'msw';
 type Rol = 'ALUMNO' | 'VINCULACION' | 'ADMIN';
 
 // Builds a GET /api/me body (backend/src/modules/me/me.service.ts).
-export function buildMe({ rol = 'ALUMNO', debeCambiar = false }: { rol?: Rol; debeCambiar?: boolean } = {}) {
+export function buildMe({
+  rol = 'ALUMNO',
+  debeCambiar = false,
+  expedienteActivo = null,
+}: { rol?: Rol; debeCambiar?: boolean; expedienteActivo?: Record<string, unknown> | null } = {}) {
   return {
     usuario: {
       id: 'user-1',
@@ -14,8 +18,48 @@ export function buildMe({ rol = 'ALUMNO', debeCambiar = false }: { rol?: Rol; de
       oficina: rol === 'VINCULACION' ? 'SERVICIO_SOCIAL' : null,
       debeCambiar,
     },
-    alumno: null,
-    expedienteActivo: null,
+    alumno:
+      rol === 'ALUMNO'
+        ? {
+            nombre: 'Ana María',
+            apellidoPaterno: 'López',
+            apellidoMaterno: 'García',
+            carrera: 'Programación',
+            semestre: 5,
+            grupo: 'A',
+            turno: 'MATUTINO',
+          }
+        : null,
+    expedienteActivo,
+  };
+}
+
+// Builds the expedienteActivo of GET /api/me.
+export function buildExpedienteActivo(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '44444444-4444-4444-8444-444444444444',
+    tipo: 'SERVICIO_SOCIAL',
+    estado: 'EN_PROCESO',
+    metaHoras: 480,
+    fechaInicio: '2026-09-01',
+    fechaTermino: null,
+    institucion: { id: '33333333-3333-4333-8333-333333333333', nombre: 'Hospital Alfa' },
+    ...overrides,
+  };
+}
+
+// Builds the `avance` of GET /api/expedientes/:id/avance (tarea 0015).
+export function buildAvance(overrides: Record<string, unknown> = {}) {
+  return {
+    expedienteId: '44444444-4444-4444-8444-444444444444',
+    metaMinutos: 28800,
+    minutosValidados: 750,
+    minutosRegistrados: 900,
+    minutosFaltantes: 28050,
+    porcentaje: 2,
+    fechaEstimada: { tipo: 'ESTIMADA', fecha: '2026-11-16', promedioMinutosDia: 240 },
+    turnoAbierto: null,
+    ...overrides,
   };
 }
 

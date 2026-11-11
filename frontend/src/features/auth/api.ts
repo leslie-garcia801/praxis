@@ -16,6 +16,25 @@ export type Me = {
     oficina: 'SERVICIO_SOCIAL' | 'PRACTICAS' | null;
     debeCambiar: boolean;
   };
+  alumno: {
+    nombre: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string | null;
+    carrera: string;
+    semestre: number;
+    grupo: string;
+    turno: 'MATUTINO' | 'VESPERTINO';
+  } | null;
+  // Active case file (RN-03): at most one in PENDIENTE, EN_PROCESO or SUSPENDIDO. Dates are 'YYYY-MM-DD'.
+  expedienteActivo: {
+    id: string;
+    tipo: 'SERVICIO_SOCIAL' | 'PRACTICAS';
+    estado: 'PENDIENTE' | 'EN_PROCESO' | 'SUSPENDIDO';
+    metaHoras: number;
+    fechaInicio: string | null;
+    fechaTermino: string | null;
+    institucion: { id: string; nombre: string } | null;
+  } | null;
 };
 
 export const meKey = ['me'] as const;

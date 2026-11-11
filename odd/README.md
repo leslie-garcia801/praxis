@@ -62,3 +62,4 @@ Decisiones tomadas y pendientes.
 | 0013 | [Acciones de vinculación sobre el expediente](tasks/0013-acciones-expediente.md) | Terminada |
 | 0014 | [Registro de asistencia por escaneo](tasks/0014-escaneo-asistencia.md) | Terminada |
 | 0015 | [Avance del expediente e historial semanal](tasks/0015-avance-historial.md) | Terminada |
+| 0016 | [Pantalla de inicio del alumno](tasks/0016-inicio-alumno.md) | Terminada |

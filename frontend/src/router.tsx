@@ -3,6 +3,8 @@ import { InstitucionFormPage } from './features/instituciones/components/Institu
 import { InstitucionesPage } from './features/instituciones/components/InstitucionesPage';
 import { ImportarInstitucionesPage } from './features/importaciones/components/ImportarInstitucionesPage';
 import { ImportarAlumnosPage } from './features/importaciones/components/ImportarAlumnosPage';
+import { AlumnoLayout } from './features/alumno/components/AlumnoLayout';
+import { InicioAlumnoPage } from './features/avance/components/InicioAlumnoPage';
 import { PlaceholderPage } from './components/PlaceholderPage';
 import { ActivarPage } from './features/auth/components/ActivarPage';
 import { CambiarContrasenaPage } from './features/auth/components/CambiarContrasenaPage';
@@ -30,11 +32,14 @@ export const routes: RouteObject[] = [
     children: [
       {
         path: '/alumno',
-        element: (
-          <PlaceholderPage title="Mi avance">
-            <SignOutButton />
-          </PlaceholderPage>
-        ),
+        element: <AlumnoLayout />,
+        children: [
+          { index: true, element: <InicioAlumnoPage /> },
+          // Placeholders until tasks 0017, 0018 and 0019.
+          { path: 'registrar', element: <PlaceholderPage title="Registrar asistencia" /> },
+          { path: 'expediente', element: <PlaceholderPage title="Mi expediente" /> },
+          { path: 'historial', element: <PlaceholderPage title="Historial" /> },
+        ],
       },
     ],
   },
