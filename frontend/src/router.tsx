@@ -5,6 +5,7 @@ import { ImportarInstitucionesPage } from './features/importaciones/components/I
 import { ImportarAlumnosPage } from './features/importaciones/components/ImportarAlumnosPage';
 import { AlumnoLayout } from './features/alumno/components/AlumnoLayout';
 import { InicioAlumnoPage } from './features/avance/components/InicioAlumnoPage';
+import { ExpedientePage } from './features/expediente/components/ExpedientePage';
 import { RegistrarPage } from './features/escaneo/components/RegistrarPage';
 import { PlaceholderPage } from './components/PlaceholderPage';
 import { ActivarPage } from './features/auth/components/ActivarPage';
@@ -37,8 +38,8 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, element: <InicioAlumnoPage /> },
           { path: 'registrar', element: <RegistrarPage /> },
-          // Placeholders until tasks 0018 and 0019.
-          { path: 'expediente', element: <PlaceholderPage title="Mi expediente" /> },
+          { path: 'expediente', element: <ExpedientePage /> },
+          // Placeholder until task 0019.
           { path: 'historial', element: <PlaceholderPage title="Historial" /> },
         ],
       },

@@ -63,6 +63,47 @@ export function buildAvance(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Builds a supervisor as the student sees it (GET /api/instituciones/:id/supervisores, task 0012).
+export function buildSupervisor(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '55555555-5555-4555-8555-555555555555',
+    institucionId: '33333333-3333-4333-8333-333333333333',
+    titulo: 'Lic.',
+    nombre: 'Laura',
+    apellidoPaterno: 'Mendoza',
+    apellidoMaterno: 'Ruiz',
+    puesto: 'Gerente',
+    departamento: 'Sistemas',
+    confirmado: true,
+    ...overrides,
+  };
+}
+
+// Builds the `expediente` of GET/PATCH /api/expedientes/:id (task 0012). Defaults to a fresh PENDIENTE servicio social file.
+export function buildExpediente(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '44444444-4444-4444-8444-444444444444',
+    tipo: 'SERVICIO_SOCIAL',
+    estado: 'PENDIENTE',
+    semestre: 5,
+    metaHoras: 480,
+    minutosTransferidos: 0,
+    departamento: null,
+    fechaInicio: null,
+    fechaTermino: null,
+    diasPactados: [],
+    horaEntrada: null,
+    horaSalida: null,
+    programa: null,
+    subprograma: null,
+    creadoEn: '2026-11-01T12:00:00.000Z',
+    institucion: null,
+    supervisor: null,
+    faltantes: ['institucionId', 'supervisorId', 'fechaInicio'],
+    ...overrides,
+  };
+}
+
 export const unauthorizedBody = {
   error: { code: 'NO_AUTENTICADO', message: 'Debes iniciar sesión.' },
 };

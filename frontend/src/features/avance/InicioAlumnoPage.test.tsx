@@ -25,7 +25,6 @@ describe('/alumno layout and routes', () => {
   });
 
   it.each([
-    ['/alumno/expediente', 'Mi expediente'],
     ['/alumno/historial', 'Historial'],
   ])('%s is a placeholder inside the layout', async (path, title) => {
     mockAlumno(null);

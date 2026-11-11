@@ -64,3 +64,4 @@ Decisiones tomadas y pendientes.
 | 0015 | [Avance del expediente e historial semanal](tasks/0015-avance-historial.md) | Terminada |
 | 0016 | [Pantalla de inicio del alumno](tasks/0016-inicio-alumno.md) | Terminada |
 | 0017 | [Registrar asistencia: escáner QR y código corto](tasks/0017-escaner-registro.md) | Terminada |
+| 0018 | [Completar expediente](tasks/0018-completar-expediente.md) | Terminada |
