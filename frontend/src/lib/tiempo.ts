@@ -16,7 +16,7 @@ const fechaMonterrey = new Intl.DateTimeFormat(LOCALE, { timeZone: TIME_ZONE, ..
 // A calendar date has no time zone: format it at UTC noon in UTC so it can never shift a day.
 const fechaCalendario = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', ...fechaOptions });
 
-const diaMonterrey = new Intl.DateTimeFormat('en-CA', {
+const diaMonterreyFormat = new Intl.DateTimeFormat('en-CA', {
   timeZone: TIME_ZONE,
   year: 'numeric',
   month: '2-digit',
@@ -47,5 +47,53 @@ export function formatHoras(minutos: number): string {
 
 // True when the instant falls on today's calendar day in Monterrey.
 export function esHoy(iso: string, ahora: Date = new Date()): boolean {
-  return diaMonterrey.format(new Date(iso)) === diaMonterrey.format(ahora);
+  return diaMonterrey(iso) === hoyMonterrey(ahora);
+}
+
+// 'YYYY-MM-DD' of an ISO instant on the Monterrey calendar.
+export function diaMonterrey(iso: string): string {
+  return diaMonterreyFormat.format(new Date(iso));
+}
+
+// Today's calendar date ('YYYY-MM-DD') in Monterrey.
+export function hoyMonterrey(ahora: Date = new Date()): string {
+  return diaMonterreyFormat.format(ahora);
+}
+
+// Moves a calendar date by n days. Works at UTC noon so the day never shifts.
+export function sumarDias(fecha: string, n: number): string {
+  const d = new Date(`${fecha}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+const diaCortoFormat = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'long', day: 'numeric' });
+const diaMesFormat = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', day: 'numeric', month: 'long' });
+const diaMesAnioFormat = new Intl.DateTimeFormat(LOCALE, {
+  timeZone: 'UTC',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+function enCalendario(fecha: string): Date {
+  return new Date(`${fecha}T12:00:00Z`);
+}
+
+// "lunes 9" for a calendar date.
+export function formatDiaCorto(fecha: string): string {
+  return diaCortoFormat.format(enCalendario(fecha)).replace(',', '');
+}
+
+// "9 al 15 de noviembre"; "26 de octubre al 1 de noviembre" across months; with years across years.
+export function formatRangoSemana(inicio: string, fin: string): string {
+  const a = enCalendario(inicio);
+  const b = enCalendario(fin);
+  if (a.getUTCFullYear() !== b.getUTCFullYear()) {
+    return `${diaMesAnioFormat.format(a)} al ${diaMesAnioFormat.format(b)}`;
+  }
+  if (a.getUTCMonth() !== b.getUTCMonth()) {
+    return `${diaMesFormat.format(a)} al ${diaMesFormat.format(b)}`;
+  }
+  return `${a.getUTCDate()} al ${diaMesFormat.format(b)}`;
 }

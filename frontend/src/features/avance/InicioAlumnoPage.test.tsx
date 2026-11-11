@@ -23,15 +23,6 @@ describe('/alumno layout and routes', () => {
     expect(screen.getByText('Praxis')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
   });
-
-  it.each([
-    ['/alumno/historial', 'Historial'],
-  ])('%s is a placeholder inside the layout', async (path, title) => {
-    mockAlumno(null);
-    renderApp(path);
-    expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument();
-    expect(screen.getByText('Praxis')).toBeInTheDocument();
-  });
 });
 
 describe('/alumno home (RF-18)', () => {

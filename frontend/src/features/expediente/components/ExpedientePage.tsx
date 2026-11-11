@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { useMe } from '@/features/auth/api';
 import { useExpediente } from '../api';
-import { ErrorConReintento } from './ErrorConReintento';
+import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { FormularioExpediente } from './FormularioExpediente';
 import { ResumenExpediente } from './ResumenExpediente';
 

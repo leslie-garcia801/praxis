@@ -63,6 +63,52 @@ export function buildAvance(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Builds the `semana` of GET /api/asistencias (tarea 0015): 7 empty days from `inicio` (a Monday).
+// `turnosPorDia` maps a date to its shifts; day totals can be overridden per date in `totalesDia`.
+export function buildSemana({
+  inicio = '2026-11-09',
+  estadoValidacion = null,
+  turnosPorDia = {},
+  totalesDia = {},
+  totales,
+}: {
+  inicio?: string;
+  estadoValidacion?: string | null;
+  turnosPorDia?: Record<string, Record<string, unknown>[]>;
+  totalesDia?: Record<string, { minutosDia: number; minutosAcreditablesDia: number }>;
+  totales?: { minutos: number; minutosAcreditables: number };
+} = {}) {
+  const start = new Date(`${inicio}T12:00:00Z`);
+  const fechas = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setUTCDate(d.getUTCDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+  const dias = fechas.map((fecha) => {
+    const turnos = (turnosPorDia[fecha] ?? []).map((t, i) => ({
+      id: `turno-${fecha}-${i}`,
+      entrada: `${fecha}T16:00:00.000Z`,
+      salida: `${fecha}T20:00:00.000Z`,
+      estado: 'CERRADA',
+      minutosAcreditables: 240,
+      sinConexion: false,
+      ...t,
+    }));
+    const suma = turnos.reduce((acc, t) => acc + (typeof t.minutosAcreditables === 'number' ? t.minutosAcreditables : 0), 0);
+    return { fecha, turnos, minutosDia: suma, minutosAcreditablesDia: suma, ...totalesDia[fecha] };
+  });
+  return {
+    inicio,
+    fin: fechas[6],
+    estadoValidacion,
+    dias,
+    totales: totales ?? {
+      minutos: dias.reduce((a, d) => a + d.minutosDia, 0),
+      minutosAcreditables: dias.reduce((a, d) => a + d.minutosAcreditablesDia, 0),
+    },
+  };
+}
+
 // Builds a supervisor as the student sees it (GET /api/instituciones/:id/supervisores, task 0012).
 export function buildSupervisor(overrides: Record<string, unknown> = {}) {
   return {

@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { esHoy, formatFecha, formatHora, formatHoras } from './tiempo';
+import {
+  diaMonterrey,
+  esHoy,
+  formatDiaCorto,
+  formatFecha,
+  formatHora,
+  formatHoras,
+  formatRangoSemana,
+  hoyMonterrey,
+  sumarDias,
+} from './tiempo';
 
 describe('tiempo (RN-15, America/Monterrey)', () => {
   it('RN-15: formatHora uses Monterrey time, not UTC or the device zone', () => {
@@ -30,5 +40,28 @@ describe('tiempo (RN-15, America/Monterrey)', () => {
     expect(esHoy('2026-11-12T05:30:00Z', ahora)).toBe(true);
     expect(esHoy('2026-11-12T07:00:00Z', ahora)).toBe(false);
     expect(esHoy('2026-11-11T15:00:00Z', ahora)).toBe(true);
+  });
+
+  it('sumarDias moves a calendar date across month and year boundaries', () => {
+    expect(sumarDias('2026-11-09', 7)).toBe('2026-11-16');
+    expect(sumarDias('2026-11-02', -7)).toBe('2026-10-26');
+    expect(sumarDias('2026-12-28', 7)).toBe('2027-01-04');
+    expect(sumarDias('2027-01-04', -7)).toBe('2026-12-28');
+  });
+
+  it('formatDiaCorto shows weekday and day number', () => {
+    expect(formatDiaCorto('2026-11-09')).toBe('lunes 9');
+    expect(formatDiaCorto('2026-11-15')).toBe('domingo 15');
+  });
+
+  it('formatRangoSemana abbreviates within a month and adds month or year when crossing', () => {
+    expect(formatRangoSemana('2026-11-09', '2026-11-15')).toBe('9 al 15 de noviembre');
+    expect(formatRangoSemana('2026-10-26', '2026-11-01')).toBe('26 de octubre al 1 de noviembre');
+    expect(formatRangoSemana('2026-12-28', '2027-01-03')).toBe('28 de diciembre de 2026 al 3 de enero de 2027');
+  });
+
+  it('RN-15: hoyMonterrey and diaMonterrey use the Monterrey calendar day', () => {
+    expect(hoyMonterrey(new Date('2026-11-12T05:45:00Z'))).toBe('2026-11-11');
+    expect(diaMonterrey('2026-11-12T07:00:00Z')).toBe('2026-11-12');
   });
 });

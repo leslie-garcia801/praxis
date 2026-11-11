@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSupervisores, type Supervisor } from '../api';
 import { nombreSupervisor } from '../nombreSupervisor';
-import { ErrorConReintento } from './ErrorConReintento';
+import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { NuevoSupervisorForm } from './NuevoSupervisorForm';
 
 type Props = {

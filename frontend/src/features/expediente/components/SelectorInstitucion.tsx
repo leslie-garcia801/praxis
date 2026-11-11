@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Field } from '@/features/auth/components/Field';
 import { useInstituciones, type TipoPrograma } from '../../instituciones/api';
-import { ErrorConReintento } from './ErrorConReintento';
+import { ErrorConReintento } from '@/components/ErrorConReintento';
 
 type Elegida = { id: string; nombre: string; municipio?: string };
 
