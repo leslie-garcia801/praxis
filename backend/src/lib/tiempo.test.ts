@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diasEntre, fechaLocal, inicioDelDiaSiguiente, instanteLocal, sumarDias } from './tiempo.js';
+import { diasEntre, fechaLocal, inicioDelDiaSiguiente, inicioSemana, instanteLocal, sumarDias } from './tiempo.js';
 
 // Monterrey is UTC-6 all year (Mexico dropped DST in 2022).
 const MTY = 'America/Monterrey';
@@ -63,5 +63,24 @@ describe('diasEntre', () => {
 
   it('is negative when the second date is earlier', () => {
     expect(diasEntre('2026-11-20', '2026-11-11')).toBe(-9);
+  });
+});
+
+describe('inicioSemana', () => {
+  it('RF-19: a Sunday goes back to the previous Monday', () => {
+    expect(inicioSemana('2026-11-15')).toBe('2026-11-09');
+  });
+
+  it('keeps a Monday as it is', () => {
+    expect(inicioSemana('2026-11-09')).toBe('2026-11-09');
+  });
+
+  it('goes back to the Monday of a midweek day', () => {
+    expect(inicioSemana('2026-11-11')).toBe('2026-11-09');
+  });
+
+  it('crosses the year boundary', () => {
+    // Friday 1 Jan 2027 belongs to the week of Monday 28 Dec 2026.
+    expect(inicioSemana('2027-01-01')).toBe('2026-12-28');
   });
 });

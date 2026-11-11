@@ -8,11 +8,13 @@ import {
   transicionDeEstado,
   type AccionEstado,
 } from '../../domain/expedientes.js';
+import { estimarFechaTermino } from '../../domain/horas.js';
 import { alcanceOficina, puedeAdministrarTipo, type TipoPrograma } from '../../domain/oficinas.js';
 import { META_HORAS } from '../../domain/programas.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
+import { fechaLocal } from '../../lib/tiempo.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import { aRespuestaSupervisor } from '../supervisores/supervisores.service.js';
 import {
@@ -94,7 +96,7 @@ const faltantes = (e: ExpedienteCompleto) =>
 
 // Anything outside the plantel does not exist (404). Inside it: a student only reaches their own case file and
 // vinculación only those of its office (RN-03b); everything else is 403.
-async function cargar(db: Db, user: AuthUser, id: string) {
+export async function cargar(db: Db, user: AuthUser, id: string) {
   const expediente = await db.expediente.findUnique({ where: { id }, include: incluir });
   if (!expediente || expediente.alumno.usuario.plantelId !== user.plantelId) throw AppError.notFound('El expediente no existe.');
 
@@ -354,6 +356,51 @@ async function minutosValidados(db: Db, expedienteId: string, minutosTransferido
     _sum: { minutosAcreditables: true },
   });
   return (_sum.minutosAcreditables ?? 0) + minutosTransferidos;
+}
+
+// RF-18, RN-11, RN-16: progress of a case file, computed from the attendances (specs 8.4). Only validated minutes
+// count towards finishing; registered ones (not validated yet) only feed the end-date estimate. `ahora` is
+// injectable for tests.
+export async function obtenerAvance(user: AuthUser, id: string, ahora: () => Date = () => new Date()) {
+  const expediente = await cargar(prisma, user, id);
+  const metaMinutos = expediente.metaHoras * 60;
+
+  const validados = await minutosValidados(prisma, id, expediente.minutosTransferidos);
+  const [registrados, cerradas, abierta] = await Promise.all([
+    prisma.asistencia.aggregate({
+      where: { expedienteId: id, OR: [{ semanaId: null }, { semana: { estado: { not: 'VALIDADA' } } }] },
+      _sum: { minutosAcreditables: true },
+    }),
+    prisma.asistencia.findMany({
+      where: { expedienteId: id, estado: 'CERRADA', minutosAcreditables: { gt: 0 } },
+      select: { entrada: true, minutosAcreditables: true },
+    }),
+    prisma.asistencia.findFirst({ where: { expedienteId: id, estado: 'ABIERTA' }, select: { id: true, entrada: true } }),
+  ]);
+  const minutosRegistrados = registrados._sum.minutosAcreditables ?? 0;
+
+  // Credited minutes per local day of the entry (RN-15) over the whole history.
+  const minutosPorDia: Record<string, number> = {};
+  for (const { entrada, minutosAcreditables } of cerradas) {
+    const dia = fechaLocal(entrada);
+    minutosPorDia[dia] = (minutosPorDia[dia] ?? 0) + (minutosAcreditables ?? 0);
+  }
+
+  return {
+    expedienteId: id,
+    metaMinutos,
+    minutosValidados: validados,
+    minutosRegistrados,
+    minutosFaltantes: Math.max(0, metaMinutos - validados),
+    porcentaje: Math.min(100, Math.floor((validados * 100) / metaMinutos)),
+    // RN-16: the estimate follows the student's real pace, so registered minutes count as done.
+    fechaEstimada: estimarFechaTermino({
+      minutosFaltantes: Math.max(0, metaMinutos - validados - minutosRegistrados),
+      minutosPorDia,
+      hoy: ahora(),
+    }),
+    turnoAbierto: abierta,
+  };
 }
 
 // RN-12: the current case file is cancelled and a PENDIENTE one is created in the new institution, in one

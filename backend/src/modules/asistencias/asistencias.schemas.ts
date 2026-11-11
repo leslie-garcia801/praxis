@@ -30,3 +30,12 @@ export const escaneoSchema = z
   });
 
 export type EscaneoInput = z.output<typeof escaneoSchema>;
+
+// RF-19: `semana` is any calendar day (it is normalized to its Monday); `expedienteId` is optional for the
+// student (defaults to their active case file) and required for the office (checked in the service).
+export const historialQuerySchema = z.object({
+  semana: z.iso.date('La semana debe tener el formato AAAA-MM-DD.').optional(),
+  expedienteId: z.uuid('El identificador del expediente no es válido.').optional(),
+});
+
+export type HistorialQuery = z.output<typeof historialQuerySchema>;

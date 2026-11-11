@@ -14,6 +14,7 @@ import {
   confirmarExpediente,
   editarExpediente,
   listarExpedientes,
+  obtenerAvance,
   obtenerExpediente,
   transferirExpediente,
 } from './expedientes.service.js';
@@ -39,7 +40,13 @@ expedientesRouter.get('/:id',requireSession(), requireRol('ALUMNO', 'VINCULACION
   res.json({ expediente: await obtenerExpediente(getAuth(req).user, id) });
 });
 
-expedientesRouter.patch('/:id', requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {
+// RF-18, RN-11, RN-16: validated and registered hours, percentage, estimated end date and open shift.
+expedientesRouter.get('/:id/avance', requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {
+  const { id } = expedienteIdParamsSchema.parse(req.params);
+  res.json({ avance: await obtenerAvance(getAuth(req).user, id) });
+});
+
+expedientesRouter.patch('/:id',requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {
   const { id } = expedienteIdParamsSchema.parse(req.params);
   const expediente = await editarExpediente(getAuth(req).user, id, editarExpedienteSchema.parse(req.body));
   res.json({ expediente });

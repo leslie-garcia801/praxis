@@ -82,3 +82,10 @@ export function diasEntre(desde: FechaISO, hasta: FechaISO): number {
 export function inicioDelDiaSiguiente(instante: Date, zona: string = ZONA_APP): Date {
   return instanteLocal(sumarDias(fechaLocal(instante, zona), 1), '00:00', zona);
 }
+
+/** Monday of the week (Monday to Sunday) that contains the given date. */
+export function inicioSemana(fecha: FechaISO): FechaISO {
+  const [y, m, d] = fecha.split('-').map(Number) as [number, number, number];
+  const diaSemana = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0 = Sunday
+  return sumarDias(fecha, -((diaSemana + 6) % 7));
+}

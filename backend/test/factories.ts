@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Express } from 'express';
 import request from 'supertest';
 import type { Prisma } from '../src/generated/prisma/client.js';
-import type { EstadoExpediente, EstadoValidacion, Rol, TipoPrograma } from '../src/generated/prisma/enums.js';
+import type { EstadoAsistencia, EstadoExpediente, EstadoValidacion, Rol, TipoPrograma } from '../src/generated/prisma/enums.js';
 import { hashPassword } from '../src/lib/password.js';
 import { prisma } from '../src/lib/prisma.js';
 
@@ -216,6 +216,42 @@ export async function crearSemana({ expedienteId, semanaInicio = '2026-03-02', e
     });
   }
   return semana;
+}
+
+type CrearAsistenciaInput = {
+  expedienteId: string;
+  entrada: Date;
+  // Length of the shift in minutes; omitted means the shift is still open (ABIERTA).
+  minutos?: number;
+  estado?: EstadoAsistencia;
+  // Minutes credited (defaults to `minutos` for a closed shift).
+  minutosAcreditables?: number | null;
+  semanaId?: string | null;
+  sinConexion?: boolean;
+};
+
+// One attendance written straight to the database (no scan, no recalculation).
+export async function crearAsistencia({
+  expedienteId,
+  entrada,
+  minutos,
+  estado = minutos === undefined ? 'ABIERTA' : 'CERRADA',
+  minutosAcreditables,
+  semanaId = null,
+  sinConexion = false,
+}: CrearAsistenciaInput) {
+  return prisma.asistencia.create({
+    data: {
+      id: randomUUID(),
+      expedienteId,
+      entrada,
+      salida: minutos === undefined ? null : new Date(entrada.getTime() + minutos * 60_000),
+      minutosAcreditables: minutosAcreditables === undefined ? (estado === 'CERRADA' ? (minutos ?? 0) : null) : minutosAcreditables,
+      estado,
+      semanaId,
+      sinConexion,
+    },
+  });
 }
 
 // Deletes a test campus with its users, students, case files, institutions and audit entries
