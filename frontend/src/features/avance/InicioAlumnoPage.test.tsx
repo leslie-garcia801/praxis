@@ -25,7 +25,6 @@ describe('/alumno layout and routes', () => {
   });
 
   it.each([
-    ['/alumno/registrar', 'Registrar asistencia'],
     ['/alumno/expediente', 'Mi expediente'],
     ['/alumno/historial', 'Historial'],
   ])('%s is a placeholder inside the layout', async (path, title) => {
