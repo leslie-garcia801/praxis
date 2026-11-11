@@ -241,20 +241,21 @@ model InstitucionCarrera {
 }
 
 model Supervisor {
-  id              String       @id @default(uuid())
-  institucionId   String       @map("institucion_id")
-  institucion     Institucion  @relation(fields: [institucionId], references: [id])
+  id              String             @id @default(uuid())
+  institucionId   String             @map("institucion_id")
+  institucion     Institucion        @relation(fields: [institucionId], references: [id])
   titulo          String?
   nombre          String
-  apellidoPaterno String       @map("apellido_paterno")
-  apellidoMaterno String?      @map("apellido_materno")
+  apellidoPaterno String             @map("apellido_paterno")
+  apellidoMaterno String?            @map("apellido_materno")
   puesto          String?
   departamento    String?
   correo          String
   telefono        String?
   extension       String?
-  confirmado      Boolean      @default(false)
+  confirmado      Boolean            @default(false)
   expedientes     Expediente[]
+  enlaces         EnlaceValidacion[]
 
   @@index([institucionId])
   @@map("supervisores")
@@ -311,24 +312,50 @@ model Asistencia {
 }
 
 model SemanaBitacora {
-  id                    String           @id @default(uuid())
-  expedienteId          String           @map("expediente_id")
-  expediente            Expediente       @relation(fields: [expedienteId], references: [id])
-  semanaInicio          DateTime         @map("semana_inicio") @db.Date // Monday
+  id                    String                   @id @default(uuid())
+  expedienteId          String                   @map("expediente_id")
+  expediente            Expediente               @relation(fields: [expedienteId], references: [id])
+  semanaInicio          DateTime                 @map("semana_inicio") @db.Date // Monday
   actividades           String?
-  estado                EstadoValidacion @default(BORRADOR)
-  tokenHash             String?          @unique @map("token_hash")
-  tokenExpira           DateTime?        @map("token_expira") @db.Timestamptz
-  validadoPor           String?          @map("validado_por") // "supervisor" or VINCULACION user id
-  validadoEn            DateTime?        @map("validado_en") @db.Timestamptz
+  estado                EstadoValidacion         @default(BORRADOR)
+  validadoPor           String?                  @map("validado_por") // "supervisor" or VINCULACION user id
+  validadoEn            DateTime?                @map("validado_en") @db.Timestamptz
   comentario            String?
   // Instant the week went to validation (RF-20) and last time the student edited the logbook (used by 0022).
-  enviadaEn             DateTime?        @map("enviada_en") @db.Timestamptz
-  bitacoraActualizadaEn DateTime?        @map("bitacora_actualizada_en") @db.Timestamptz
+  enviadaEn             DateTime?                @map("enviada_en") @db.Timestamptz
+  bitacoraActualizadaEn DateTime?                @map("bitacora_actualizada_en") @db.Timestamptz
   asistencias           Asistencia[]
+  enlaces               EnlaceValidacionSemana[]
 
   @@unique([expedienteId, semanaInicio])
   @@map("semanas_bitacora")
+}
+
+// RF-21, RF-21a: one validation link belongs to a supervisor and groups the weeks sent in one email. Only the SHA-256
+// hash of the token is stored (RNF-06). The link expires 14 days after it is created.
+model EnlaceValidacion {
+  id           String                   @id @default(uuid())
+  supervisorId String                   @map("supervisor_id")
+  supervisor   Supervisor               @relation(fields: [supervisorId], references: [id])
+  tokenHash    String                   @unique @map("token_hash")
+  expiraEn     DateTime                 @map("expira_en") @db.Timestamptz
+  creadoEn     DateTime                 @default(now()) @map("creado_en") @db.Timestamptz
+  semanas      EnlaceValidacionSemana[]
+
+  @@index([supervisorId])
+  @@map("enlaces_validacion")
+}
+
+// The weeks included in a link.
+model EnlaceValidacionSemana {
+  enlaceId String           @map("enlace_id")
+  enlace   EnlaceValidacion @relation(fields: [enlaceId], references: [id], onDelete: Cascade)
+  semanaId String           @map("semana_id")
+  semana   SemanaBitacora   @relation(fields: [semanaId], references: [id])
+
+  @@id([enlaceId, semanaId])
+  @@index([semanaId])
+  @@map("enlaces_validacion_semanas")
 }
 
 model SolicitudCorreccion {

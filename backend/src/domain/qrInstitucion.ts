@@ -1,9 +1,9 @@
-import { createHash, randomBytes, randomInt } from 'node:crypto';
+import { randomInt } from 'node:crypto';
+import { generarToken, hashToken } from './tokens.js';
 
 // Uppercase and digits without look-alikes (no 0/O, 1/I/L): read aloud or written on paper (RF-15).
 export const ALFABETO_CODIGO_CORTO = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const LONGITUD_CODIGO_CORTO = 6;
-const BYTES_TOKEN = 32;
 
 export function generarCodigoCorto(): string {
   let codigo = '';
@@ -12,12 +12,10 @@ export function generarCodigoCorto(): string {
 }
 
 // RNF-06: only the hash is stored; the raw token cannot be recovered afterwards.
-export function hashTokenQr(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
-}
+export const hashTokenQr = hashToken;
 
 // Fresh QR credentials for an institution. `token` goes in the QR URL (RF-13); never persist it.
 export function generarCredencialesQr() {
-  const token = randomBytes(BYTES_TOKEN).toString('base64url');
+  const token = generarToken();
   return { token, qrTokenHash: hashTokenQr(token), codigoCorto: generarCodigoCorto() };
 }

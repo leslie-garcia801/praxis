@@ -41,4 +41,17 @@ describe('parseEnv', () => {
   it('rejects a BETTER_AUTH_SECRET shorter than 32 characters', () => {
     expect(() => parseEnv({ ...base, BETTER_AUTH_SECRET: 'corto' })).toThrow(/BETTER_AUTH_SECRET/);
   });
+
+  it('RF-21: in production RESEND_API_KEY and MAIL_FROM are required', () => {
+    expect(() => parseEnv({ ...base, NODE_ENV: 'production' })).toThrow(/RESEND_API_KEY/);
+    expect(() => parseEnv({ ...base, NODE_ENV: 'production', RESEND_API_KEY: 're_x' })).toThrow(/MAIL_FROM/);
+    expect(parseEnv({ ...base, NODE_ENV: 'production', RESEND_API_KEY: 're_x', MAIL_FROM: 'a@b.invalid' }).MAIL_FROM).toBe(
+      'a@b.invalid',
+    );
+  });
+
+  it('RF-21: development and test do not require the mail variables', () => {
+    expect(() => parseEnv({ ...base, NODE_ENV: 'development' })).not.toThrow();
+    expect(() => parseEnv({ ...base, NODE_ENV: 'test' })).not.toThrow();
+  });
 });

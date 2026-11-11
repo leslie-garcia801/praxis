@@ -257,6 +257,8 @@ export async function crearAsistencia({
 // Deletes a test campus with its users, students, case files, institutions and audit entries
 // (sessions and accounts cascade).
 export async function borrarPlantel(plantelId: string) {
+  // Validation links first: they reference supervisors and weeks (their week rows cascade).
+  await prisma.enlaceValidacion.deleteMany({ where: { supervisor: { institucion: { plantelId } } } });
   const usuarios = await prisma.user.findMany({ where: { plantelId }, select: { id: true } });
   const ids = usuarios.map((u) => u.id);
   await prisma.auditLog.deleteMany({ where: { entidadId: { in: ids } } });

@@ -15,6 +15,7 @@ import { meRouter } from './modules/me/me.routes.js';
 import { semanasRouter } from './modules/semanas/semanas.routes.js';
 import { supervisoresDeInstitucionRouter, supervisoresRouter } from './modules/supervisores/supervisores.routes.js';
 import { usuariosRouter } from './modules/usuarios/usuarios.routes.js';
+import { validacionRouter } from './modules/validacion/validacion.routes.js';
 
 // Builds the Express app without listening, so tests can import it.
 export function createApp() {
@@ -50,6 +51,8 @@ export function createApp() {
   app.use('/api/asistencias', asistenciasRouter);
   app.use('/api/semanas', semanasRouter);
   app.use('/api/carreras', carrerasRouter);
+  // Public: the supervisor validates with the token of the email link, no session (RF-21).
+  app.use('/api/validacion', validacionRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

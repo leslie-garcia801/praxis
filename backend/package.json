@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "prisma": "prisma",
     "postinstall": "prisma generate",
-    "db:seed": "tsx --env-file-if-exists=.env src/scripts/seed.ts"
+    "db:seed": "tsx --env-file-if-exists=.env src/scripts/seed.ts",
+    "dev:enlace": "tsx --env-file-if-exists=.env src/scripts/enviarEnlacePrueba.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
@@ -28,6 +29,7 @@
     "pdfmake": "^0.3.14",
     "pg": "^8.23.1",
     "qrcode": "^1.5.4",
+    "resend": "6.38.0",
     "xlsx": "file:vendor/xlsx-0.20.3.tgz",
     "zod": "^4.6.7"
   },
