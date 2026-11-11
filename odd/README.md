@@ -60,3 +60,4 @@ Decisiones tomadas y pendientes.
 | 0011 | [Pantallas de instituciones](tasks/0011-instituciones-frontend.md) | Terminada |
 | 0012 | [Supervisores y completar expediente](tasks/0012-supervisores-completar-expediente.md) | Terminada |
 | 0013 | [Acciones de vinculación sobre el expediente](tasks/0013-acciones-expediente.md) | Terminada |
+| 0014 | [Registro de asistencia por escaneo](tasks/0014-escaneo-asistencia.md) | Terminada |

@@ -297,6 +297,7 @@ model Asistencia {
   expediente          Expediente            @relation(fields: [expedienteId], references: [id])
   entrada             DateTime              @db.Timestamptz
   salida              DateTime?             @db.Timestamptz
+  salidaId            String?               @unique @map("salida_id") // client-generated UUID of the exit scan (idempotency)
   minutosAcreditables Int?                  @map("minutos_acreditables")
   estado              EstadoAsistencia      @default(ABIERTA)
   sinConexion         Boolean               @default(false) @map("sin_conexion")
