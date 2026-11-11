@@ -4,6 +4,7 @@ import { prisma } from '../../lib/prisma.js';
 import { fechaLocal, inicioSemana, instanteLocal, sumarDias } from '../../lib/tiempo.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import { cargar } from '../expedientes/expedientes.service.js';
+import { ESTADOS_EDITABLES, ESTADOS_QUE_ENVIAN, semanaCerrada } from '../semanas/semanas.service.js';
 import type { HistorialQuery } from './asistencias.schemas.js';
 
 // RN-03: states of a case file that is still "alive" for the student.
@@ -36,7 +37,7 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
       { path: 'expedienteId', message: 'Indica el expediente.' },
     ]);
   }
-  await cargar(prisma, user, id); // 404 outside the plantel, 403 for another student or another office (RN-03b)
+  const expediente = await cargar(prisma, user, id); // 404 outside the plantel, 403 for another student or another office (RN-03b)
 
   const inicio = inicioSemana(semana ?? fechaLocal(ahora()));
   const fechas = Array.from({ length: 7 }, (_, i) => sumarDias(inicio, i));
@@ -52,8 +53,14 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
   const { porDia } = calcularMinutosAcreditables(turnos);
   const bitacora = await prisma.semanaBitacora.findFirst({
     where: { expedienteId: id, semanaInicio: new Date(`${inicio}T00:00:00.000Z`) },
-    select: { estado: true },
   });
+  // RF-20: only the student writes the logbook, so the office never gets edit or send permission.
+  const puedeEditar =
+    user.rol === 'ALUMNO' && bitacora !== null && (ESTADOS_EDITABLES as readonly string[]).includes(bitacora.estado);
+  const puedeEnviar =
+    puedeEditar &&
+    semanaCerrada(bitacora!.semanaInicio, ahora()) &&
+    (ESTADOS_QUE_ENVIAN as readonly string[]).includes(expediente.estado);
 
   const dias = fechas.map((fecha) => {
     const resumen = porDia[fecha] ?? { minutos: 0, acreditables: 0 };
@@ -78,6 +85,13 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
     inicio,
     fin: fechas[6]!,
     estadoValidacion: bitacora?.estado ?? null,
+    id: bitacora?.id ?? null,
+    actividades: bitacora?.actividades ?? null,
+    // The supervisor's comment only matters while the week is waiting to be corrected.
+    comentario: bitacora?.estado === 'RECHAZADA' ? bitacora.comentario : null,
+    enviadaEn: bitacora?.enviadaEn ?? null,
+    puedeEditar,
+    puedeEnviar,
     dias,
     totales: {
       minutos: dias.reduce((suma, d) => suma + d.minutosDia, 0),

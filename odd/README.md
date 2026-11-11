@@ -66,3 +66,4 @@ Decisiones tomadas y pendientes.
 | 0017 | [Registrar asistencia: escáner QR y código corto](tasks/0017-escaner-registro.md) | Terminada |
 | 0018 | [Completar expediente](tasks/0018-completar-expediente.md) | Terminada |
 | 0019 | [Historial semanal del alumno](tasks/0019-historial-alumno.md) | Terminada |
+| 0020 | [Semanas y bitácora](tasks/0020-semanas-bitacora.md) | Terminada |

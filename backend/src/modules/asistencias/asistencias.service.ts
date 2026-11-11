@@ -1,10 +1,11 @@
+import { randomUUID } from 'node:crypto';
 import { decidirAccion, motivoRechazoExpediente, resolverInstante, type MotivoRechazoExpediente } from '../../domain/asistencias.js';
 import { calcularMinutosAcreditables, cerrarTurnoAbierto } from '../../domain/horas.js';
 import { hashTokenQr } from '../../domain/qrInstitucion.js';
 import type { Asistencia, Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
-import { fechaLocal, inicioDelDiaSiguiente, instanteLocal, sumarDias } from '../../lib/tiempo.js';
+import { fechaLocal, inicioDelDiaSiguiente, inicioSemana, instanteLocal, sumarDias } from '../../lib/tiempo.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import type { EscaneoInput } from './asistencias.schemas.js';
 
@@ -195,8 +196,20 @@ async function escanear(tx: Tx, user: AuthUser, input: EscaneoInput, ahora: Date
       data: { salida: cierre.salida, estado: cierre.estado, minutosAcreditables: cierre.minutosAcreditables },
     });
   }
+  // RF-19, RN-15: the attendance belongs to the week (Monday to Sunday) of the local day of its entry; the week is
+  // created with the first one. Prisma's upsert is not atomic (two concurrent first scans would fail with a unique
+  // violation that aborts the transaction), so the insert is ON CONFLICT DO NOTHING followed by a read.
+  const inicio = inicioSemana(fechaEscaneo);
+  await tx.$executeRaw`
+    INSERT INTO "semanas_bitacora" ("id", "expediente_id", "semana_inicio")
+    VALUES (${randomUUID()}, ${expediente.id}, ${inicio}::date)
+    ON CONFLICT ("expediente_id", "semana_inicio") DO NOTHING`;
+  const semana = await tx.semanaBitacora.findUniqueOrThrow({
+    where: { expedienteId_semanaInicio: { expedienteId: expediente.id, semanaInicio: new Date(`${inicio}T00:00:00.000Z`) } },
+    select: { id: true },
+  });
   const nueva = await tx.asistencia.create({
-    data: { id: input.id, expedienteId: expediente.id, entrada: instante, estado: 'ABIERTA', sinConexion: input.sinConexion },
+    data: { id: input.id, expedienteId: expediente.id, entrada: instante, estado: 'ABIERTA', sinConexion: input.sinConexion, semanaId: semana.id },
   });
   const resumen = await recalcularDias(tx, expediente.id, fechaEscaneo, fechaEscaneo, fechaEscaneo);
   return { creada: true, tipo: 'ENTRADA' as const, asistencia: aAsistencia(nueva), ...resumen };

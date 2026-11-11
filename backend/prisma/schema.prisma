@@ -311,18 +311,21 @@ model Asistencia {
 }
 
 model SemanaBitacora {
-  id           String           @id @default(uuid())
-  expedienteId String           @map("expediente_id")
-  expediente   Expediente       @relation(fields: [expedienteId], references: [id])
-  semanaInicio DateTime         @map("semana_inicio") @db.Date // Monday
-  actividades  String?
-  estado       EstadoValidacion @default(BORRADOR)
-  tokenHash    String?          @unique @map("token_hash")
-  tokenExpira  DateTime?        @map("token_expira") @db.Timestamptz
-  validadoPor  String?          @map("validado_por") // "supervisor" or VINCULACION user id
-  validadoEn   DateTime?        @map("validado_en") @db.Timestamptz
-  comentario   String?
-  asistencias  Asistencia[]
+  id                    String           @id @default(uuid())
+  expedienteId          String           @map("expediente_id")
+  expediente            Expediente       @relation(fields: [expedienteId], references: [id])
+  semanaInicio          DateTime         @map("semana_inicio") @db.Date // Monday
+  actividades           String?
+  estado                EstadoValidacion @default(BORRADOR)
+  tokenHash             String?          @unique @map("token_hash")
+  tokenExpira           DateTime?        @map("token_expira") @db.Timestamptz
+  validadoPor           String?          @map("validado_por") // "supervisor" or VINCULACION user id
+  validadoEn            DateTime?        @map("validado_en") @db.Timestamptz
+  comentario            String?
+  // Instant the week went to validation (RF-20) and last time the student edited the logbook (used by 0022).
+  enviadaEn             DateTime?        @map("enviada_en") @db.Timestamptz
+  bitacoraActualizadaEn DateTime?        @map("bitacora_actualizada_en") @db.Timestamptz
+  asistencias           Asistencia[]
 
   @@unique([expedienteId, semanaInicio])
   @@map("semanas_bitacora")

@@ -181,6 +181,100 @@ describe('GET /api/asistencias (RF-19)', () => {
 
       expect(res.body.semana.estadoValidacion).toBe('ENVIADA');
     });
+
+    describe('bitácora de la semana (RF-20)', () => {
+      const ENVIO = new Date('2026-11-10T15:00:00.000Z');
+
+      it('sin SemanaBitacora: id null, bitácora vacía y sin permiso para editar ni enviar', async () => {
+        const c = await caso();
+        const res = await pedir(`?semana=${HOY}`, await c.cookie());
+        expect(res.body.semana).toMatchObject({
+          id: null,
+          actividades: null,
+          comentario: null,
+          enviadaEn: null,
+          puedeEditar: false,
+          puedeEnviar: false,
+        });
+      });
+
+      it('semana en curso en borrador: se edita pero aún no se envía', async () => {
+        const c = await caso();
+        const s = await crearSemana({ expedienteId: c.id, semanaInicio: '2026-11-09', estado: 'BORRADOR' });
+        await prisma.semanaBitacora.update({ where: { id: s.id }, data: { actividades: 'Archivo de oficios' } });
+
+        const res = await pedir(`?semana=${HOY}`, await c.cookie());
+
+        expect(res.body.semana).toMatchObject({
+          id: s.id,
+          estadoValidacion: 'BORRADOR',
+          actividades: 'Archivo de oficios',
+          enviadaEn: null,
+          puedeEditar: true,
+          puedeEnviar: false,
+        });
+      });
+
+      it('semana cerrada en borrador de un expediente en proceso se puede enviar', async () => {
+        const c = await caso();
+        const s = await crearSemana({ expedienteId: c.id, semanaInicio: '2026-11-02', estado: 'BORRADOR' });
+
+        const res = await pedir('?semana=2026-11-02', await c.cookie());
+
+        expect(res.body.semana).toMatchObject({ id: s.id, puedeEditar: true, puedeEnviar: true });
+      });
+
+      it('un expediente finalizado edita pero no envía', async () => {
+        const c = await caso({ estado: 'FINALIZADO' });
+        await crearSemana({ expedienteId: c.id, semanaInicio: '2026-11-02', estado: 'BORRADOR' });
+
+        const res = await pedir('?semana=2026-11-02', await c.cookie());
+
+        expect(res.body.semana).toMatchObject({ puedeEditar: true, puedeEnviar: false });
+      });
+
+      it('RECHAZADA: muestra el comentario del supervisor y vuelve a ser editable y enviable', async () => {
+        const c = await caso();
+        const s = await crearSemana({ expedienteId: c.id, semanaInicio: '2026-11-02', estado: 'RECHAZADA' });
+        await prisma.semanaBitacora.update({ where: { id: s.id }, data: { comentario: 'Detalla las actividades.', enviadaEn: ENVIO } });
+
+        const res = await pedir('?semana=2026-11-02', await c.cookie());
+
+        expect(res.body.semana).toMatchObject({
+          comentario: 'Detalla las actividades.',
+          enviadaEn: ENVIO.toISOString(),
+          puedeEditar: true,
+          puedeEnviar: true,
+        });
+      });
+
+      it('ENVIADA o VALIDADA: no se edita ni se envía, y el comentario solo sale si está rechazada', async () => {
+        for (const estado of ['ENVIADA', 'VALIDADA'] as const) {
+          const c = await caso();
+          const s = await crearSemana({ expedienteId: c.id, semanaInicio: '2026-11-02', estado });
+          await prisma.semanaBitacora.update({ where: { id: s.id }, data: { comentario: 'Comentario viejo', enviadaEn: ENVIO } });
+
+          const res = await pedir('?semana=2026-11-02', await c.cookie());
+
+          expect(res.body.semana).toMatchObject({
+            estadoValidacion: estado,
+            comentario: null,
+            enviadaEn: ENVIO.toISOString(),
+            puedeEditar: false,
+            puedeEnviar: false,
+          });
+        }
+      });
+
+      it('la oficina ve la bitácora pero no puede editarla ni enviarla (solo la escribe el alumno)', async () => {
+        const c = await caso();
+        const s = await crearSemana({ expedienteId: c.id, semanaInicio: '2026-11-02', estado: 'BORRADOR' });
+
+        const res = await pedir('?semana=2026-11-02&expedienteId=' + c.id, cookiePracticas);
+
+        expect(res.body.semana).toMatchObject({ id: s.id, puedeEditar: false, puedeEnviar: false });
+      });
+    });
   });
 
   describe('expediente del alumno', () => {

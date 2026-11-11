@@ -369,6 +369,107 @@ describe('POST /api/asistencias/escaneo (RF-14, RF-15)', () => {
     });
   });
 
+  describe('semana de bitácora (RF-19, RN-15)', () => {
+    // Monday 2026-11-09 to Sunday 2026-11-15, all in the past of the real clock only for the fake dates used here.
+    const LUNES = '2026-11-09';
+    const DOMINGO = '2026-11-15';
+    const SIGUIENTE_LUNES = '2026-11-16';
+    const fecha = (d: Date) => d.toISOString().slice(0, 10);
+
+    it('RF-19: la entrada crea la semana de bitácora y le asigna la asistencia', async () => {
+      const a = await caso();
+      const res = await escanear(a.cookie, { id: randomUUID(), token: a.token }, ['2026-11-11', '08:00']);
+      expect(res.status).toBe(201);
+
+      const semanas = await prisma.semanaBitacora.findMany({ where: { expedienteId: a.expediente.id } });
+      expect(semanas).toHaveLength(1);
+      expect(fecha(semanas[0]!.semanaInicio)).toBe(LUNES);
+      expect(semanas[0]!.estado).toBe('BORRADOR');
+      const asistencia = await prisma.asistencia.findUniqueOrThrow({ where: { id: res.body.asistencia.id } });
+      expect(asistencia.semanaId).toBe(semanas[0]!.id);
+    });
+
+    it('RF-19: varias entradas de la misma semana reutilizan la semana; otra semana crea otra', async () => {
+      const a = await caso();
+      const una = await escanear(a.cookie, { id: randomUUID(), token: a.token }, ['2026-11-10', '08:00']);
+      await escanear(a.cookie, { id: randomUUID(), token: a.token }, ['2026-11-10', '10:00']);
+      const otra = await escanear(a.cookie, { id: randomUUID(), token: a.token }, ['2026-11-11', '08:00']);
+      const siguiente = await escanear(a.cookie, { id: randomUUID(), token: a.token }, [SIGUIENTE_LUNES, '08:00']);
+
+      expect(await prisma.semanaBitacora.count({ where: { expedienteId: a.expediente.id } })).toBe(2);
+      const ids = await prisma.asistencia.findMany({
+        where: { id: { in: [una.body.asistencia.id, otra.body.asistencia.id, siguiente.body.asistencia.id] } },
+        orderBy: { entrada: 'asc' },
+      });
+      expect(ids[0]!.semanaId).toBe(ids[1]!.semanaId);
+      expect(ids[2]!.semanaId).not.toBe(ids[0]!.semanaId);
+    });
+
+    it('RN-15: un turno del domingo que sigue abierto al lunes queda en la semana del domingo', async () => {
+      const a = await caso();
+      const entrada = await escanear(a.cookie, { id: randomUUID(), token: a.token }, [DOMINGO, '22:00']);
+      // The exit scan after midnight closes the same shift: it stays in the week of its entry.
+      await escanear(a.cookie, { id: randomUUID(), token: a.token }, [SIGUIENTE_LUNES, '01:00']);
+
+      const turno = await prisma.asistencia.findUniqueOrThrow({ where: { id: entrada.body.asistencia.id }, include: { semana: true } });
+      expect(fecha(turno.semana!.semanaInicio)).toBe(LUNES);
+    });
+
+    it('RN-15: usa el día local de la entrada (domingo 22:00 en Monterrey ya es lunes en UTC)', async () => {
+      const a = await caso();
+      const hora = instanteLocal(DOMINGO, '22:00');
+      expect(fecha(hora)).toBe(SIGUIENTE_LUNES);
+      const res = await escanear(a.cookie, { id: randomUUID(), token: a.token, hora: hora.toISOString(), sinConexion: true }, [DOMINGO, '22:05']);
+      const turno = await prisma.asistencia.findUniqueOrThrow({ where: { id: res.body.asistencia.id }, include: { semana: true } });
+      expect(fecha(turno.semana!.semanaInicio)).toBe(LUNES);
+    });
+
+    it('RN-08: la nueva entrada tras cerrar un turno olvidado de otra semana queda en su propia semana', async () => {
+      const a = await caso();
+      const vieja = await escanear(a.cookie, { id: randomUUID(), token: a.token }, ['2026-11-10', '08:00']);
+      const nueva = await escanear(a.cookie, { id: randomUUID(), token: a.token }, [SIGUIENTE_LUNES, '08:00']);
+
+      const [anterior, actual] = await Promise.all([
+        prisma.asistencia.findUniqueOrThrow({ where: { id: vieja.body.asistencia.id }, include: { semana: true } }),
+        prisma.asistencia.findUniqueOrThrow({ where: { id: nueva.body.asistencia.id }, include: { semana: true } }),
+      ]);
+      expect(anterior.estado).toBe('INCOMPLETA');
+      expect(fecha(anterior.semana!.semanaInicio)).toBe(LUNES);
+      expect(fecha(actual.semana!.semanaInicio)).toBe(SIGUIENTE_LUNES);
+    });
+
+    it('RF-19: la salida y los reenvíos no crean semanas nuevas', async () => {
+      const a = await caso();
+      const id = randomUUID();
+      await escanear(a.cookie, { id, token: a.token }, ['2026-11-11', '08:00']);
+      await escanear(a.cookie, { id, token: a.token }, ['2026-11-11', '08:01']);
+      await escanear(a.cookie, { id: randomUUID(), token: a.token }, ['2026-11-11', '10:00']);
+      expect(await prisma.semanaBitacora.count({ where: { expedienteId: a.expediente.id } })).toBe(1);
+    });
+
+    it('RF-19: una entrada que choca con otra no deja una semana suelta ni una asistencia', async () => {
+      const a = await caso();
+      await escanear(a.cookie, { id: randomUUID(), token: a.token }, [HOY, '08:00']);
+      await escanear(a.cookie, { id: randomUUID(), token: a.token }, [HOY, '10:00']);
+      const antes = await prisma.semanaBitacora.count({ where: { expedienteId: a.expediente.id } });
+      const hora = instanteLocal(HOY, '09:00').toISOString();
+      const res = await escanear(a.cookie, { id: randomUUID(), token: a.token, hora, sinConexion: true }, [HOY, '10:30']);
+      expect(res.status).toBe(409);
+      expect(await prisma.semanaBitacora.count({ where: { expedienteId: a.expediente.id } })).toBe(antes);
+    });
+
+    it('RF-19: dos primeras entradas simultáneas dejan una sola semana y ningún 500', async () => {
+      const a = await caso();
+      fijarHora('2026-11-11', '08:00');
+      const pedir = () =>
+        request(app).post('/api/asistencias/escaneo').set('Origin', ORIGIN).set('Cookie', a.cookie).send({ id: randomUUID(), token: a.token });
+      const respuestas = await Promise.all([pedir(), pedir()]);
+      vi.useRealTimers();
+      expect(respuestas.map((r) => [r.status, r.body.error?.code])).toSatisfy((r: [number, string][]) => r.every(([s]) => s < 500));
+      expect(await prisma.semanaBitacora.count({ where: { expedienteId: a.expediente.id } })).toBe(1);
+    });
+  });
+
   describe('idempotencia', () => {
     it('responde 200 con el registro existente cuando llega el mismo id dos veces', async () => {
       const a = await caso();

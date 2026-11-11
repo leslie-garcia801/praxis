@@ -12,6 +12,7 @@ import { expedientesRouter } from './modules/expedientes/expedientes.routes.js';
 import { importacionesRouter } from './modules/importaciones/importaciones.routes.js';
 import { institucionesRouter } from './modules/instituciones/instituciones.routes.js';
 import { meRouter } from './modules/me/me.routes.js';
+import { semanasRouter } from './modules/semanas/semanas.routes.js';
 import { supervisoresDeInstitucionRouter, supervisoresRouter } from './modules/supervisores/supervisores.routes.js';
 import { usuariosRouter } from './modules/usuarios/usuarios.routes.js';
 
@@ -47,6 +48,7 @@ export function createApp() {
   app.use('/api/supervisores', supervisoresRouter);
   app.use('/api/expedientes', expedientesRouter);
   app.use('/api/asistencias', asistenciasRouter);
+  app.use('/api/semanas', semanasRouter);
   app.use('/api/carreras', carrerasRouter);
 
   app.use(notFoundHandler);
