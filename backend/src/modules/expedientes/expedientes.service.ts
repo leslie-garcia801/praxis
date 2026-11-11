@@ -1,5 +1,15 @@
-import { faltantesParaConfirmar, horarioValido, periodoValido, semestreValido } from '../../domain/expedientes.js';
-import { alcanceOficina, puedeAdministrarTipo } from '../../domain/oficinas.js';
+import {
+  decidirAsignacion,
+  faltantesParaConfirmar,
+  horarioValido,
+  periodoValido,
+  puedeTransferir,
+  semestreValido,
+  transicionDeEstado,
+  type AccionEstado,
+} from '../../domain/expedientes.js';
+import { alcanceOficina, puedeAdministrarTipo, type TipoPrograma } from '../../domain/oficinas.js';
+import { META_HORAS } from '../../domain/programas.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
@@ -8,8 +18,10 @@ import { aRespuestaSupervisor } from '../supervisores/supervisores.service.js';
 import {
   CAMPOS_SOLO_PRACTICAS,
   CAMPOS_SOLO_SERVICIO,
+  type CambiarEstadoInput,
   type EditarExpedienteInput,
   type ListarExpedientesQuery,
+  type TransferirExpedienteInput,
 } from './expedientes.schemas.js';
 
 type Db = Prisma.TransactionClient;
@@ -131,6 +143,23 @@ const instantanea = (e: ExpedienteCompleto) => ({
   subprograma: e.subprograma,
 });
 
+// The institution must exist in the plantel, be active and accept the program type.
+async function validarInstitucion(db: Db, plantelId: string, institucionId: string, tipo: TipoPrograma) {
+  const institucion = await db.institucion.findFirst({
+    where: { id: institucionId, plantelId, activa: true },
+    select: { aceptaServicio: true, aceptaPracticas: true },
+  });
+  if (!institucion) throw new AppError(400, 'INSTITUCION_INVALIDA', 'La institución no existe o no está activa.');
+  const acepta = tipo === 'PRACTICAS' ? institucion.aceptaPracticas : institucion.aceptaServicio;
+  if (!acepta) {
+    throw new AppError(
+      400,
+      'INSTITUCION_NO_ACEPTA_TIPO',
+      `La institución no recibe alumnos de ${tipo === 'PRACTICAS' ? 'prácticas profesionales' : 'servicio social'}.`,
+    );
+  }
+}
+
 // RF-10: partial edit. The student only while PENDIENTE; the office while the case file is active.
 export async function editarExpediente(user: AuthUser, id: string, input: EditarExpedienteInput) {
   const actualizado = await prisma.$transaction(async (tx) => {
@@ -167,21 +196,7 @@ export async function editarExpediente(user: AuthUser, id: string, input: Editar
     const horaEntrada = input.horaEntrada === undefined ? actual.horaEntrada : input.horaEntrada;
     const horaSalida = input.horaSalida === undefined ? actual.horaSalida : input.horaSalida;
 
-    if (input.institucionId !== undefined) {
-      const institucion = await tx.institucion.findFirst({
-        where: { id: input.institucionId, plantelId: user.plantelId, activa: true },
-        select: { aceptaServicio: true, aceptaPracticas: true },
-      });
-      if (!institucion) throw new AppError(400, 'INSTITUCION_INVALIDA', 'La institución no existe o no está activa.');
-      const acepta = actual.tipo === 'PRACTICAS' ? institucion.aceptaPracticas : institucion.aceptaServicio;
-      if (!acepta) {
-        throw new AppError(
-          400,
-          'INSTITUCION_NO_ACEPTA_TIPO',
-          `La institución no recibe alumnos de ${actual.tipo === 'PRACTICAS' ? 'prácticas profesionales' : 'servicio social'}.`,
-        );
-      }
-    }
+    if (input.institucionId !== undefined) await validarInstitucion(tx, user.plantelId, input.institucionId, actual.tipo);
 
     const cambiaInstitucion = input.institucionId !== undefined && input.institucionId !== actual.institucionId;
     if (supervisorId && (input.supervisorId !== undefined || cambiaInstitucion)) {
@@ -289,4 +304,168 @@ export async function confirmarExpediente(user: AuthUser, id: string) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') throw yaHayActivo();
     throw err;
   }
+}
+
+const transicionNoPermitida = (mensaje: string) => new AppError(409, 'TRANSICION_NO_PERMITIDA', mensaje);
+
+const AUDITORIA_ESTADO: Record<AccionEstado, string> = {
+  SUSPENDER: 'SUSPENDER_EXPEDIENTE',
+  REACTIVAR: 'REACTIVAR_EXPEDIENTE',
+  CANCELAR: 'CANCELAR_EXPEDIENTE',
+};
+
+const MENSAJE_TRANSICION: Record<AccionEstado, string> = {
+  SUSPENDER: 'Solo se puede suspender un expediente en proceso.',
+  REACTIVAR: 'Solo se puede reactivar un expediente suspendido.',
+  CANCELAR: 'Solo se puede dar de baja un expediente pendiente, en proceso o suspendido.',
+};
+
+// RF-11, RF-12: suspend, reactivate or cancel. The UPDATE is guarded by the state read, so two simultaneous
+// actions cannot both win; the audit entry (with the reason) is written in the same transaction (RF-29).
+export async function cambiarEstado(user: AuthUser, id: string, { accion, motivo }: CambiarEstadoInput) {
+  const actualizado = await prisma.$transaction(async (tx) => {
+    const actual = await cargar(tx, user, id);
+    const destino = transicionDeEstado(accion, actual.estado);
+    if (!destino) throw transicionNoPermitida(MENSAJE_TRANSICION[accion]);
+
+    const { count } = await tx.expediente.updateMany({ where: { id, estado: actual.estado }, data: { estado: destino } });
+    if (count === 0) throw transicionNoPermitida(MENSAJE_TRANSICION[accion]);
+
+    await tx.auditLog.create({
+      data: {
+        usuarioId: user.id,
+        accion: AUDITORIA_ESTADO[accion],
+        entidad: 'Expediente',
+        entidadId: id,
+        antes: { estado: actual.estado },
+        despues: { estado: destino, motivo },
+      },
+    });
+    return tx.expediente.findUniqueOrThrow({ where: { id }, include: incluir });
+  });
+  return aRespuesta(actualizado, user);
+}
+
+// Minutes already earned in a case file: weeks validated by the supervisor or the office plus what it received
+// from an earlier transfer (specs 8.4). Totals are never stored, they are computed.
+async function minutosValidados(db: Db, expedienteId: string, minutosTransferidos: number) {
+  const { _sum } = await db.asistencia.aggregate({
+    where: { expedienteId, semana: { estado: 'VALIDADA' } },
+    _sum: { minutosAcreditables: true },
+  });
+  return (_sum.minutosAcreditables ?? 0) + minutosTransferidos;
+}
+
+// RN-12: the current case file is cancelled and a PENDIENTE one is created in the new institution, in one
+// transaction. The old one is cancelled first because the partial unique index allows one active case file.
+export async function transferirExpediente(user: AuthUser, id: string, { institucionId, conservarHoras, motivo }: TransferirExpedienteInput) {
+  try {
+    const { anterior, nuevo } = await prisma.$transaction(async (tx) => {
+      const actual = await cargar(tx, user, id);
+      const noPermitida = () => transicionNoPermitida('Solo se puede transferir un expediente en proceso o suspendido.');
+      if (!puedeTransferir(actual.estado)) throw noPermitida();
+
+      await validarInstitucion(tx, user.plantelId, institucionId, actual.tipo);
+      if (actual.institucionId === institucionId) {
+        throw new AppError(400, 'INSTITUCION_IGUAL', 'El expediente ya está en esa institución.');
+      }
+
+      const minutosTransferidos = conservarHoras ? await minutosValidados(tx, id, actual.minutosTransferidos) : 0;
+
+      const { count } = await tx.expediente.updateMany({ where: { id, estado: actual.estado }, data: { estado: 'CANCELADO' } });
+      if (count === 0) throw noPermitida();
+
+      const creado = await tx.expediente.create({
+        data: {
+          alumnoId: actual.alumnoId,
+          tipo: actual.tipo,
+          semestre: actual.semestre,
+          metaHoras: actual.metaHoras,
+          estado: 'PENDIENTE',
+          institucionId,
+          minutosTransferidos,
+          motivoTransferencia: motivo,
+        },
+        select: { id: true },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          usuarioId: user.id,
+          accion: 'TRANSFERIR_EXPEDIENTE',
+          entidad: 'Expediente',
+          entidadId: id,
+          antes: { estado: actual.estado, institucionId: actual.institucionId },
+          despues: { estado: 'CANCELADO', expedienteNuevoId: creado.id, institucionId, conservarHoras, minutosTransferidos, motivo },
+        },
+      });
+      return {
+        anterior: await tx.expediente.findUniqueOrThrow({ where: { id }, include: incluir }),
+        nuevo: await tx.expediente.findUniqueOrThrow({ where: { id: creado.id }, include: incluir }),
+      };
+    });
+    return { anterior: aRespuesta(anterior, user), nuevo: aRespuesta(nuevo, user) };
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') throw yaHayActivo();
+    throw err;
+  }
+}
+
+type Omitido = { alumnoId: string; motivo: string };
+type Asignado = { alumnoId: string; expedienteId: string; tipo: TipoPrograma };
+
+// RF-01, RN-03a, RN-03b: creates the PENDIENTE case file of the other program for each student who finished the
+// first one. Each student has its own transaction so one conflict does not undo the rest; the ones that cannot
+// be assigned come back with the reason.
+export async function asignarPrograma(user: AuthUser, alumnoIds: string[]) {
+  const alcance = alcanceOficina(user);
+  const existentes = await prisma.alumno.findMany({
+    where: { id: { in: alumnoIds }, usuario: { plantelId: user.plantelId } },
+    select: { id: true },
+  });
+  const delPlantel = new Set(existentes.map((a) => a.id));
+
+  const asignados: Asignado[] = [];
+  const omitidos: Omitido[] = [];
+  for (const alumnoId of alumnoIds) {
+    if (!delPlantel.has(alumnoId)) {
+      omitidos.push({ alumnoId, motivo: 'El alumno no existe.' });
+      continue;
+    }
+    try {
+      const resultado = await prisma.$transaction(async (tx) => {
+        const alumno = await tx.alumno.findUniqueOrThrow({
+          where: { id: alumnoId },
+          select: { semestre: true, expedientes: { select: { tipo: true, estado: true, creadoEn: true } } },
+        });
+        const decision = decidirAsignacion({ semestreAlumno: alumno.semestre, expedientes: alumno.expedientes, alcance });
+        if ('motivo' in decision) return decision;
+
+        const creado = await tx.expediente.create({
+          data: { alumnoId, tipo: decision.tipo, semestre: alumno.semestre, metaHoras: META_HORAS[decision.tipo], estado: 'PENDIENTE' },
+          select: { id: true },
+        });
+        await tx.auditLog.create({
+          data: {
+            usuarioId: user.id,
+            accion: 'ASIGNAR_PROGRAMA',
+            entidad: 'Expediente',
+            entidadId: creado.id,
+            despues: { alumnoId, tipo: decision.tipo, estado: 'PENDIENTE', semestre: alumno.semestre },
+          },
+        });
+        return { tipo: decision.tipo, expedienteId: creado.id };
+      });
+      if ('motivo' in resultado) omitidos.push({ alumnoId, motivo: resultado.motivo });
+      else asignados.push({ alumnoId, ...resultado });
+    } catch (err) {
+      // RN-03: another request created an active case file for this student first.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        omitidos.push({ alumnoId, motivo: 'El alumno ya tiene un expediente activo.' });
+        continue;
+      }
+      throw err;
+    }
+  }
+  return { asignados, omitidos };
 }

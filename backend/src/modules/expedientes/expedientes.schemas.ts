@@ -49,5 +49,38 @@ export const editarExpedienteSchema = z
 
 export type EditarExpedienteInput = z.output<typeof editarExpedienteSchema>;
 
+// RF-12: every action asks for a reason; it goes to the audit log.
+const motivo = z
+  .string('Indica el motivo.')
+  .trim()
+  .min(1, 'Indica el motivo.')
+  .max(500, 'Máximo 500 caracteres.');
+
+export const cambiarEstadoSchema = z.strictObject({
+  accion: z.enum(['SUSPENDER', 'REACTIVAR', 'CANCELAR'], 'Acción no válida.'),
+  motivo,
+});
+export type CambiarEstadoInput = z.output<typeof cambiarEstadoSchema>;
+
+// RN-12: vinculación decides whether the validated hours travel to the new case file.
+export const transferirExpedienteSchema = z.strictObject({
+  institucionId: z.uuid('Institución no válida.'),
+  conservarHoras: z.boolean('Indica si se conservan las horas.'),
+  motivo,
+});
+export type TransferirExpedienteInput = z.output<typeof transferirExpedienteSchema>;
+
+export const MAX_ALUMNOS_ASIGNAR = 500;
+
+// RF-01, RN-03a: repeated ids are processed once.
+export const asignarProgramaSchema = z.strictObject({
+  alumnoIds: z
+    .array(z.uuid('Alumno no válido.'), 'Indica los alumnos.')
+    .min(1, 'Indica al menos un alumno.')
+    .max(MAX_ALUMNOS_ASIGNAR, `Máximo ${MAX_ALUMNOS_ASIGNAR} alumnos por solicitud.`)
+    .transform((ids) => [...new Set(ids)]),
+});
+export type AsignarProgramaInput = z.output<typeof asignarProgramaSchema>;
+
 export const CAMPOS_SOLO_PRACTICAS = ['fechaTermino', 'diasPactados', 'horaEntrada', 'horaSalida'] as const;
 export const CAMPOS_SOLO_SERVICIO = ['programa', 'subprograma'] as const;

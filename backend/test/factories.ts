@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Express } from 'express';
 import request from 'supertest';
 import type { Prisma } from '../src/generated/prisma/client.js';
-import type { EstadoExpediente, Rol, TipoPrograma } from '../src/generated/prisma/enums.js';
+import type { EstadoExpediente, EstadoValidacion, Rol, TipoPrograma } from '../src/generated/prisma/enums.js';
 import { hashPassword } from '../src/lib/password.js';
 import { prisma } from '../src/lib/prisma.js';
 
@@ -186,6 +186,38 @@ export async function crearExpediente({
   });
 }
 
+type CrearSemanaInput = {
+  expedienteId: string;
+  // Monday of the week, "YYYY-MM-DD".
+  semanaInicio?: string;
+  estado?: EstadoValidacion;
+  // Minutes credited by the closed attendances of the week (one attendance per entry).
+  minutos?: number[];
+};
+
+// A logbook week with closed attendances that credit the given minutes.
+export async function crearSemana({ expedienteId, semanaInicio = '2026-03-02', estado = 'VALIDADA', minutos = [] }: CrearSemanaInput) {
+  const semana = await prisma.semanaBitacora.create({
+    data: { expedienteId, semanaInicio: new Date(`${semanaInicio}T00:00:00.000Z`), estado },
+  });
+  for (const [i, m] of minutos.entries()) {
+    const entrada = new Date(`${semanaInicio}T14:00:00.000Z`);
+    entrada.setUTCDate(entrada.getUTCDate() + i);
+    await prisma.asistencia.create({
+      data: {
+        id: randomUUID(),
+        expedienteId,
+        entrada,
+        salida: new Date(entrada.getTime() + m * 60_000),
+        minutosAcreditables: m,
+        estado: 'CERRADA',
+        semanaId: semana.id,
+      },
+    });
+  }
+  return semana;
+}
+
 // Deletes a test campus with its users, students, case files, institutions and audit entries
 // (sessions and accounts cascade).
 export async function borrarPlantel(plantelId: string) {
@@ -194,6 +226,9 @@ export async function borrarPlantel(plantelId: string) {
   await prisma.auditLog.deleteMany({ where: { entidadId: { in: ids } } });
   const expedientes = await prisma.expediente.findMany({ where: { alumno: { usuarioId: { in: ids } } }, select: { id: true } });
   await prisma.auditLog.deleteMany({ where: { entidadId: { in: expedientes.map((e) => e.id) } } });
+  const expedienteIds = expedientes.map((e) => e.id);
+  await prisma.asistencia.deleteMany({ where: { expedienteId: { in: expedienteIds } } });
+  await prisma.semanaBitacora.deleteMany({ where: { expedienteId: { in: expedienteIds } } });
   await prisma.expediente.deleteMany({ where: { alumno: { usuarioId: { in: ids } } } });
   await prisma.alumno.deleteMany({ where: { usuarioId: { in: ids } } });
   const instituciones = await prisma.institucion.findMany({ where: { plantelId }, select: { id: true } });

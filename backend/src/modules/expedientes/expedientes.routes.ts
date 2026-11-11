@@ -1,7 +1,22 @@
 import { Router } from 'express';
 import { getAuth, requireRol, requireSession } from '../../middleware/auth.js';
-import { editarExpedienteSchema, expedienteIdParamsSchema, listarExpedientesQuerySchema } from './expedientes.schemas.js';
-import { confirmarExpediente, editarExpediente, listarExpedientes, obtenerExpediente } from './expedientes.service.js';
+import {
+  asignarProgramaSchema,
+  cambiarEstadoSchema,
+  editarExpedienteSchema,
+  expedienteIdParamsSchema,
+  listarExpedientesQuerySchema,
+  transferirExpedienteSchema,
+} from './expedientes.schemas.js';
+import {
+  asignarPrograma,
+  cambiarEstado,
+  confirmarExpediente,
+  editarExpediente,
+  listarExpedientes,
+  obtenerExpediente,
+  transferirExpediente,
+} from './expedientes.service.js';
 
 export const expedientesRouter = Router();
 
@@ -13,7 +28,13 @@ expedientesRouter.get('/', requireSession(), requireRol('VINCULACION', 'ADMIN'),
   res.json({ expedientes });
 });
 
-expedientesRouter.get('/:id', requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {
+// RF-01, RN-03a: next program for students who finished the first one.
+expedientesRouter.post('/asignar', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
+  const { alumnoIds } = asignarProgramaSchema.parse(req.body);
+  res.json(await asignarPrograma(getAuth(req).user, alumnoIds));
+});
+
+expedientesRouter.get('/:id',requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {
   const { id } = expedienteIdParamsSchema.parse(req.params);
   res.json({ expediente: await obtenerExpediente(getAuth(req).user, id) });
 });
@@ -27,4 +48,16 @@ expedientesRouter.patch('/:id', requireSession(), requireRol('ALUMNO', 'VINCULAC
 expedientesRouter.post('/:id/confirmar', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
   const { id } = expedienteIdParamsSchema.parse(req.params);
   res.json({ expediente: await confirmarExpediente(getAuth(req).user, id) });
+});
+
+// RF-11, RF-12: suspend, reactivate or cancel (baja); the reason is mandatory and audited.
+expedientesRouter.patch('/:id/estado', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
+  const { id } = expedienteIdParamsSchema.parse(req.params);
+  res.json({ expediente: await cambiarEstado(getAuth(req).user, id, cambiarEstadoSchema.parse(req.body)) });
+});
+
+// RN-12: move to another institution, keeping the validated hours or not.
+expedientesRouter.post('/:id/transferir', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
+  const { id } = expedienteIdParamsSchema.parse(req.params);
+  res.status(201).json(await transferirExpediente(getAuth(req).user, id, transferirExpedienteSchema.parse(req.body)));
 });
