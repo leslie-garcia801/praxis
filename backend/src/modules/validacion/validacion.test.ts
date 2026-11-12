@@ -332,9 +332,10 @@ describe('validación por enlace (RF-21, RF-21a, RF-22, RN-06b)', () => {
 
       expect(primera.body.resultados).toEqual([{ semanaId: a, resultado: 'VALIDADA' }]);
       expect(segunda.body.resultados).toEqual([{ semanaId: b, resultado: 'RECHAZADA' }]);
-      expect(await prisma.semanaBitacora.findUniqueOrThrow({ where: { id: a } })).toMatchObject({ estado: 'VALIDADA' });
+      expect(await prisma.semanaBitacora.findUniqueOrThrow({ where: { id: a } })).toMatchObject({ estado: 'VALIDADA', rechazadaEn: null });
       expect(await prisma.semanaBitacora.findUniqueOrThrow({ where: { id: b } })).toMatchObject({
         estado: 'RECHAZADA',
+        rechazadaEn: expect.any(Date),
         comentario: 'Faltó detallar las actividades',
         validadoPor: null,
         validadoEn: null,

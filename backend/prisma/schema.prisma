@@ -324,6 +324,8 @@ model SemanaBitacora {
   // Instant the week went to validation (RF-20) and last time the student edited the logbook (used by 0022).
   enviadaEn             DateTime?                @map("enviada_en") @db.Timestamptz
   bitacoraActualizadaEn DateTime?                @map("bitacora_actualizada_en") @db.Timestamptz
+  // Instant the supervisor rejected the week (RF-22); 0022 compares it with bitacoraActualizadaEn.
+  rechazadaEn           DateTime?                @map("rechazada_en") @db.Timestamptz
   asistencias           Asistencia[]
   enlaces               EnlaceValidacionSemana[]
 

@@ -15,6 +15,9 @@ export const MINIMO_ACTIVIDADES = 50;
 // A case file that can still send weeks (RN-13: suspended students keep their logbook).
 export const ESTADOS_QUE_ENVIAN = ['EN_PROCESO', 'SUSPENDIDO'] as const;
 
+// RN-17: the logbook is valid when it has the minimum length ignoring spaces at both ends.
+export const bitacoraValida = (actividades: string | null) => (actividades ?? '').trim().length >= MINIMO_ACTIVIDADES;
+
 const conflicto = (code: string, message: string) => new AppError(409, code, message);
 
 const aFecha = (d: Date) => d.toISOString().slice(0, 10);
@@ -69,7 +72,7 @@ export async function enviarSemana(user: AuthUser, id: string, ahora: () => Date
       throw conflicto('SEMANA_EN_CURSO', 'La semana todavía no termina. Podrás enviarla a partir del lunes.');
     }
     if (!(ESTADOS_EDITABLES as readonly string[]).includes(semana.estado)) throw noEditable();
-    if ((semana.actividades ?? '').trim().length < MINIMO_ACTIVIDADES) {
+    if (!bitacoraValida(semana.actividades)) {
       throw conflicto('BITACORA_INCOMPLETA', `Escribe al menos ${MINIMO_ACTIVIDADES} caracteres en la bitácora antes de enviarla.`);
     }
 

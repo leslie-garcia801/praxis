@@ -68,3 +68,4 @@ Decisiones tomadas y pendientes.
 | 0019 | [Historial semanal del alumno](tasks/0019-historial-alumno.md) | Terminada |
 | 0020 | [Semanas y bitácora](tasks/0020-semanas-bitacora.md) | Terminada |
 | 0021 | [Mailer y validación por enlace](tasks/0021-validacion-enlace.md) | Terminada (prueba manual con la 0024) |
+| 0022 | [Resumen semanal al supervisor](tasks/0022-resumen-semanal.md) | Terminada |

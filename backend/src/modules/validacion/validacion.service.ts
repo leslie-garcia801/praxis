@@ -152,7 +152,7 @@ export async function resolverSemanas(enlace: EnlaceVigente, { decisiones }: Dec
         where: { id: d.semanaId, estado: 'ENVIADA' },
         data: validar
           ? { estado, validadoPor: 'SUPERVISOR', validadoEn: momento, comentario: null }
-          : { estado, comentario: d.comentario },
+          : { estado, comentario: d.comentario, rechazadaEn: momento },
       });
       if (count === 0) {
         salida.push({ semanaId: d.semanaId, resultado: 'YA_RESUELTA' });
