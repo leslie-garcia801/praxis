@@ -5,6 +5,7 @@ import { username } from 'better-auth/plugins';
 import { env } from '../config/env.js';
 import { hashPassword, verifyPassword } from './password.js';
 import { prisma } from './prisma.js';
+import { AMBAS_OFICINAS_DESTINO } from '../domain/oficinas.js';
 
 const THIRTY_DAYS_IN_SECONDS = 60 * 60 * 24 * 30;
 
@@ -67,7 +68,7 @@ export const auth = betterAuth({
           if (!user?.activo) {
             throw new APIError('FORBIDDEN', {
               code: 'CUENTA_INACTIVA',
-              message: 'Tu cuenta está desactivada. Acude a vinculación.',
+              message: `Tu cuenta está desactivada. Acude a ${AMBAS_OFICINAS_DESTINO}.`,
             });
           }
         },

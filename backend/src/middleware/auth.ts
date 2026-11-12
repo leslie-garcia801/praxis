@@ -1,7 +1,7 @@
 import { fromNodeHeaders } from 'better-auth/node';
 import type { Request, RequestHandler } from 'express';
 import { z } from 'zod';
-import { puedeAdministrarTipo, type Rol, type TipoPrograma } from '../domain/oficinas.js';
+import { AMBAS_OFICINAS_DESTINO, puedeAdministrarTipo, type Rol, type TipoPrograma } from '../domain/oficinas.js';
 import { auth } from '../lib/auth.js';
 import { AppError } from '../lib/errors.js';
 
@@ -49,7 +49,7 @@ export function requireSession({ permitirCambioPendiente = false }: RequireSessi
 
     const user = authUserSchema.parse(result.user);
     if (!user.activo) {
-      throw new AppError(403, 'CUENTA_INACTIVA', 'Tu cuenta está desactivada. Acude a vinculación.');
+      throw new AppError(403, 'CUENTA_INACTIVA', `Tu cuenta está desactivada. Acude a ${AMBAS_OFICINAS_DESTINO}.`);
     }
     if (user.debeCambiar && !permitirCambioPendiente) {
       throw new AppError(403, 'DEBE_CAMBIAR_CONTRASENA', 'Debes cambiar tu contraseña temporal para continuar.');

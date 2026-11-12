@@ -1,3 +1,4 @@
+import { ACUDE_A_TU_OFICINA, acudeALaOficina } from '@/lib/oficinas';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -58,7 +59,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
   return (
     <>
       {suspendido && (
-        <Aviso>Tu expediente está suspendido; no puedes registrar asistencia. Acude a vinculación.</Aviso>
+        <Aviso>{`Tu expediente está suspendido; no puedes registrar asistencia. ${acudeALaOficina(expediente.tipo)}`}</Aviso>
       )}
       {avance.isPending && <p>Cargando tu avance…</p>}
       {avance.isError && (
@@ -110,7 +111,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
 }
 
 function Contenido({ expediente }: { expediente: Expediente | null }) {
-  if (!expediente) return <Aviso>No tienes un expediente activo. Acude a vinculación.</Aviso>;
+  if (!expediente) return <Aviso>{`No tienes un expediente activo. ${ACUDE_A_TU_OFICINA}`}</Aviso>;
   if (expediente.estado === 'PENDIENTE') {
     return (
       <>

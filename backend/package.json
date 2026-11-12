@@ -18,6 +18,7 @@
     "prisma": "prisma",
     "postinstall": "prisma generate",
     "db:seed": "tsx --env-file-if-exists=.env src/scripts/seed.ts",
+    "db:seed:demo": "tsx --env-file-if-exists=.env src/scripts/seedDemo.ts",
     "job:resumen-semanal": "tsx --env-file-if-exists=.env src/scripts/resumenSemanal.ts",
     "dev:enlace": "tsx --env-file-if-exists=.env src/scripts/enviarEnlacePrueba.ts"
   },

@@ -46,7 +46,7 @@ describe('activación de cuenta (RF-02)', () => {
       expect(res.status).toBe(404);
       expect(res.body.error).toEqual({
         code: 'MATRICULA_NO_REGISTRADA',
-        message: 'Tu matrícula no está registrada; acude a vinculación.',
+        message: 'Tu matrícula no está registrada; acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.',
       });
     });
 
@@ -55,6 +55,9 @@ describe('activación de cuenta (RF-02)', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.error.code).toBe('NOMBRE_NO_COINCIDE');
+      expect(res.body.error.message).toBe(
+        'El nombre no coincide con el registrado. Revisa cómo lo escribiste o acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.',
+      );
     });
 
     it('RNF-07: never reveals the stored name', async () => {
@@ -169,6 +172,7 @@ describe('activación de cuenta (RF-02)', () => {
 
       expect(res.status).toBe(403);
       expect(res.body.error.code).toBe('CUENTA_INACTIVA');
+      expect(res.body.error.message).toBe('Tu cuenta está desactivada. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.');
     });
 
     it('RNF-06: limits activation attempts per client', async () => {

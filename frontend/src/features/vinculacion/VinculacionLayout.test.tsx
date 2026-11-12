@@ -47,13 +47,15 @@ describe('VinculacionLayout (RN-03b)', () => {
   });
 
   it.each([
-    ['SERVICIO_SOCIAL', 'Servicio social'],
-    ['PRACTICAS', 'Prácticas'],
-    [null, 'Ambas oficinas'],
-  ] as const)('shows the office indicator for %s', async (oficina, texto) => {
-    signedIn('VINCULACION', oficina);
+    ['VINCULACION', 'SERVICIO_SOCIAL', 'Oficina de Servicio Social y Titulación', 'Panel de Servicio Social y Titulación'],
+    ['VINCULACION', 'PRACTICAS', 'Oficina de Prácticas Profesionales', 'Panel de Prácticas Profesionales'],
+    ['VINCULACION', null, 'Ambas oficinas', 'Panel general'],
+    ['ADMIN', null, 'Administrador', 'Panel general'],
+  ] as const)('RN-03b: %s with office %s sees "%s" and the panel "%s"', async (rol, oficina, etiqueta, titulo) => {
+    signedIn(rol, oficina);
     renderApp('/vinculacion');
-    expect(await screen.findByLabelText('Oficina')).toHaveTextContent(texto);
+    expect(await screen.findByLabelText('Perfil')).toHaveTextContent(etiqueta);
+    expect(await screen.findByRole('heading', { level: 1, name: titulo })).toBeInTheDocument();
   });
 
   it('offers sign out', async () => {

@@ -1,3 +1,4 @@
+import { NOMBRE_OFICINA, type Oficina } from '@/lib/oficinas';
 import { useState } from 'react';
 import { useSupervisores, type Supervisor } from '../api';
 import { nombreSupervisor } from '../nombreSupervisor';
@@ -8,6 +9,8 @@ type Props = {
   institucionId: string | undefined;
   valueId: string;
   onChange: (id: string) => void;
+  // Program of the case file: names the office that reviews a new supervisor.
+  tipo: Oficina;
 };
 
 const filaClass =
@@ -15,7 +18,7 @@ const filaClass =
 
 // RF-09, RF-10: supervisors of the chosen institution, or register a new one. The component is keyed by
 // institution in the parent, so changing institution drops what was created here.
-function Lista({ institucionId, valueId, onChange }: Props & { institucionId: string }) {
+function Lista({ institucionId, valueId, onChange, tipo }: Props & { institucionId: string }) {
   const supervisores = useSupervisores(institucionId);
   const [abierto, setAbierto] = useState(false);
   // A supervisor the student just created is pending: the API does not list it for the student.
@@ -89,19 +92,19 @@ function Lista({ institucionId, valueId, onChange }: Props & { institucionId: st
       )}
       {aviso && !abierto && (
         <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
-          Vinculación revisará los datos de tu supervisor
+          La {NOMBRE_OFICINA[tipo]} revisará los datos de tu supervisor
         </p>
       )}
     </>
   );
 }
 
-export function SelectorSupervisor({ institucionId, valueId, onChange }: Props) {
+export function SelectorSupervisor({ institucionId, valueId, onChange, tipo }: Props) {
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="mb-1 text-base font-semibold">Supervisor</legend>
       {institucionId ? (
-        <Lista key={institucionId} institucionId={institucionId} valueId={valueId} onChange={onChange} />
+        <Lista key={institucionId} institucionId={institucionId} valueId={valueId} onChange={onChange} tipo={tipo} />
       ) : (
         <p className="text-slate-700">Elige primero una institución para ver sus supervisores.</p>
       )}

@@ -16,6 +16,15 @@ export function alcanceOficina(usuario: UsuarioConOficina): TipoPrograma[] {
   return [];
 }
 
+// Names of the two offices (specs §4), used in messages that tell the student where to go.
+export const NOMBRE_OFICINA: Readonly<Record<TipoPrograma, string>> = {
+  PRACTICAS: 'Oficina de Prácticas Profesionales',
+  SERVICIO_SOCIAL: 'Oficina de Servicio Social y Titulación',
+};
+
+// When the program is unknown (activation, deactivated account), both offices are named.
+export const AMBAS_OFICINAS_DESTINO = 'la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación';
+
 export function puedeAdministrarTipo(usuario: UsuarioConOficina, tipo: TipoPrograma): boolean {
   return alcanceOficina(usuario).includes(tipo);
 }

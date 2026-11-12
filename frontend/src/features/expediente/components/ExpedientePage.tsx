@@ -1,3 +1,4 @@
+import { ACUDE_A_TU_OFICINA } from '@/lib/oficinas';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { useMe } from '@/features/auth/api';
@@ -31,7 +32,7 @@ export function ExpedientePage() {
       {me.isError && <ErrorConReintento message="No se pudo cargar tu expediente." onRetry={() => void me.refetch()} />}
       {me.data && !activo && (
         <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
-          No tienes un expediente activo. Acude a vinculación.
+          No tienes un expediente activo. {ACUDE_A_TU_OFICINA}
         </p>
       )}
       {activo && <Detalle id={activo.id} />}

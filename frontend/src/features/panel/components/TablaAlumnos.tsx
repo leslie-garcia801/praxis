@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { Progress } from '@/components/ui/progress';
 import { formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
 import type { FilaPanel, Riesgo } from '../api';
@@ -29,13 +30,15 @@ function FechaEstimada({ fila }: { fila: FilaPanel }) {
   return <>{fila.riesgo === 'COMPLETADO' ? '—' : 'Sin datos suficientes'}</>;
 }
 
-// The row does not link yet: the student detail is task 0030 (the row is the place for it).
+// The student name links to the detail (task 0030): a real link keeps keyboard and screen reader access.
 function Fila({ fila }: { fila: FilaPanel }) {
   const { alumno } = fila;
   return (
     <tr className="border-b border-border align-top">
       <td className="py-2 pr-3">
-        <div className="font-medium">{alumno.nombre}</div>
+        <Link to={`/vinculacion/expedientes/${fila.expediente.id}`} className="font-medium underline">
+          {alumno.nombre}
+        </Link>
         {alumno.matricula && <div className="text-xs text-slate-700">{alumno.matricula}</div>}
       </td>
       <td className="py-2 pr-3">
