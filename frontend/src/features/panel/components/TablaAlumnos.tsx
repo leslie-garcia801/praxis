@@ -1,8 +1,6 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Link } from 'react-router';
 import { Progress } from '@/components/ui/progress';
 import { formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
-import { DescargarReporte } from '@/features/reporte/components/DescargarReporte';
 import type { FilaPanel, Riesgo } from '../api';
 
 const ETIQUETA_RIESGO: Record<Riesgo, string> = {
@@ -32,16 +30,15 @@ function FechaEstimada({ fila }: { fila: FilaPanel }) {
   return <>{fila.riesgo === 'COMPLETADO' ? '—' : 'Sin datos suficientes'}</>;
 }
 
-// The row does not link yet: the student detail is task 0030 (the row is the place for it).
+// RF-25: the student name opens the detail of the case file.
 function Fila({ fila }: { fila: FilaPanel }) {
   const { alumno } = fila;
-  // No dialog component in components/ui (only alert-dialog, meant for confirmations): an inline disclosure row.
-  const [reporteAbierto, setReporteAbierto] = useState(false);
   return (
-    <>
     <tr className="border-b border-border align-top">
       <td className="py-2 pr-3">
-        <div className="font-medium">{alumno.nombre}</div>
+        <Link to={`/vinculacion/expedientes/${fila.expediente.id}`} className="font-medium text-primary underline underline-offset-4">
+          {alumno.nombre}
+        </Link>
         {alumno.matricula && <div className="text-xs text-slate-700">{alumno.matricula}</div>}
       </td>
       <td className="py-2 pr-3">
@@ -75,30 +72,10 @@ function Fila({ fila }: { fila: FilaPanel }) {
       <td className="py-2 pr-3">
         <FechaEstimada fila={fila} />
       </td>
-      <td className="py-2 pr-3">
+      <td className="py-2">
         <EtiquetaRiesgo fila={fila} />
       </td>
-      <td className="py-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          aria-expanded={reporteAbierto}
-          aria-label={`Reporte de ${alumno.nombre}`}
-          onClick={() => setReporteAbierto((v) => !v)}
-        >
-          Reporte
-        </Button>
-      </td>
     </tr>
-    {reporteAbierto && (
-      <tr className="border-b border-border">
-        <td colSpan={10} className="py-3">
-          <DescargarReporte expedienteId={fila.expediente.id} />
-        </td>
-      </tr>
-    )}
-    </>
   );
 }
 
@@ -116,8 +93,7 @@ export function TablaAlumnos({ filas }: { filas: FilaPanel[] }) {
             <th scope="col" className="py-2 pr-3">Último registro</th>
             <th scope="col" className="py-2 pr-3">Semanas pendientes</th>
             <th scope="col" className="py-2 pr-3">Fecha estimada</th>
-            <th scope="col" className="py-2 pr-3">Riesgo</th>
-            <th scope="col" className="py-2">Reporte</th>
+            <th scope="col" className="py-2">Riesgo</th>
           </tr>
         </thead>
         <tbody>

@@ -5,7 +5,6 @@ import { buildAvance, buildExpedienteActivo, buildFilaPanel, buildInstitucion, b
 import { server } from '../../../test/msw/server';
 import { renderApp } from '../../../test/utils';
 
-const EXPEDIENTE = '44444444-4444-4444-8444-444444444441';
 const PROPIO = '44444444-4444-4444-8444-444444444444';
 
 // Serves the PDF and records the query string of each request.
@@ -125,16 +124,12 @@ describe('DescargarReporte (RF-27)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('No tienes permiso para realizar esta acción.');
   });
 
-  it('panel row action opens the report form and downloads that case file', async () => {
+  it('the panel rows no longer carry the report (it lives in the student detail)', async () => {
     mockStaff();
-    const requests = mockReporte();
-    const { user } = renderApp('/vinculacion');
+    renderApp('/vinculacion');
 
+    await screen.findByText('Ana María López García');
+    expect(screen.queryByRole('button', { name: /Reporte de/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Descargar reporte' })).not.toBeInTheDocument();
-    await user.click(await screen.findByRole('button', { name: 'Reporte de Ana María López García' }));
-    await user.click(await screen.findByRole('button', { name: 'Descargar reporte' }));
-
-    await waitFor(() => expect(descargas).toHaveLength(1));
-    expect(requests[0]!.id).toBe(EXPEDIENTE);
   });
 });
