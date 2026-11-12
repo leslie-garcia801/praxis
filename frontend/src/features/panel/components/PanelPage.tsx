@@ -7,6 +7,7 @@ import { messageOf } from '../../importaciones/archivo';
 import { CLAVES_FILTRO, usePanelAlumnos, type ClaveFiltro, type FiltrosPanel as Filtros } from '../api';
 import { esClaveAlerta, TITULO_ALERTA } from '../alertas';
 import { AlertasPanel } from './AlertasPanel';
+import { ExportarPanel } from './ExportarPanel';
 import { FiltrosPanel } from './FiltrosPanel';
 import { TablaAlumnos } from './TablaAlumnos';
 
@@ -63,6 +64,8 @@ export function PanelPage() {
         onCambiar={(clave: ClaveFiltro, valor) => cambiarParam(clave, valor)}
         onLimpiar={() => setSearchParams({})}
       />
+
+      <ExportarPanel filtros={filtros} alerta={alerta} />
 
       {panel.isPending && (
         <p role="status" className="text-slate-700">

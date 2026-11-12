@@ -1,5 +1,5 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { apiFetch } from '@/lib/api';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
+import { apiFetch, downloadFile } from '@/lib/api';
 import type { TipoPrograma, Turno } from '../instituciones/api';
 
 // Contract of GET /api/panel/alumnos (backend/src/modules/panel, task 0026).
@@ -83,5 +83,14 @@ export function usePanelAlumnos(filtros: FiltrosPanel) {
     queryKey: panelKeys.alumnos(filtros),
     queryFn: () => apiFetch<RespuestaPanel>(`/api/panel/alumnos${toQueryString(filtros)}`),
     placeholderData: keepPreviousData,
+  });
+}
+
+export type ExportacionPanel = 'alumnos' | 'edumedia';
+
+// RF-26: downloads the table (or the Edumedia data) with the same filters as the table; returns the file name.
+export function useExportarPanel(exportacion: ExportacionPanel, filtros: FiltrosPanel) {
+  return useMutation({
+    mutationFn: () => downloadFile(`/api/panel/${exportacion}.xlsx${toQueryString(filtros)}`),
   });
 }

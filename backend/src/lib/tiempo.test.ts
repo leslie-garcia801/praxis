@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diasEntre, fechaLocal, inicioDelDiaSiguiente, inicioSemana, instanteLocal, sumarDias } from './tiempo.js';
+import { diasEntre, fechaHoraLocal, fechaLocal, inicioDelDiaSiguiente, inicioSemana, instanteLocal, sumarDias } from './tiempo.js';
 
 // Monterrey is UTC-6 all year (Mexico dropped DST in 2022).
 const MTY = 'America/Monterrey';
@@ -82,5 +82,15 @@ describe('inicioSemana', () => {
   it('crosses the year boundary', () => {
     // Friday 1 Jan 2027 belongs to the week of Monday 28 Dec 2026.
     expect(inicioSemana('2027-01-01')).toBe('2026-12-28');
+  });
+});
+
+describe('fechaHoraLocal', () => {
+  it('RN-15: writes the local date and time of an instant', () => {
+    expect(fechaHoraLocal(new Date('2026-05-19T15:05:00.000Z'))).toBe('2026-05-19 09:05');
+  });
+
+  it('uses the local day when UTC is already the next one', () => {
+    expect(fechaHoraLocal(new Date('2026-05-20T03:30:00.000Z'))).toBe('2026-05-19 21:30');
   });
 });

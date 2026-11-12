@@ -89,3 +89,9 @@ export function inicioSemana(fecha: FechaISO): FechaISO {
   const diaSemana = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0 = Sunday
   return sumarDias(fecha, -((diaSemana + 6) % 7));
 }
+
+/** Local date and wall-clock time of an instant, "YYYY-MM-DD HH:mm". */
+export function fechaHoraLocal(instante: Date, zona: string = ZONA_APP): string {
+  const p = partesLocales(instante, zona);
+  return `${fechaLocal(instante, zona)} ${pad(p.hour)}:${pad(p.minute)}`;
+}
