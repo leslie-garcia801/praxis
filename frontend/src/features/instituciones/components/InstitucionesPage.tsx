@@ -38,9 +38,6 @@ export function InstitucionesPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-6 px-4 py-8">
       <header className="flex flex-col gap-1">
-        <Link to="/vinculacion" className="text-sm text-primary underline-offset-4 hover:underline">
-          Volver al panel
-        </Link>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold">Instituciones</h1>
           <div className="flex flex-wrap gap-2">

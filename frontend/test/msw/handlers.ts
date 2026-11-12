@@ -7,7 +7,13 @@ export function buildMe({
   rol = 'ALUMNO',
   debeCambiar = false,
   expedienteActivo = null,
-}: { rol?: Rol; debeCambiar?: boolean; expedienteActivo?: Record<string, unknown> | null } = {}) {
+  oficina,
+}: {
+  rol?: Rol;
+  debeCambiar?: boolean;
+  expedienteActivo?: Record<string, unknown> | null;
+  oficina?: 'SERVICIO_SOCIAL' | 'PRACTICAS' | null;
+} = {}) {
   return {
     usuario: {
       id: 'user-1',
@@ -15,7 +21,7 @@ export function buildMe({
       email: null,
       matricula: rol === 'ALUMNO' ? '25319051769999' : null,
       rol,
-      oficina: rol === 'VINCULACION' ? 'SERVICIO_SOCIAL' : null,
+      oficina: oficina !== undefined ? oficina : rol === 'VINCULACION' ? 'SERVICIO_SOCIAL' : null,
       debeCambiar,
     },
     alumno:
@@ -226,6 +232,10 @@ export const handlers = [
   http.get('*/api/health', () => HttpResponse.json({ status: 'ok' })),
   http.get('*/api/me', () => HttpResponse.json(unauthorizedBody, { status: 401 })),
   http.get('*/api/semanas/pendientes', () => HttpResponse.json({ pendientes: [] })),
+  // The vinculación panel (home of the office layout) loads these on every visit to /vinculacion.
+  http.get('*/api/panel/alumnos', () => HttpResponse.json(buildPanel())),
+  http.get('*/api/carreras', () => HttpResponse.json({ carreras: [] })),
+  http.get('*/api/instituciones', () => HttpResponse.json({ instituciones: [] })),
 ];
 
 // Builds a week of GET /api/validacion/:token (task 0021, "Contrato de la API").
@@ -259,5 +269,52 @@ export function buildEnlaceValidacion(overrides: Record<string, unknown> = {}) {
     expiraEn: '2026-11-26T01:00:00.000Z', // Wednesday 25 in Monterrey
     semanas: [buildSemanaValidacion()],
     ...overrides,
+  };
+}
+
+// Builds a row of GET /api/panel/alumnos (task 0026, "Contrato de la API").
+export function buildFilaPanel(overrides: Record<string, unknown> = {}) {
+  return {
+    expediente: {
+      id: '44444444-4444-4444-8444-444444444441',
+      tipo: 'SERVICIO_SOCIAL',
+      estado: 'EN_PROCESO',
+      fechaInicio: '2026-03-02',
+      fechaTermino: null,
+    },
+    alumno: {
+      id: '88888888-8888-4888-8888-888888888881',
+      nombre: 'Ana María López García',
+      matricula: '25319051769999',
+      carrera: 'Programación',
+      semestre: 5,
+      grupo: 'A',
+      turno: 'MATUTINO',
+    },
+    institucion: { id: '33333333-3333-4333-8333-333333333333', nombre: 'Hospital Alfa' },
+    minutosValidados: 1500,
+    metaMinutos: 28800,
+    porcentaje: 5,
+    minutosRegistrados: 120,
+    ultimoRegistro: '2026-11-10T14:00:00.000Z', // 08:00 in Monterrey
+    semanasPendientes: 2,
+    fechaEstimada: '2027-02-01',
+    limite: '2027-03-01',
+    riesgo: 'EN_TIEMPO',
+    ...overrides,
+  };
+}
+
+// Builds the body of GET /api/panel/alumnos: no rows and no alerts unless overridden.
+export function buildPanel(overrides: { alumnos?: unknown[]; alertas?: Record<string, unknown> } = {}) {
+  return {
+    alumnos: overrides.alumnos ?? [],
+    alertas: {
+      sinRegistros: { total: 0, expedienteIds: [] },
+      semanasSinValidar: { total: 0, expedienteIds: [] },
+      turnosIncompletos: { total: 0, expedienteIds: [] },
+      supervisoresSinConfirmar: { total: 0, supervisores: [] },
+      ...overrides.alertas,
+    },
   };
 }

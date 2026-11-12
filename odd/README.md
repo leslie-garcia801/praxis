@@ -73,3 +73,4 @@ Decisiones tomadas y pendientes.
 | 0024 | [Página de validación del supervisor](tasks/0024-validar-supervisor.md) | Terminada (prueba manual desde el lunes 16) |
 | 0025 | [Tope diario de 6 h 30 min](tasks/0025-tope-diario.md) | Terminada |
 | 0026 | [Panel de vinculación: tabla, alertas y "en riesgo" (backend)](tasks/0026-panel-backend.md) | Terminada |
+| 0027 | [Panel de vinculación y layout de la oficina (frontend)](tasks/0027-panel-frontend.md) | Terminada |

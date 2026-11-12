@@ -26,7 +26,8 @@ describe('/vinculacion/instituciones (RF-05, RF-06)', () => {
     const { user } = renderApp('/vinculacion');
     await user.click(await screen.findByRole('link', { name: 'Instituciones' }));
     expect(await screen.findByRole('heading', { name: 'Instituciones' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Importar instituciones' })).toBeInTheDocument();
+    // One in the menu and one in the page header.
+    expect(screen.getAllByRole('link', { name: 'Importar instituciones' })).toHaveLength(2);
   });
 
   it('requires the vinculación or admin role', async () => {

@@ -58,9 +58,6 @@ export function ImportarInstitucionesPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-4xl flex-col gap-6 px-4 py-8">
       <header className="flex flex-col gap-1">
-        <Link to="/vinculacion" className="text-sm text-primary underline-offset-4 hover:underline">
-          Volver al panel
-        </Link>
         <h1 className="text-2xl font-bold">Importar instituciones</h1>
       </header>
 

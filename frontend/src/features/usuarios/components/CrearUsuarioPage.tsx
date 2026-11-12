@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/features/auth/components/Field';
 import { ApiError } from '@/lib/api';
@@ -114,9 +113,6 @@ export function CrearUsuarioPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-4 py-8">
-      <Link to="/vinculacion" className="text-sm text-primary underline underline-offset-4">
-        Volver al panel
-      </Link>
       <h1 className="text-2xl font-bold">Crear usuario de vinculación</h1>
       {creado ? (
         <ResultView creado={creado} onReset={resetAll} />

@@ -149,10 +149,10 @@ describe('/vinculacion/usuarios/nuevo', () => {
 });
 
 describe('access to the user creation screen (RN-03b)', () => {
-  it('ADMIN sees the link in the panel', async () => {
+  it('ADMIN sees the Usuarios link in the menu', async () => {
     mockRol('ADMIN');
     renderApp('/vinculacion');
-    expect(await screen.findByRole('link', { name: 'Crear usuario de vinculación' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Usuarios' })).toHaveAttribute(
       'href',
       '/vinculacion/usuarios/nuevo',
     );
@@ -162,7 +162,7 @@ describe('access to the user creation screen (RN-03b)', () => {
     mockRol('VINCULACION');
     const { router } = renderApp('/vinculacion');
     await screen.findByRole('link', { name: 'Importar alumnos' });
-    expect(screen.queryByRole('link', { name: 'Crear usuario de vinculación' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Usuarios' })).not.toBeInTheDocument();
 
     await router.navigate('/vinculacion/usuarios/nuevo');
     await waitFor(() => expect(router.state.location.pathname).toBe('/vinculacion'));
