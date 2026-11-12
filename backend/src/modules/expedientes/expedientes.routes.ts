@@ -6,6 +6,7 @@ import {
   editarExpedienteSchema,
   expedienteIdParamsSchema,
   listarExpedientesQuerySchema,
+  reporteQuerySchema,
   transferirExpedienteSchema,
 } from './expedientes.schemas.js';
 import {
@@ -18,6 +19,7 @@ import {
   obtenerExpediente,
   transferirExpediente,
 } from './expedientes.service.js';
+import { generarReporte } from './reporte.service.js';
 
 export const expedientesRouter = Router();
 
@@ -44,6 +46,16 @@ expedientesRouter.get('/:id',requireSession(), requireRol('ALUMNO', 'VINCULACION
 expedientesRouter.get('/:id/avance', requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {
   const { id } = expedienteIdParamsSchema.parse(req.params);
   res.json({ avance: await obtenerAvance(getAuth(req).user, id) });
+});
+
+// RF-27: hours and activities report as PDF, optionally for a local date range.
+expedientesRouter.get('/:id/reporte.pdf', requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {
+  const { id } = expedienteIdParamsSchema.parse(req.params);
+  const { pdf, archivo } = await generarReporte(getAuth(req).user, id, reporteQuerySchema.parse(req.query));
+  res
+    .status(200)
+    .set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${archivo}"`, 'Cache-Control': 'no-store' })
+    .send(pdf);
 });
 
 expedientesRouter.patch('/:id',requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {

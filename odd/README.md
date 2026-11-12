@@ -75,3 +75,4 @@ Decisiones tomadas y pendientes.
 | 0026 | [Panel de vinculación: tabla, alertas y "en riesgo" (backend)](tasks/0026-panel-backend.md) | Terminada |
 | 0027 | [Panel de vinculación y layout de la oficina (frontend)](tasks/0027-panel-frontend.md) | Terminada |
 | 0028 | [Exportaciones a Excel del panel](tasks/0028-exportaciones-excel.md) | Terminada |
+| 0029 | [PDF de horas y actividades](tasks/0029-reporte-pdf.md) | Terminada |

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { PendientesAlumno } from '@/features/bitacora/components/PendientesAlumno';
 import { useMe, type Me } from '@/features/auth/api';
+import { DescargarReporte } from '@/features/reporte/components/DescargarReporte';
 import { esHoy, formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
 import { useAvance, type Avance } from '../api';
 
@@ -105,6 +106,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
         Historial
       </Link>
       <PendientesAlumno />
+      <DescargarReporte expedienteId={expediente.id} />
     </>
   );
 }

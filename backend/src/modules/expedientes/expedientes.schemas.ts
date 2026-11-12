@@ -84,3 +84,10 @@ export type AsignarProgramaInput = z.output<typeof asignarProgramaSchema>;
 
 export const CAMPOS_SOLO_PRACTICAS = ['fechaTermino', 'diasPactados', 'horaEntrada', 'horaSalida'] as const;
 export const CAMPOS_SOLO_SERVICIO = ['programa', 'subprograma'] as const;
+
+// RF-27: optional calendar range (local days, RN-15). The order is checked in the service so the message is specific.
+const fechaReporte = z.preprocess((v) => (v === '' ? undefined : v), z.iso.date('La fecha debe tener el formato AAAA-MM-DD.').optional());
+
+export const reporteQuerySchema = z.object({ desde: fechaReporte, hasta: fechaReporte });
+
+export type ReporteQuery = z.output<typeof reporteQuerySchema>;
