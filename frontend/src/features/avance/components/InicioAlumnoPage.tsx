@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { PendientesAlumno } from '@/features/bitacora/components/PendientesAlumno';
 import { useMe, type Me } from '@/features/auth/api';
 import { esHoy, formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
 import { useAvance, type Avance } from '../api';
@@ -103,6 +104,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
       <Link to="/alumno/historial" className={linkClass}>
         Historial
       </Link>
+      <PendientesAlumno />
     </>
   );
 }

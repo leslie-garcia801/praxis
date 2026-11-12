@@ -27,6 +27,13 @@ export type SemanaHistorial = {
   inicio: string;
   fin: string;
   estadoValidacion: EstadoValidacion | null;
+  // Logbook (RF-20, task 0020). `id` is null while the week has no shifts. `comentario` only when RECHAZADA.
+  id: string | null;
+  actividades: string | null;
+  comentario: string | null;
+  enviadaEn: string | null;
+  puedeEditar: boolean;
+  puedeEnviar: boolean;
   dias: DiaHistorial[];
   totales: { minutos: number; minutosAcreditables: number };
 };

@@ -33,7 +33,7 @@ describe('semanas de bitácora (RF-20, RN-17)', () => {
 
   // Only Date is faked: the database and sockets keep working.
   const llamar = async (
-    metodo: 'put' | 'post',
+    metodo: 'put' | 'post' | 'get',
     ruta: string,
     cookie: string | null,
     body?: object,
@@ -53,6 +53,8 @@ describe('semanas de bitácora (RF-20, RN-17)', () => {
     llamar('put', `/api/semanas/${id}/bitacora`, cookie, body, momento);
   const enviar = (id: string, cookie: string | null, momento?: [string, string]) =>
     llamar('post', `/api/semanas/${id}/enviar`, cookie, undefined, momento);
+  const pendientes = (cookie: string | null, momento?: [string, string]) =>
+    llamar('get', '/api/semanas/pendientes', cookie, undefined, momento);
 
   async function caso({
     semanaInicio = SEMANA_CERRADA,
@@ -283,6 +285,91 @@ describe('semanas de bitácora (RF-20, RN-17)', () => {
       const c = await caso({ actividades: TEXTO_VALIDO });
       expect((await enviar(c.semana.id, cookieOtroPlantel)).status).toBe(404);
       expect((await enviar(randomUUID(), c.cookie)).status).toBe(404);
+    });
+  });
+
+  describe('GET /api/semanas/pendientes (RF-18)', () => {
+    it('RF-22: una semana rechazada aparece con su comentario', async () => {
+      const c = await caso({ estado: 'RECHAZADA', actividades: TEXTO_VALIDO, comentario: 'Falta detalle.' });
+
+      const res = await pendientes(c.cookie);
+
+      expect(res.status).toBe(200);
+      expect(res.body.pendientes).toEqual([
+        {
+          id: c.semana.id,
+          semanaInicio: SEMANA_CERRADA,
+          semanaFin: '2026-11-08',
+          estado: 'RECHAZADA',
+          motivo: 'RECHAZADA',
+          comentario: 'Falta detalle.',
+        },
+      ]);
+    });
+
+    it('RN-17: una semana cerrada en borrador sin bitácora válida aparece como BITACORA_PENDIENTE', async () => {
+      const sinTexto = await caso();
+      const corto = await caso({ actividades: 'Texto corto' });
+      for (const c of [sinTexto, corto]) {
+        const res = await pendientes(c.cookie);
+        expect(res.body.pendientes).toEqual([
+          expect.objectContaining({ id: c.semana.id, estado: 'BORRADOR', motivo: 'BITACORA_PENDIENTE', comentario: null }),
+        ]);
+      }
+    });
+
+    it('la semana en curso sin bitácora válida aparece como BITACORA_SEMANA_ACTUAL', async () => {
+      const c = await caso({ semanaInicio: SEMANA_EN_CURSO, actividades: 'Archivo.' });
+      const res = await pendientes(c.cookie);
+      expect(res.body.pendientes).toEqual([
+        expect.objectContaining({ id: c.semana.id, semanaInicio: SEMANA_EN_CURSO, semanaFin: '2026-11-15', motivo: 'BITACORA_SEMANA_ACTUAL' }),
+      ]);
+    });
+
+    it('RN-17: una semana con bitácora válida, enviada o validada no aparece', async () => {
+      const conTexto = await caso({ actividades: TEXTO_VALIDO });
+      const enCursoConTexto = await caso({ semanaInicio: SEMANA_EN_CURSO, actividades: TEXTO_VALIDO });
+      const enviada = await caso({ estado: 'ENVIADA', actividades: TEXTO_VALIDO });
+      const validada = await caso({ estado: 'VALIDADA' });
+      for (const c of [conTexto, enCursoConTexto, enviada, validada]) {
+        const res = await pendientes(c.cookie);
+        expect(res.status).toBe(200);
+        expect(res.body.pendientes).toEqual([]);
+      }
+    });
+
+    it('ordena de la semana más reciente a la más antigua', async () => {
+      const c = await caso({ estado: 'RECHAZADA', comentario: 'Detalla.' });
+      const vieja = await crearSemana({ expedienteId: c.expediente.id, semanaInicio: '2026-10-26' });
+      await prisma.semanaBitacora.update({ where: { id: vieja.id }, data: { estado: 'BORRADOR' } });
+      const actual = await crearSemana({ expedienteId: c.expediente.id, semanaInicio: SEMANA_EN_CURSO, estado: 'BORRADOR' });
+
+      const res = await pendientes(c.cookie);
+
+      expect(res.body.pendientes.map((p: { id: string }) => p.id)).toEqual([actual.id, c.semana.id, vieja.id]);
+    });
+
+    it('solo muestra las semanas del expediente activo del alumno', async () => {
+      const c = await caso({ expediente: 'FINALIZADO' });
+      const res = await pendientes(c.cookie);
+      expect(res.body.pendientes).toEqual([]);
+    });
+
+    it('un alumno sin expediente activo recibe una lista vacía', async () => {
+      const usuario = await crearAlumnoPrecargado({ plantelId, matricula: '25319057779999', password: PASSWORD_PRUEBA });
+      const res = await pendientes(await iniciarSesion(app, usuario));
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ pendientes: [] });
+    });
+
+    it('401: sin sesión', async () => {
+      expect((await pendientes(null)).status).toBe(401);
+    });
+
+    it('403: vinculación no tiene pendientes de bitácora', async () => {
+      const res = await pendientes(cookieVinculacion);
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe('FORBIDDEN');
     });
   });
 });

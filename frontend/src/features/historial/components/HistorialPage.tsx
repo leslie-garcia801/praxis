@@ -3,6 +3,7 @@ import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api';
 import { formatHoras, formatRangoSemana, hoyMonterrey, sumarDias } from '@/lib/tiempo';
+import { BitacoraSemana } from '../../bitacora/components/BitacoraSemana';
 import { useHistorial, type EstadoValidacion, type SemanaHistorial } from '../api';
 import { DiaHistorial } from './DiaHistorial';
 
@@ -58,6 +59,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
           </p>
         </>
       )}
+      <BitacoraSemana key={semana.inicio} semana={semana} />
     </>
   );
 }

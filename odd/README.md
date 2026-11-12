@@ -69,3 +69,4 @@ Decisiones tomadas y pendientes.
 | 0020 | [Semanas y bitácora](tasks/0020-semanas-bitacora.md) | Terminada |
 | 0021 | [Mailer y validación por enlace](tasks/0021-validacion-enlace.md) | Terminada (prueba manual con la 0024) |
 | 0022 | [Resumen semanal al supervisor](tasks/0022-resumen-semanal.md) | Terminada |
+| 0023 | [Bitácora del alumno y pendientes del inicio](tasks/0023-bitacora-alumno.md) | Terminada |

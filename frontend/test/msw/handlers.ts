@@ -68,12 +68,24 @@ export function buildAvance(overrides: Record<string, unknown> = {}) {
 export function buildSemana({
   inicio = '2026-11-09',
   estadoValidacion = null,
+  id = '66666666-6666-4666-8666-666666666666',
+  actividades = null,
+  comentario = null,
+  enviadaEn = null,
+  puedeEditar = false,
+  puedeEnviar = false,
   turnosPorDia = {},
   totalesDia = {},
   totales,
 }: {
   inicio?: string;
   estadoValidacion?: string | null;
+  id?: string | null;
+  actividades?: string | null;
+  comentario?: string | null;
+  enviadaEn?: string | null;
+  puedeEditar?: boolean;
+  puedeEnviar?: boolean;
   turnosPorDia?: Record<string, Record<string, unknown>[]>;
   totalesDia?: Record<string, { minutosDia: number; minutosAcreditablesDia: number }>;
   totales?: { minutos: number; minutosAcreditables: number };
@@ -101,11 +113,30 @@ export function buildSemana({
     inicio,
     fin: fechas[6],
     estadoValidacion,
+    id,
+    actividades,
+    comentario,
+    enviadaEn,
+    puedeEditar,
+    puedeEnviar,
     dias,
     totales: totales ?? {
       minutos: dias.reduce((a, d) => a + d.minutosDia, 0),
       minutosAcreditables: dias.reduce((a, d) => a + d.minutosAcreditablesDia, 0),
     },
+  };
+}
+
+// Builds an item of GET /api/semanas/pendientes (task 0023).
+export function buildPendiente(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '66666666-6666-4666-8666-666666666666',
+    semanaInicio: '2026-11-02',
+    semanaFin: '2026-11-08',
+    estado: 'BORRADOR',
+    motivo: 'BITACORA_PENDIENTE',
+    comentario: null,
+    ...overrides,
   };
 }
 
@@ -194,4 +225,5 @@ export function buildInstitucion(overrides: Record<string, unknown> = {}) {
 export const handlers = [
   http.get('*/api/health', () => HttpResponse.json({ status: 'ok' })),
   http.get('*/api/me', () => HttpResponse.json(unauthorizedBody, { status: 401 })),
+  http.get('*/api/semanas/pendientes', () => HttpResponse.json({ pendientes: [] })),
 ];

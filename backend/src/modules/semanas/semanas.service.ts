@@ -1,6 +1,6 @@
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
-import { fechaLocal, sumarDias } from '../../lib/tiempo.js';
+import { fechaLocal, inicioSemana, sumarDias } from '../../lib/tiempo.js';
 import type { Prisma, SemanaBitacora } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import { cargar } from '../expedientes/expedientes.service.js';
@@ -95,4 +95,50 @@ export async function enviarSemana(user: AuthUser, id: string, ahora: () => Date
     });
     return aRespuesta(await tx.semanaBitacora.findUniqueOrThrow({ where: { id } }));
   });
+}
+
+// RN-03: the case file the student is working on (same choice as the profile in `me`).
+const ESTADOS_ACTIVOS = ['PENDIENTE', 'EN_PROCESO', 'SUSPENDIDO'] as const;
+
+export type MotivoPendiente = 'RECHAZADA' | 'BITACORA_PENDIENTE' | 'BITACORA_SEMANA_ACTUAL';
+
+// RF-18 (point 5): weeks of the active case file that need something from the student. `ahora` is injectable for tests.
+export async function listarPendientes(user: AuthUser, ahora: () => Date = () => new Date()) {
+  const expediente = await prisma.expediente.findFirst({
+    where: { alumno: { usuarioId: user.id }, estado: { in: [...ESTADOS_ACTIVOS] } },
+    orderBy: { creadoEn: 'desc' },
+    select: { id: true },
+  });
+  if (!expediente) return [];
+
+  const semanaActual = inicioSemana(fechaLocal(ahora()));
+  const semanas = await prisma.semanaBitacora.findMany({
+    where: { expedienteId: expediente.id, estado: { in: ['BORRADOR', 'RECHAZADA'] } },
+    orderBy: { semanaInicio: 'desc' },
+  });
+
+  const pendientes: {
+    id: string;
+    semanaInicio: string;
+    semanaFin: string;
+    estado: SemanaBitacora['estado'];
+    motivo: MotivoPendiente;
+    comentario: string | null;
+  }[] = [];
+  for (const s of semanas) {
+    const inicio = aFecha(s.semanaInicio);
+    let motivo: MotivoPendiente;
+    if (s.estado === 'RECHAZADA') motivo = 'RECHAZADA';
+    else if (bitacoraValida(s.actividades)) continue;
+    else motivo = inicio === semanaActual ? 'BITACORA_SEMANA_ACTUAL' : 'BITACORA_PENDIENTE';
+    pendientes.push({
+      id: s.id,
+      semanaInicio: inicio,
+      semanaFin: sumarDias(inicio, 6),
+      estado: s.estado,
+      motivo,
+      comentario: s.estado === 'RECHAZADA' ? s.comentario : null,
+    });
+  }
+  return pendientes;
 }
