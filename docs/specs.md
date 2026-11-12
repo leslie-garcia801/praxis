@@ -184,7 +184,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 | RN-03 | Un alumno no puede tener servicio y prácticas en proceso al mismo tiempo. Puede hacer ambos en la misma institución en periodos distintos | Vinculación | Confirmada |
 | RN-03a | **El tipo de programa lo asigna vinculación**, no el alumno. En 5.º semestre se asigna servicio o prácticas, y en 6.º el otro | Servicio social | Confirmada |
 | RN-03b | Cada usuario de vinculación administra solo los expedientes de su oficina (Prácticas o Servicio Social); el administrador ve ambos | Formatos de Edumedia | Confirmada |
-| RN-04 | Máximo **5 horas acreditables por día** por alumno. Si un turno las supera, el excedente se registra pero no se acredita, y se avisa al alumno | Vinculación | Confirmada |
+| RN-04 | Máximo **6 h 30 min (390 minutos) acreditables por día** por alumno. Si un turno las supera, el excedente se registra pero no se acredita, y se avisa al alumno. *(Antes 5 horas; cambiado por decisión de la responsable del proyecto el 2026-11-11.)* | Vinculación | Confirmada |
 | RN-05 | Todos los días cuentan, incluidos sábados y domingos | Vinculación | Confirmada |
 | RN-06 | Duración configurable por tipo, con mínimo y máximo en meses. Valores iniciales: **servicio social, máximo 6 meses**; **prácticas, el periodo de inicio y término del expediente** (unos 3 meses). El expediente se finaliza al cumplir las horas validadas | Servicio social, vinculación y formatos | Confirmada, con la discrepancia de 2.4 por resolver |
 | RN-06a | Si con el ritmo actual la fecha estimada de término pasa el máximo permitido o el fin del periodo, el alumno y vinculación ven una alerta "en riesgo" | Diseño | — |
@@ -558,7 +558,7 @@ CREATE UNIQUE INDEX un_expediente_activo
 ### 8.4 Cálculo de horas
 
 - Minutos del turno = `salida − entrada`; menos de 15 minutos → 0 (RN-09).
-- Minutos acreditables del día = `min(suma del día, 300)` (RN-04); el excedente se descuenta del último turno del día.
+- Minutos acreditables del día = `min(suma del día, 390)` (RN-04); el excedente se descuenta del último turno del día.
 - Horas validadas = (suma de minutos acreditables en semanas `VALIDADA` + `minutosTransferidos`) ÷ 60.
 - El total se calcula con una consulta o vista, no se guarda como columna, para evitar desincronización.
 

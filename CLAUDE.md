@@ -71,7 +71,7 @@ Cada proyecto tiene `.env.example`; nunca subas `.env`.
 
 ## Pruebas (obligatorias)
 
-- Toda regla de negocio (RN-xx) tiene al menos una prueba que la menciona en su nombre, por ejemplo `it('RN-04: acredita máximo 300 minutos por día')`.
+- Toda regla de negocio (RN-xx) tiene al menos una prueba que la menciona en su nombre, por ejemplo `it('RN-04: acredita máximo 390 minutos por día')`.
 - Toda ruta nueva de la API tiene pruebas de: caso feliz, validación inválida, sin sesión (401) y rol incorrecto (403).
 - Un cambio no está terminado si `pnpm test` y `pnpm typecheck` fallan en el proyecto que tocaste.
 

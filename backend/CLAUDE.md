@@ -75,7 +75,7 @@ Las rutas solo validan entrada (Zod) y llaman al servicio. La lógica de negocio
 
 ## Pruebas
 
-- `domain/horas.ts` se escribe **primero** y con pruebas exhaustivas: turno menor a 15 min (RN-09), tope de 300 min por día con varios turnos (RN-04), turno que cruza medianoche, turno abierto cerrado a las 23:59 (RN-08), fecha estimada con menos de 5 días de datos (RN-16).
+- `domain/horas.ts` se escribe **primero** y con pruebas exhaustivas: turno menor a 15 min (RN-09), tope de 390 min (6 h 30 min) por día con varios turnos (RN-04), turno que cruza medianoche, turno abierto cerrado a las 23:59 (RN-08), fecha estimada con menos de 5 días de datos (RN-16).
 - Las pruebas de rutas usan Supertest sobre `app.ts` y una base real de prueba (`app_test`), no mocks de Prisma. Así se prueban también las restricciones SQL.
 - Fija la hora con `vi.useFakeTimers()` / `vi.setSystemTime()` en pruebas que dependen de la fecha.
 - Cada prueba crea sus propios datos con `test/factories.ts`.
