@@ -20,7 +20,8 @@ Este documento muestra cómo se usa la app **hoy**, pantalla por pantalla, para 
 | `/vinculacion/instituciones/nueva` y `/:id/editar` | Formulario de institución | Vinculación y administrador |
 | `/vinculacion/importar/alumnos` | Importar alumnos | Vinculación y administrador |
 | `/vinculacion/importar/instituciones` | Importar instituciones | Vinculación y administrador |
-| `/vinculacion/usuarios/nuevo` | Crear usuario de vinculación | Solo administrador |
+| `/vinculacion/expedientes/:id` | Detalle del alumno y restablecer contraseña | Vinculación y administrador |
+| `/vinculacion/usuarios/nuevo` | Crear usuario de oficina | Solo administrador |
 | `/validar/:token` | Validar semanas | Supervisor (enlace del correo, sin cuenta) |
 
 ## Entrada a la app (todos los roles)
@@ -53,7 +54,7 @@ El administrador ve todo lo que ve vinculación, de ambas oficinas, más la opci
 ```mermaid
 flowchart TD
     IN([Primer inicio con la contraseña del seed]) --> CC[Cambiar contraseña]
-    CC --> P[Panel de vinculación<br/>con filtro Tipo: ambas oficinas]
+    CC --> P[Panel general<br/>con filtro Tipo: ambas oficinas]
     P --> NAV{Menú}
     NAV --> U[Usuarios]
     NAV --> OTRAS[Panel, Instituciones,<br/>Importar alumnos, Importar instituciones<br/>igual que vinculación]
@@ -72,11 +73,20 @@ flowchart TD
 
 Vinculación prepara el catálogo (instituciones y alumnos) y da seguimiento desde el panel. Solo ve los expedientes de su oficina; el filtro "Tipo" aparece únicamente si tiene ambas oficinas o es administrador.
 
+En pantalla no aparece la palabra "vinculación": cada usuario ve el nombre de su oficina (specs §4). Las rutas siguen siendo `/vinculacion/...`, pero eso es interno.
+
+| Usuario | Título del panel | Etiqueta del encabezado |
+| --- | --- | --- |
+| Administrador | Panel general | Administrador |
+| Oficina de prácticas | Panel de Prácticas Profesionales | Oficina de Prácticas Profesionales |
+| Oficina de servicio social | Panel de Servicio Social y Titulación | Oficina de Servicio Social y Titulación |
+| Usuario con ambas oficinas | Panel general | Ambas oficinas |
+
 ### Preparar el semestre
 
 ```mermaid
 flowchart TD
-    V([Panel de vinculación]) --> I[Instituciones]
+    V([Panel de la oficina]) --> I[Instituciones]
     V --> IA[Importar alumnos]
     V --> II[Importar instituciones]
 
@@ -123,9 +133,30 @@ flowchart LR
     F1 --> TB
 
     TB --> COL[Horas validadas vs meta, horas sin validar,<br/>último registro, semanas pendientes,<br/>fecha estimada y riesgo]
+    TB -- "Clic en el nombre" --> DET["/vinculacion/expedientes/:id<br/>Detalle del alumno"]
 ```
 
-- El panel es **de solo lectura**: las filas todavía no abren el detalle del alumno (tarea 0030).
+- El panel solo consulta; las acciones sobre un alumno están en su detalle.
+- "En riesgo" sigue la regla RN-06a; el panel solo muestra lo que calcula la API.
+
+### Detalle del alumno y restablecer contraseña
+
+```mermaid
+flowchart TD
+    D([Detalle del alumno]) --> S1[Alumno: matrícula, carrera,<br/>semestre, grupo y turno]
+    D --> S2[Expediente: programa, estado,<br/>institución, supervisor e inicio]
+    D --> S3[Avance: horas validadas vs meta,<br/>registradas, faltantes y fecha estimada]
+    S1 --> RB[Restablecer contraseña]
+    RB --> CF{"¿Restablecer?<br/>La actual deja de funcionar<br/>y se cierran sus sesiones"}
+    CF -- Cancelar --> D
+    CF -- Restablecer --> PT[Contraseña temporal, una sola vez,<br/>con botón Copiar]
+    PT --> EN[Entregar la contraseña al alumno]
+    EN --> AL[El alumno entra con ella<br/>y debe elegir una nueva]
+    PT -- Listo --> D
+```
+
+- Cualquier oficina puede restablecer la contraseña de cualquier alumno del plantel: es soporte, no gestión del expediente.
+- Si el alumno nunca activó su cuenta, restablecer se la crea; también sirve cuando la activación falla porque su nombre no coincide.
 - "En riesgo" sigue la regla RN-06a; el panel solo muestra lo que calcula la API.
 
 ## Alumno
@@ -253,9 +284,8 @@ La API ya tiene estos endpoints, pero la interfaz todavía no los usa:
 | Suspender, reactivar o cancelar un expediente | `PATCH /api/expedientes/:id/estado` | — |
 | Transferir de institución | `POST /api/expedientes/:id/transferir` | — |
 | Asignar el siguiente programa | `POST /api/expedientes/asignar` | — |
-| Restablecer la contraseña de un alumno | `POST /api/alumnos/:id/restablecer-contrasena` | — |
 | Editar o confirmar un supervisor | `PATCH /api/supervisores/:id` | La alerta "Supervisores por confirmar" no tiene acción |
-| Detalle del alumno desde el panel | — (tarea 0030) | Las filas del panel no abren nada |
-| Listar, editar o desactivar usuarios | — | El administrador solo puede crear |
+| Validar semanas en nombre del supervisor | — (resto de la tarea 0030) | — |
+| Listar, editar, desactivar o restablecer la contraseña de usuarios de vinculación | — (necesita backend) | El administrador solo puede crear; si alguien de vinculación olvida su contraseña, no hay forma de recuperarla desde la app |
 
 Mientras tanto, para probar el flujo completo de un alumno ya en proceso, usa los datos demo (`pnpm db:seed:demo` en `backend/`): Ana y Bruno ya tienen expedientes EN_PROCESO.
