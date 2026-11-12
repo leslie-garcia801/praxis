@@ -267,16 +267,16 @@ describe('POST /api/asistencias/escaneo (RF-14, RF-15)', () => {
   });
 
   describe('turnos y horas acreditables', () => {
-    it('RN-04: acredita máximo 300 minutos por día y reporta el excedente', async () => {
+    it('RN-04: acredita máximo 390 minutos (6 h 30 min) por día y reporta el excedente', async () => {
       const a = await caso();
       await escanear(a.cookie, { id: randomUUID(), token: a.token }, [HOY, '07:00']);
       const salida = await escanear(a.cookie, { id: randomUUID(), token: a.token }, [HOY, '14:00']);
       expect(salida.body).toMatchObject({
         tipo: 'SALIDA',
-        asistencia: { minutosAcreditables: 300 },
+        asistencia: { minutosAcreditables: 390 },
         minutosDia: 420,
-        minutosAcreditablesDia: 300,
-        excedente: 120,
+        minutosAcreditablesDia: 390,
+        excedente: 30,
       });
     });
 
@@ -287,12 +287,12 @@ describe('POST /api/asistencias/escaneo (RF-14, RF-15)', () => {
         return escanear(a.cookie, { id: randomUUID(), token: a.token }, [HOY, a2]);
       };
       const primero = await dos('06:00', '09:00'); // 180
-      const segundo = await dos('10:00', '14:00'); // 240 -> only 120 credited
+      const segundo = await dos('10:00', '14:00'); // 240 -> only 210 credited
       expect(primero.body.asistencia.minutosAcreditables).toBe(180);
-      expect(segundo.body).toMatchObject({ minutosDia: 420, minutosAcreditablesDia: 300, excedente: 120 });
-      expect(segundo.body.asistencia.minutosAcreditables).toBe(120);
+      expect(segundo.body).toMatchObject({ minutosDia: 420, minutosAcreditablesDia: 390, excedente: 30 });
+      expect(segundo.body.asistencia.minutosAcreditables).toBe(210);
       const guardados = await prisma.asistencia.findMany({ where: { expedienteId: a.expediente.id }, orderBy: { entrada: 'asc' } });
-      expect(guardados.map((g) => g.minutosAcreditables)).toEqual([180, 120]);
+      expect(guardados.map((g) => g.minutosAcreditables)).toEqual([180, 210]);
     });
 
     it('RN-09: un turno de menos de 15 minutos se cierra pero no acredita nada', async () => {

@@ -15,8 +15,8 @@ import {
 /** RN-09: a shift shorter than this credits nothing (avoids accidental double scans). */
 export const MINUTOS_MINIMOS_TURNO = 15;
 
-/** RN-04: maximum creditable minutes per student per calendar day. */
-export const TOPE_MINUTOS_DIA = 300;
+/** RN-04: maximum creditable minutes per student per calendar day (6 h 30 min). */
+export const TOPE_MINUTOS_DIA = 390;
 
 /** RN-08: open shifts are auto-closed at this local time. */
 export const HORA_CIERRE_AUTOMATICO = '23:59';
@@ -78,7 +78,7 @@ function partirPorDia(turnoId: string, entrada: Date, salida: Date, zona: string
  * - Only CERRADA shifts count; ABIERTA and INCOMPLETA credit 0 (RN-08).
  * - RN-09 is evaluated on the whole shift, before splitting it.
  * - A shift crossing midnight is split between both days (team decision, task 0002).
- * - Each day is capped at 300 minutes, filled chronologically, so the excess is
+ * - Each day is capped at 390 minutes (6 h 30 min), filled chronologically, so the excess is
  *   deducted from the last shift of the day (RN-04, specs 8.4).
  * - Days are grouped in the app time zone (RN-15); weekends count the same (RN-05).
  */

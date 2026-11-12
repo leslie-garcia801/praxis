@@ -37,42 +37,42 @@ describe('calcularMinutosAcreditables', () => {
     expect(r.porDia).toEqual({ '2026-11-09': { minutos: 240, acreditables: 240 } });
   });
 
-  it('RN-04: acredita máximo 300 minutos por día', () => {
-    const r = calcularMinutosAcreditables([turno('a', '2026-11-09T08:00:00', '2026-11-09T14:00:00')]);
+  it('RN-04: acredita máximo 390 minutos (6 h 30 min) por día', () => {
+    const r = calcularMinutosAcreditables([turno('a', '2026-11-09T08:00:00', '2026-11-09T15:00:00')]);
 
-    expect(TOPE_MINUTOS_DIA).toBe(300);
-    expect(r.porTurno).toEqual({ a: 300 });
+    expect(TOPE_MINUTOS_DIA).toBe(390);
+    expect(r.porTurno).toEqual({ a: 390 });
     // The excess is recorded but not credited
-    expect(r.porDia['2026-11-09']).toEqual({ minutos: 360, acreditables: 300 });
+    expect(r.porDia['2026-11-09']).toEqual({ minutos: 420, acreditables: 390 });
   });
 
   it('RN-04: con varios turnos, el excedente se descuenta del último turno del día', () => {
     // Passed out of order on purpose: crediting must follow chronological order
     const r = calcularMinutosAcreditables([
-      turno('tarde', '2026-11-09T12:00:00', '2026-11-09T15:00:00'),
+      turno('tarde', '2026-11-09T12:00:00', '2026-11-09T16:00:00'),
       turno('manana', '2026-11-09T08:00:00', '2026-11-09T11:00:00'),
     ]);
 
-    expect(r.porTurno).toEqual({ manana: 180, tarde: 120 });
-    expect(r.porDia['2026-11-09']).toEqual({ minutos: 360, acreditables: 300 });
+    expect(r.porTurno).toEqual({ manana: 180, tarde: 210 });
+    expect(r.porDia['2026-11-09']).toEqual({ minutos: 420, acreditables: 390 });
   });
 
   it('RN-04: un turno que llega cuando el día ya está lleno acredita 0', () => {
     const r = calcularMinutosAcreditables([
-      turno('a', '2026-11-09T07:00:00', '2026-11-09T12:00:00'),
-      turno('b', '2026-11-09T13:00:00', '2026-11-09T14:00:00'),
+      turno('a', '2026-11-09T07:00:00', '2026-11-09T14:00:00'),
+      turno('b', '2026-11-09T15:00:00', '2026-11-09T16:00:00'),
     ]);
 
-    expect(r.porTurno).toEqual({ a: 300, b: 0 });
+    expect(r.porTurno).toEqual({ a: 390, b: 0 });
   });
 
   it('RN-04: el tope es independiente para cada día', () => {
     const r = calcularMinutosAcreditables([
-      turno('lun', '2026-11-09T08:00:00', '2026-11-09T14:00:00'),
-      turno('mar', '2026-11-10T08:00:00', '2026-11-10T14:00:00'),
+      turno('lun', '2026-11-09T08:00:00', '2026-11-09T15:00:00'),
+      turno('mar', '2026-11-10T08:00:00', '2026-11-10T15:00:00'),
     ]);
 
-    expect(r.porTurno).toEqual({ lun: 300, mar: 300 });
+    expect(r.porTurno).toEqual({ lun: 390, mar: 390 });
   });
 
   it('RN-05: sábados y domingos cuentan igual que entre semana', () => {
@@ -105,13 +105,13 @@ describe('calcularMinutosAcreditables', () => {
 
   it('RN-04: un turno que cruza la medianoche respeta el tope de cada día', () => {
     const r = calcularMinutosAcreditables([
-      turno('dia', '2026-11-09T08:00:00', '2026-11-09T12:00:00'), // 240 on day 1
+      turno('dia', '2026-11-09T08:00:00', '2026-11-09T13:00:00'), // 300 on day 1
       turno('noche', '2026-11-09T22:00:00', '2026-11-10T02:00:00'), // 120 day 1 + 120 day 2
     ]);
 
-    // Day 1 only has 60 minutes left for the night shift; day 2 credits its full 120
-    expect(r.porTurno).toEqual({ dia: 240, noche: 180 });
-    expect(r.porDia['2026-11-09']).toEqual({ minutos: 360, acreditables: 300 });
+    // Day 1 only has 90 minutes left for the night shift; day 2 credits its full 120
+    expect(r.porTurno).toEqual({ dia: 300, noche: 210 });
+    expect(r.porDia['2026-11-09']).toEqual({ minutos: 420, acreditables: 390 });
     expect(r.porDia['2026-11-10']).toEqual({ minutos: 120, acreditables: 120 });
   });
 
@@ -127,11 +127,11 @@ describe('calcularMinutosAcreditables', () => {
   it('RN-09: un turno corto no ocupa espacio del tope diario', () => {
     const r = calcularMinutosAcreditables([
       turno('doble', '2026-11-09T07:00:00', '2026-11-09T07:05:00'),
-      turno('a', '2026-11-09T08:00:00', '2026-11-09T13:00:00'),
+      turno('a', '2026-11-09T08:00:00', '2026-11-09T14:30:00'),
     ]);
 
-    expect(r.porTurno).toEqual({ doble: 0, a: 300 });
-    expect(r.porDia['2026-11-09']).toEqual({ minutos: 300, acreditables: 300 });
+    expect(r.porTurno).toEqual({ doble: 0, a: 390 });
+    expect(r.porDia['2026-11-09']).toEqual({ minutos: 390, acreditables: 390 });
   });
 
   it('RN-08: los turnos INCOMPLETA y ABIERTA acreditan 0', () => {

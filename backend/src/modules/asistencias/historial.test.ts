@@ -138,18 +138,18 @@ describe('GET /api/asistencias (RF-19)', () => {
       expect(otra.body.semana.totales.minutos).toBe(0);
     });
 
-    it('RN-04: el historial muestra el excedente pero acredita máximo 300 min', async () => {
+    it('RN-04: el historial muestra el excedente pero acredita máximo 390 min (6 h 30 min)', async () => {
       const c = await caso();
-      await turno(c.id, '2026-11-10', '08:00', 200, { minutosAcreditables: 200 });
-      await turno(c.id, '2026-11-10', '13:00', 200, { minutosAcreditables: 100 });
+      await turno(c.id, '2026-11-10', '08:00', 250, { minutosAcreditables: 250 });
+      await turno(c.id, '2026-11-10', '13:00', 250, { minutosAcreditables: 140 });
 
       const res = await pedir(`?semana=${HOY}`, await c.cookie());
 
       const martes = res.body.semana.dias[1];
-      expect(martes.minutosDia).toBe(400);
-      expect(martes.minutosAcreditablesDia).toBe(300);
-      expect(martes.turnos.map((t: { minutosAcreditables: number }) => t.minutosAcreditables)).toEqual([200, 100]);
-      expect(res.body.semana.totales).toEqual({ minutos: 400, minutosAcreditables: 300 });
+      expect(martes.minutosDia).toBe(500);
+      expect(martes.minutosAcreditablesDia).toBe(390);
+      expect(martes.turnos.map((t: { minutosAcreditables: number }) => t.minutosAcreditables)).toEqual([250, 140]);
+      expect(res.body.semana.totales).toEqual({ minutos: 500, minutosAcreditables: 390 });
     });
 
     it('RN-09: un turno de menos de 15 minutos no suma', async () => {

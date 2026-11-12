@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/features/auth/components/Field';
 import { ApiError } from '@/lib/api';
+import { TOPE_DIARIO_TEXTO } from '@/lib/reglas';
 import { formatHora, formatHoras } from '@/lib/tiempo';
 import { useRegistrarEscaneo, type Credencial, type EscaneoRequest, type EscaneoResponse } from '../api';
 import { useQrScanner, type MotivoErrorCamara } from '../hooks/useQrScanner';
@@ -52,7 +53,7 @@ function Confirmacion({ resultado }: { resultado: EscaneoResponse }) {
       </p>
       {horaSalida && <p>{`Hoy llevas ${formatHoras(minutosAcreditablesDia)} acreditadas`}</p>}
       {/* RN-04 */}
-      {excedente > 0 && <Aviso>{`Solo se acreditan 5 h por día; ${formatHoras(excedente)} no cuentan`}</Aviso>}
+      {excedente > 0 && <Aviso>{`Solo se acreditan ${TOPE_DIARIO_TEXTO} por día; ${formatHoras(excedente)} no cuentan`}</Aviso>}
       {/* RN-09 */}
       {horaSalida && asistencia.minutosAcreditables === 0 && (
         <Aviso>El turno duró menos de 15 minutos y no se acredita</Aviso>

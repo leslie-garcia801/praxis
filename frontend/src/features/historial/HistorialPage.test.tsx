@@ -111,12 +111,12 @@ describe('/alumno/historial (RF-19)', () => {
     mockSemana((inicio) =>
       buildSemana({
         inicio,
-        turnosPorDia: { '2026-11-09': [{ minutosAcreditables: 300 }] },
-        totalesDia: { '2026-11-09': { minutosDia: 390, minutosAcreditablesDia: 300 } },
+        turnosPorDia: { '2026-11-09': [{ minutosAcreditables: 390 }] },
+        totalesDia: { '2026-11-09': { minutosDia: 480, minutosAcreditablesDia: 390 } },
       }),
     );
     renderApp('/alumno/historial');
-    expect(await screen.findByText('1 h 30 min no se acreditan (tope de 5 h por día)')).toBeInTheDocument();
+    expect(await screen.findByText('1 h 30 min no se acreditan (tope de 6 h 30 min por día)')).toBeInTheDocument();
   });
 
   it('RN-04: does not show the cap notice when the whole day is credited', async () => {

@@ -1,3 +1,4 @@
+import { TOPE_DIARIO_TEXTO } from '@/lib/reglas';
 import { diaMonterrey, formatDiaCorto, formatHora, formatHoras } from '@/lib/tiempo';
 import type { DiaHistorial as Dia, Turno } from '../api';
 
@@ -51,7 +52,7 @@ export function DiaHistorial({ dia }: { dia: Dia }) {
       </ul>
       <p className="font-medium">Total del día: {formatHoras(dia.minutosAcreditablesDia)}</p>
       {noAcreditado > 0 && (
-        <p className="text-slate-800">{formatHoras(noAcreditado)} no se acreditan (tope de 5 h por día)</p>
+        <p className="text-slate-800">{formatHoras(noAcreditado)} no se acreditan (tope de {TOPE_DIARIO_TEXTO} por día)</p>
       )}
     </section>
   );

@@ -124,13 +124,13 @@ describe('/alumno/registrar, modo código (RF-14, RF-15)', () => {
 
   it('RN-04: avisa el excedente del tope diario', async () => {
     mockEscaneo(() =>
-      HttpResponse.json(respuestaSalida({ minutosDia: 360, minutosAcreditablesDia: 300, excedente: 60 })),
+      HttpResponse.json(respuestaSalida({ minutosDia: 450, minutosAcreditablesDia: 390, excedente: 60 })),
     );
     const ctx = await abrirModoCodigo();
     await escribirYEnviar(ctx, 'ABC234');
 
-    expect(await screen.findByText('Hoy llevas 5 h acreditadas')).toBeInTheDocument();
-    expect(screen.getByText('Solo se acreditan 5 h por día; 1 h no cuentan')).toBeInTheDocument();
+    expect(await screen.findByText('Hoy llevas 6 h 30 min acreditadas')).toBeInTheDocument();
+    expect(screen.getByText('Solo se acreditan 6 h 30 min por día; 1 h no cuentan')).toBeInTheDocument();
   });
 
   it('RN-09: avisa que un turno de menos de 15 minutos no se acredita', async () => {
