@@ -1,5 +1,8 @@
 import { screen } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
+import { buildEnlaceValidacion } from '../test/msw/handlers';
+import { server } from '../test/msw/server';
 import { renderApp } from '../test/utils';
 
 describe('router', () => {
@@ -10,8 +13,9 @@ describe('router', () => {
   });
 
   it('renders the supervisor validation route with a token, without a session', async () => {
+    server.use(http.get('*/api/validacion/abc123', () => HttpResponse.json({ enlace: buildEnlaceValidacion() })));
     renderApp('/validar/abc123');
-    expect(await screen.findByRole('heading', { name: 'Validar semanas' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Hola, Laura Mendoza' })).toBeInTheDocument();
   });
 
   it('shows a not-found screen for unknown paths', async () => {

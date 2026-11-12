@@ -8,6 +8,7 @@ import { InicioAlumnoPage } from './features/avance/components/InicioAlumnoPage'
 import { ExpedientePage } from './features/expediente/components/ExpedientePage';
 import { HistorialPage } from './features/historial/components/HistorialPage';
 import { RegistrarPage } from './features/escaneo/components/RegistrarPage';
+import { ValidarSemanasPage } from './features/validacion/components/ValidarSemanasPage';
 import { PlaceholderPage } from './components/PlaceholderPage';
 import { ActivarPage } from './features/auth/components/ActivarPage';
 import { CambiarContrasenaPage } from './features/auth/components/CambiarContrasenaPage';
@@ -78,7 +79,7 @@ export const routes: RouteObject[] = [
     children: [{ path: '/vinculacion/usuarios/nuevo', element: <CrearUsuarioPage /> }],
   },
   // Public: the supervisor opens it from an email link (RF-21).
-  { path: '/validar/:token', element: <PlaceholderPage title="Validar semanas" /> },
+  { path: '/validar/:token', element: <ValidarSemanasPage /> },
   { path: '*', element: <PlaceholderPage title="Página no encontrada" /> },
 ];
 

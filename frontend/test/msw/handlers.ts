@@ -227,3 +227,37 @@ export const handlers = [
   http.get('*/api/me', () => HttpResponse.json(unauthorizedBody, { status: 401 })),
   http.get('*/api/semanas/pendientes', () => HttpResponse.json({ pendientes: [] })),
 ];
+
+// Builds a week of GET /api/validacion/:token (task 0021, "Contrato de la API").
+export function buildSemanaValidacion(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '77777777-7777-4777-8777-777777777771',
+    alumno: { nombre: 'Ana María López García', carrera: 'Programación' },
+    institucion: 'Empresa Demo',
+    semanaInicio: '2026-11-02',
+    semanaFin: '2026-11-08',
+    estado: 'ENVIADA',
+    actividades: 'Apoyé en la captura de expedientes.\nAtendí al público.',
+    turnos: [
+      {
+        entrada: '2026-11-02T14:00:00.000Z', // Monday 08:00 in Monterrey
+        salida: '2026-11-02T20:00:00.000Z', // 14:00
+        estado: 'CERRADA',
+        minutosAcreditables: 300,
+        fueraDeHorario: false,
+      },
+    ],
+    minutosAcreditables: 300,
+    ...overrides,
+  };
+}
+
+// Builds the `enlace` of GET /api/validacion/:token.
+export function buildEnlaceValidacion(overrides: Record<string, unknown> = {}) {
+  return {
+    supervisor: { nombre: 'Laura Mendoza' },
+    expiraEn: '2026-11-26T01:00:00.000Z', // Wednesday 25 in Monterrey
+    semanas: [buildSemanaValidacion()],
+    ...overrides,
+  };
+}
