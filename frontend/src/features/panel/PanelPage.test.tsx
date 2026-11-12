@@ -72,7 +72,7 @@ describe('/vinculacion panel (RF-23, RF-24)', () => {
     mockPanel();
     renderApp('/vinculacion');
 
-    expect(await screen.findByRole('heading', { name: 'Panel de vinculación' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Panel de Servicio Social y Titulación' })).toBeInTheDocument();
     expect(await screen.findByText('Ana María López García')).toBeInTheDocument();
     expect(screen.getByText('2 alumnos')).toBeInTheDocument();
     const ana = filaDe('Ana María López García');

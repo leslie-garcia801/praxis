@@ -44,5 +44,5 @@ test('RF-02: an unknown matrícula shows the not-registered message', async ({ p
   await page.getByLabel('Primer apellido').fill('Registrado');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
-  await expect(page.getByRole('alert')).toHaveText('Tu matrícula no está registrada; acude a vinculación');
+  await expect(page.getByRole('alert')).toHaveText('Tu matrícula no está registrada; acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación');
 });

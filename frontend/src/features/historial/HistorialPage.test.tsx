@@ -201,7 +201,7 @@ describe('/alumno/historial (RF-19)', () => {
       ),
     );
     renderApp('/alumno/historial');
-    expect(await screen.findByText('No tienes un expediente. Acude a vinculación.')).toBeInTheDocument();
+    expect(await screen.findByText('No tienes un expediente. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación, según tu programa.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument();
   });
 

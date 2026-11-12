@@ -133,7 +133,7 @@ describe('Better Auth', () => {
       const res = await signIn(PASSWORD);
 
       expect(res.status).toBe(403);
-      expect(res.body).toMatchObject({ code: 'CUENTA_INACTIVA', message: expect.stringMatching(/desactivada/) });
+      expect(res.body).toMatchObject({ code: 'CUENTA_INACTIVA', message: 'Tu cuenta está desactivada. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.' });
       expect(await prisma.session.count({ where: { userId } })).toBe(sesionesAntes);
     });
 

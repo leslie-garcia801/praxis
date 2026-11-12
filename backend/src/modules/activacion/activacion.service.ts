@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { nombresCoinciden } from '../../domain/nombres.js';
+import { AMBAS_OFICINAS_DESTINO } from '../../domain/oficinas.js';
 import { AppError } from '../../lib/errors.js';
 import { hashPassword } from '../../lib/password.js';
 import { prisma } from '../../lib/prisma.js';
@@ -18,17 +19,17 @@ async function verificarIdentidad(db: Db, { matricula, nombre, apellidoPaterno }
     include: { alumno: true, accounts: { where: { providerId: CREDENTIAL }, select: { id: true } } },
   });
   if (!user || user.rol !== 'ALUMNO' || !user.alumno) {
-    throw new AppError(404, 'MATRICULA_NO_REGISTRADA', 'Tu matrícula no está registrada; acude a vinculación.');
+    throw new AppError(404, 'MATRICULA_NO_REGISTRADA', `Tu matrícula no está registrada; acude a ${AMBAS_OFICINAS_DESTINO}.`);
   }
   if (!nombresCoinciden(user.alumno, { nombre, apellidoPaterno })) {
     throw new AppError(
       400,
       'NOMBRE_NO_COINCIDE',
-      'El nombre no coincide con el registrado. Revisa cómo lo escribiste o acude a vinculación.',
+      `El nombre no coincide con el registrado. Revisa cómo lo escribiste o acude a ${AMBAS_OFICINAS_DESTINO}.`,
     );
   }
   if (!user.activo) {
-    throw new AppError(403, 'CUENTA_INACTIVA', 'Tu cuenta está desactivada. Acude a vinculación.');
+    throw new AppError(403, 'CUENTA_INACTIVA', `Tu cuenta está desactivada. Acude a ${AMBAS_OFICINAS_DESTINO}.`);
   }
   if (user.accounts.length > 0) {
     throw new AppError(409, 'CUENTA_YA_ACTIVADA', 'Tu cuenta ya está activada; inicia sesión.');

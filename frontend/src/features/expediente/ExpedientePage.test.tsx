@@ -93,7 +93,7 @@ describe('/alumno/expediente (RF-10)', () => {
     setDate('Fecha de inicio', '2026-11-16');
     await user.click(screen.getByRole('button', { name: 'Guardar expediente' }));
 
-    expect(await screen.findByText('Listo. Vinculación revisará tu expediente para confirmarlo')).toBeInTheDocument();
+    expect(await screen.findByText('Listo. La Oficina de Servicio Social y Titulación revisará tu expediente para confirmarlo')).toBeInTheDocument();
     expect(captured.patch).toEqual({
       institucionId: ALFA,
       supervisorId: SUP_ALFA,
@@ -147,7 +147,7 @@ describe('/alumno/expediente (RF-10)', () => {
     fireEvent.change(screen.getByLabelText('Hora de salida'), { target: { value: '14:00' } });
     await user.click(screen.getByRole('button', { name: 'Guardar expediente' }));
 
-    expect(await screen.findByText('Listo. Vinculación revisará tu expediente para confirmarlo')).toBeInTheDocument();
+    expect(await screen.findByText('Listo. La Oficina de Prácticas Profesionales revisará tu expediente para confirmarlo')).toBeInTheDocument();
     // Only practicas fields: no programa/subprograma.
     expect(captured.patch).toEqual({
       institucionId: ALFA,
@@ -184,13 +184,13 @@ describe('/alumno/expediente (RF-10)', () => {
     await user.type(screen.getByLabelText('Correo'), 'rosa@empresa.mx');
     await user.click(screen.getByRole('button', { name: 'Agregar supervisor' }));
 
-    expect(await screen.findByText('Vinculación revisará los datos de tu supervisor')).toBeInTheDocument();
+    expect(await screen.findByText('La Oficina de Servicio Social y Titulación revisará los datos de tu supervisor')).toBeInTheDocument();
     expect(captured.post).toEqual({ nombre: 'Rosa', apellidoPaterno: 'Vega', correo: 'rosa@empresa.mx' });
     expect(screen.getByRole('radio', { name: /Rosa Vega/ })).toBeChecked();
 
     setDate('Fecha de inicio', '2026-11-16');
     await user.click(screen.getByRole('button', { name: 'Guardar expediente' }));
-    await screen.findByText('Listo. Vinculación revisará tu expediente para confirmarlo');
+    await screen.findByText('Listo. La Oficina de Servicio Social y Titulación revisará tu expediente para confirmarlo');
     expect(captured.patch).toMatchObject({ supervisorId: '88888888-8888-4888-8888-888888888888' });
   });
 
@@ -225,7 +225,7 @@ describe('/alumno/expediente (RF-10)', () => {
     expect(screen.queryByRole('radio', { name: /Laura Mendoza/ })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Guardar expediente' }));
-    await screen.findByText('Listo. Vinculación revisará tu expediente para confirmarlo');
+    await screen.findByText('Listo. La Oficina de Servicio Social y Titulación revisará tu expediente para confirmarlo');
     expect(captured.patch).toMatchObject({ institucionId: BETA, supervisorId: null });
   });
 
@@ -302,7 +302,7 @@ describe('/alumno/expediente (RF-10)', () => {
     });
     renderApp('/alumno/expediente');
 
-    expect(await screen.findByText('Tu expediente ya fue confirmado; para cambios acude a vinculación')).toBeInTheDocument();
+    expect(await screen.findByText('Tu expediente ya fue confirmado; para cambios acude a la Oficina de Servicio Social y Titulación')).toBeInTheDocument();
     expect(screen.getByText('Hospital Alfa')).toBeInTheDocument();
     expect(screen.getByText('Lic. Laura Mendoza Ruiz')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Guardar expediente' })).not.toBeInTheDocument();
@@ -312,14 +312,14 @@ describe('/alumno/expediente (RF-10)', () => {
   it('SUSPENDIDO es de solo lectura con su propio aviso', async () => {
     mockApi({ estadoActivo: 'SUSPENDIDO', expediente: buildExpediente({ estado: 'SUSPENDIDO', faltantes: [] }) });
     renderApp('/alumno/expediente');
-    expect(await screen.findByText('Tu expediente está suspendido; para cambios acude a vinculación')).toBeInTheDocument();
+    expect(await screen.findByText('Tu expediente está suspendido; para cambios acude a la Oficina de Servicio Social y Titulación')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Guardar expediente' })).not.toBeInTheDocument();
   });
 
   it('sin expediente activo avisa y no pide el expediente', async () => {
     server.use(http.get('*/api/me', () => HttpResponse.json(buildMe({ expedienteActivo: null }))));
     renderApp('/alumno/expediente');
-    expect(await screen.findByText('No tienes un expediente activo. Acude a vinculación.')).toBeInTheDocument();
+    expect(await screen.findByText('No tienes un expediente activo. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación, según tu programa.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/alumno');
   });
 

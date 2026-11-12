@@ -2,33 +2,24 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { PasswordTemporal } from '@/components/PasswordTemporal';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/features/auth/components/Field';
 import { ApiError } from '@/lib/api';
-import { crearUsuarioVinculacion, type Oficina, type UsuarioCreado } from '../api';
+import { AMBAS_OFICINAS, NOMBRE_OFICINA } from '@/lib/oficinas';
+import { crearUsuarioVinculacion, type UsuarioCreado } from '../api';
 import { crearUsuarioSchema, type CrearUsuarioValues } from '../schemas';
 
 const GENERIC_MESSAGE = 'No se pudo completar la solicitud. Intenta de nuevo.';
 
-const OFICINA_LABEL: Record<Oficina, string> = { PRACTICAS: 'Prácticas', SERVICIO_SOCIAL: 'Servicio Social' };
 const OPCIONES: { value: CrearUsuarioValues['oficina']; label: string }[] = [
-  { value: 'PRACTICAS', label: 'Prácticas' },
-  { value: 'SERVICIO_SOCIAL', label: 'Servicio Social' },
-  { value: 'AMBAS', label: 'Ambas oficinas' },
+  { value: 'PRACTICAS', label: NOMBRE_OFICINA.PRACTICAS },
+  { value: 'SERVICIO_SOCIAL', label: NOMBRE_OFICINA.SERVICIO_SOCIAL },
+  { value: 'AMBAS', label: AMBAS_OFICINAS },
 ];
 
 function ResultView({ creado, onReset }: { creado: UsuarioCreado; onReset: () => void }) {
-  const [copyState, setCopyState] = useState<'idle' | 'ok' | 'error'>('idle');
   const { usuario } = creado;
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(creado.passwordTemporal);
-      setCopyState('ok');
-    } catch {
-      setCopyState('error');
-    }
-  }
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="resultado-titulo">
@@ -41,26 +32,9 @@ function ResultView({ creado, onReset }: { creado: UsuarioCreado; onReset: () =>
         <dt className="text-muted-foreground">Correo</dt>
         <dd className="break-all">{usuario.email}</dd>
         <dt className="text-muted-foreground">Oficina</dt>
-        <dd>{usuario.oficina ? OFICINA_LABEL[usuario.oficina] : 'Ambas oficinas'}</dd>
+        <dd>{usuario.oficina ? NOMBRE_OFICINA[usuario.oficina] : AMBAS_OFICINAS}</dd>
       </dl>
-      <div className="flex flex-col gap-2 rounded-lg border p-3">
-        <p className="text-sm font-medium">Contraseña temporal</p>
-        <code className="select-all break-all rounded bg-muted px-2 py-1.5 font-mono text-base">
-          {creado.passwordTemporal}
-        </code>
-        <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" onClick={() => void copy()}>
-            Copiar
-          </Button>
-          <span role="status" className="text-sm">
-            {copyState === 'ok' && 'Copiada.'}
-            {copyState === 'error' && 'No se pudo copiar. Selecciónala y cópiala manualmente.'}
-          </span>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Esta contraseña no se volverá a mostrar. La persona deberá cambiarla en su primer inicio de sesión.
-        </p>
-      </div>
+      <PasswordTemporal password={creado.passwordTemporal} />
       <Button type="button" onClick={onReset}>
         Crear otro usuario
       </Button>
@@ -113,7 +87,7 @@ export function CrearUsuarioPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-4 py-8">
-      <h1 className="text-2xl font-bold">Crear usuario de vinculación</h1>
+      <h1 className="text-2xl font-bold">Crear usuario de oficina</h1>
       {creado ? (
         <ResultView creado={creado} onReset={resetAll} />
       ) : (

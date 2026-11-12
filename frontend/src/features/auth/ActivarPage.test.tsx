@@ -61,7 +61,7 @@ describe('/activar (RF-02, RNF-07)', () => {
     await fillIdentity(user);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      /^Tu matrícula no está registrada; acude a vinculación$/,
+      /^Tu matrícula no está registrada; acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación$/,
     );
   });
 
@@ -72,7 +72,7 @@ describe('/activar (RF-02, RNF-07)', () => {
     await fillIdentity(user);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'El nombre no coincide con el registrado. Revisa cómo lo escribiste o acude a vinculación.',
+      'El nombre no coincide con el registrado. Revisa cómo lo escribiste o acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.',
     );
   });
 
@@ -93,7 +93,7 @@ describe('/activar (RF-02, RNF-07)', () => {
 
     await fillIdentity(user);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Tu cuenta está desactivada. Acude a vinculación.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tu cuenta está desactivada. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.');
   });
 
   it('RNF-06: the rate limit (429) shows a wait message', async () => {

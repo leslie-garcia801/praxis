@@ -95,6 +95,7 @@ describe('auth middlewares', () => {
 
       expect(res.status).toBe(403);
       expect(res.body.error.code).toBe('CUENTA_INACTIVA');
+      expect(res.body.error.message).toBe('Tu cuenta está desactivada. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.');
     });
 
     it('RF-04: 403 while the temporary password has not been changed', async () => {

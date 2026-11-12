@@ -192,7 +192,19 @@ describe('POST /api/asistencias/escaneo (RF-14, RF-15)', () => {
       const res = await escanear(a.cookie, { id: randomUUID(), token: a.token }, [HOY, '08:00']);
       expect(res.status).toBe(409);
       expect(res.body.error.code).toBe('EXPEDIENTE_SUSPENDIDO');
+      expect(res.body.error.message).toBe(
+        'Tu expediente está suspendido y no permite registrar asistencia. Acude a la Oficina de Servicio Social y Titulación.',
+      );
       expect(await prisma.asistencia.count({ where: { expedienteId: a.expediente.id } })).toBe(0);
+    });
+
+    it('RN-13: el aviso de suspensión nombra la oficina del programa (prácticas)', async () => {
+      const a = await caso({ estado: 'SUSPENDIDO', tipo: 'PRACTICAS' });
+      const res = await escanear(a.cookie, { id: randomUUID(), token: a.token }, [HOY, '08:00']);
+      expect(res.status).toBe(409);
+      expect(res.body.error.message).toBe(
+        'Tu expediente está suspendido y no permite registrar asistencia. Acude a la Oficina de Prácticas Profesionales.',
+      );
     });
 
     it('rechaza un expediente PENDIENTE, FINALIZADO o CANCELADO', async () => {

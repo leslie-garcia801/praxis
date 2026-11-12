@@ -130,7 +130,7 @@ describe('/alumno home (RF-18)', () => {
   it('shows a message and no progress or Registrar without an active expediente', async () => {
     mockAlumno(null);
     renderApp('/alumno');
-    expect(await screen.findByText('No tienes un expediente activo. Acude a vinculación.')).toBeInTheDocument();
+    expect(await screen.findByText('No tienes un expediente activo. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación, según tu programa.')).toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Registrar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Registrar' })).not.toBeInTheDocument();
@@ -150,10 +150,19 @@ describe('/alumno home (RF-18)', () => {
     mockAvance();
     renderApp('/alumno');
     expect(
-      await screen.findByText('Tu expediente está suspendido; no puedes registrar asistencia. Acude a vinculación.'),
+      await screen.findByText('Tu expediente está suspendido; no puedes registrar asistencia. Acude a la Oficina de Servicio Social y Titulación.'),
     ).toBeInTheDocument();
     expect(await screen.findByRole('progressbar', { name: 'Avance validado' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Registrar' })).toBeDisabled();
     expect(screen.queryByRole('link', { name: 'Registrar' })).not.toBeInTheDocument();
+  });
+
+  it('RN-03b: el aviso de suspensión nombra la oficina del programa del alumno', async () => {
+    mockAlumno(buildExpedienteActivo({ estado: 'SUSPENDIDO', tipo: 'PRACTICAS', metaHoras: 240 }));
+    mockAvance();
+    renderApp('/alumno');
+    expect(
+      await screen.findByText('Tu expediente está suspendido; no puedes registrar asistencia. Acude a la Oficina de Prácticas Profesionales.'),
+    ).toBeInTheDocument();
   });
 });

@@ -30,7 +30,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthShell title="Iniciar sesión" description="Entra con tu matrícula (alumnos) o con tu correo (vinculación).">
+    <AuthShell title="Iniciar sesión" description="Entra con tu matrícula (alumnos) o con tu correo (personal de las oficinas).">
       <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} noValidate className="flex flex-col gap-4">
         <Field
           id="identificador"
