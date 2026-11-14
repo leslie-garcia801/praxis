@@ -2,15 +2,19 @@ import { z } from 'zod';
 import { urlQr } from '../domain/qrPdf.js';
 import { prisma } from '../lib/prisma.js';
 import { DEMO_VINCULACION, seedDemo } from './seedDemoData.js';
+import { assertDemoSeedAllowed } from './seedDemoGuard.js';
 
-// Entry point: `pnpm db:seed:demo`. Local development only; refuses to run in production.
+// Entry point: `pnpm db:seed:demo`. Local development only; refuses production and any non-local database.
 async function main() {
-  if (process.env.NODE_ENV === 'production') throw new Error('The demo seed never runs in production.');
+  assertDemoSeedAllowed(process.env);
 
   const env = z
     .object({ SEED_DEMO_PASSWORD: z.string().min(12), FRONTEND_ORIGIN: z.url().default('http://localhost:5173') })
     .safeParse(process.env);
-  if (!env.success) throw new Error('Set SEED_DEMO_PASSWORD (12+ characters) in backend/.env to run the demo seed.');
+  if (!env.success) {
+    const names = [...new Set(env.error.issues.map((i) => String(i.path[0])))].join(', ');
+    throw new Error(`Invalid demo seed environment (${names}): SEED_DEMO_PASSWORD needs 12+ characters and FRONTEND_ORIGIN must be a URL.`);
+  }
 
   const result = await seedDemo(prisma, { password: env.data.SEED_DEMO_PASSWORD });
   if (!result.creado) {
