@@ -1,3 +1,4 @@
+import { faltantesParaConfirmar } from '../../domain/expedientes.js';
 import { estimarFechaTermino, DIAS_VENTANA_PROMEDIO } from '../../domain/horas.js';
 import { alcanceOficina, type TipoPrograma } from '../../domain/oficinas.js';
 import { evaluarRiesgo, limiteExpediente, type NivelRiesgo } from '../../domain/riesgo.js';
@@ -286,7 +287,26 @@ function calcularAlertas(base: FilaBase[], hoy: FechaISO) {
     .map((s) => ({ ...s, expedienteIds: s.expedienteIds.sort() }))
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es') || a.id.localeCompare(b.id));
 
+  // RF-10: PENDIENTE case files whose data is complete, so the office can confirm them now.
+  const porConfirmar = base
+    .filter(
+      (f) =>
+        f.estado === 'PENDIENTE' &&
+        faltantesParaConfirmar({
+          tipo: f.tipo,
+          institucionId: f.institucion_id,
+          supervisorId: f.supervisor_id,
+          fechaInicio: f.fecha_inicio,
+          fechaTermino: f.fecha_termino,
+          diasPactados: f.dias_pactados,
+          horaEntrada: f.hora_entrada,
+          horaSalida: f.hora_salida,
+        }).length === 0,
+    )
+    .map((f) => f.id);
+
   return {
+    alumnosPorConfirmar: { total: porConfirmar.length, expedienteIds: porConfirmar },
     sinRegistros: { total: sinRegistros.length, expedienteIds: sinRegistros },
     semanasSinValidar: {
       total: conSemanasVencidas.reduce((suma, f) => suma + Number(f.semanas_vencidas), 0),

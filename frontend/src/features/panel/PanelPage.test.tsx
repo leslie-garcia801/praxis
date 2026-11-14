@@ -159,6 +159,7 @@ describe('/vinculacion panel (RF-23, RF-24)', () => {
 
   describe('alerts (RF-24)', () => {
     const alertas = {
+      alumnosPorConfirmar: { total: 1, expedienteIds: [ANA] },
       sinRegistros: { total: 1, expedienteIds: [BETO] },
       semanasSinValidar: { total: 4, expedienteIds: [ANA] },
       turnosIncompletos: { total: 2, expedienteIds: [ANA, BETO] },
@@ -170,7 +171,7 @@ describe('/vinculacion panel (RF-23, RF-24)', () => {
       },
     };
 
-    it('shows the four cards with their totals', async () => {
+    it('shows the five cards with their totals', async () => {
       mockStaff();
       mockPanel(buildPanel({ alumnos: [filaAna, filaBeto], alertas }));
       renderApp('/vinculacion');
@@ -179,6 +180,22 @@ describe('/vinculacion panel (RF-23, RF-24)', () => {
       expect(screen.getByRole('button', { name: /4.*Semanas sin validar \(más de 7 días\)/ })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /2.*Turnos incompletos/ })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /1.*Supervisores por confirmar/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /1.*Alumnos por confirmar/ })).toBeInTheDocument();
+    });
+
+    it('RF-10: "Alumnos por confirmar" asks for the PENDIENTE students and lists only the ready ones', async () => {
+      mockStaff();
+      const requests = mockPanel(buildPanel({ alumnos: [filaAna, filaBeto], alertas }));
+      const { user } = renderApp('/vinculacion');
+      await screen.findByText('Ana María López García');
+      expect(requests[0]?.get('estado')).toBeNull();
+
+      await user.click(screen.getByRole('button', { name: /Alumnos por confirmar/ }));
+
+      await waitFor(() => expect(requests.at(-1)?.get('estado')).toBe('PENDIENTE'));
+      expect(screen.getByText('Ana María López García')).toBeInTheDocument();
+      expect(screen.queryByText('Beto Ruiz Soto')).not.toBeInTheDocument();
+      expect(screen.getByText(/Mostrando: Alumnos por confirmar/)).toBeInTheDocument();
     });
 
     it('filters the table to the alert students and "Quitar" undoes it', async () => {

@@ -84,6 +84,32 @@ const setDate = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
 describe('/alumno/expediente (RF-10)', () => {
+  it('RF-10: al guardar un expediente completo vuelve al inicio con un aviso, sin botón extra', async () => {
+    mockApi();
+    // The first read is the form; once saved, the API reports nothing left to fill in.
+    let lecturas = 0;
+    server.use(
+      http.get('*/api/expedientes/:id', () =>
+        HttpResponse.json({ expediente: buildExpediente({ faltantes: lecturas++ === 0 ? ['supervisorId'] : [] }) }),
+      ),
+    );
+    const { user, router } = renderApp('/alumno/expediente');
+
+    await user.click(await screen.findByRole('radio', { name: /Hospital Alfa/ }));
+    await user.click(await screen.findByRole('radio', { name: /Laura Mendoza/ }));
+    setDate('Fecha de inicio', '2026-11-16');
+    await user.click(screen.getByRole('button', { name: 'Guardar expediente' }));
+
+    expect(await screen.findByRole('heading', { name: 'Mi avance' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/alumno');
+    expect(
+      screen.getByText('Listo. La Oficina de Servicio Social y Titulación revisará tu expediente para confirmarlo'),
+    ).toBeInTheDocument();
+    expect(await screen.findByText(/Tu expediente está pendiente de confirmar/)).toBeInTheDocument();
+    // The notice is consumed: it does not come back if the page is reloaded.
+    expect(router.state.location.state).toBeNull();
+  });
+
   it('guarda un servicio social: institución, supervisor existente y fecha de inicio (RF-10)', async () => {
     const captured = mockApi();
     const { user } = renderApp('/alumno/expediente');

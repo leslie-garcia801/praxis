@@ -310,6 +310,7 @@ export function buildPanel(overrides: { alumnos?: unknown[]; alertas?: Record<st
   return {
     alumnos: overrides.alumnos ?? [],
     alertas: {
+      alumnosPorConfirmar: { total: 0, expedienteIds: [] },
       sinRegistros: { total: 0, expedienteIds: [] },
       semanasSinValidar: { total: 0, expedienteIds: [] },
       turnosIncompletos: { total: 0, expedienteIds: [] },

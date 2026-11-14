@@ -145,7 +145,13 @@ describe('panel de vinculación', () => {
           'ultimoRegistro',
         ].sort(),
       );
-      expect(Object.keys(res.body.alertas).sort()).toEqual(['semanasSinValidar', 'sinRegistros', 'supervisoresSinConfirmar', 'turnosIncompletos']);
+      expect(Object.keys(res.body.alertas).sort()).toEqual([
+        'alumnosPorConfirmar',
+        'semanasSinValidar',
+        'sinRegistros',
+        'supervisoresSinConfirmar',
+        'turnosIncompletos',
+      ]);
     });
 
     it('returns 401 without a session', async () => {
@@ -508,6 +514,34 @@ describe('panel de vinculación', () => {
           expedienteIds: [a.expediente.id, b.expediente.id].sort(),
         },
       ]);
+    });
+
+    it('RF-10, RF-24: alumnos por confirmar are PENDIENTE case files with the data the office needs', async () => {
+      await limpiar();
+      const supervisor = await crearSupervisor({ institucionId: institucionAlertas });
+      const listo = await casoA({ estado: 'PENDIENTE', datos: { supervisorId: supervisor.id } });
+      const practicasListo = await casoA({
+        tipo: 'PRACTICAS',
+        estado: 'PENDIENTE',
+        datos: {
+          supervisorId: supervisor.id,
+          fechaTermino: fechaDB(hace(-30)),
+          diasPactados: [1, 3],
+          horaEntrada: '09:00',
+          horaSalida: '13:00',
+        },
+      });
+      // Not ready: no supervisor yet, practicas without schedule, no institution, no start date.
+      await casoA({ estado: 'PENDIENTE' });
+      await casoA({ tipo: 'PRACTICAS', estado: 'PENDIENTE', datos: { supervisorId: supervisor.id } });
+      await casoA({ estado: 'PENDIENTE', institucion: null, datos: { supervisorId: supervisor.id } });
+      await casoA({ estado: 'PENDIENTE', fechaInicio: null, datos: { supervisorId: supervisor.id } });
+      // Already confirmed.
+      await casoA({ estado: 'EN_PROCESO', datos: { supervisorId: supervisor.id } });
+
+      const { alumnosPorConfirmar } = await alertas();
+      expect(alumnosPorConfirmar.total).toBe(2);
+      expect(alumnosPorConfirmar.expedienteIds.sort()).toEqual([listo.expediente.id, practicasListo.expediente.id].sort());
     });
 
     it('RF-24: alerts count the whole office, not the filters', async () => {
