@@ -23,6 +23,8 @@ export type Supervisor = {
   correo?: string | null;
   telefono?: string | null;
   extension?: string | null;
+  // Only the office receives it; a student never gets a deactivated supervisor.
+  activo?: boolean;
 };
 
 export type Expediente = {
@@ -69,6 +71,20 @@ export type CrearSupervisorInput = {
   extension?: string;
 };
 
+// Body of PATCH /api/supervisores/:id. Optional fields travel as null to clear them.
+export type EditarSupervisorInput = {
+  nombre?: string;
+  apellidoPaterno?: string;
+  correo?: string;
+  titulo?: string | null;
+  apellidoMaterno?: string | null;
+  puesto?: string | null;
+  departamento?: string | null;
+  telefono?: string | null;
+  extension?: string | null;
+  activo?: boolean;
+};
+
 export const expedienteKeys = {
   all: ['expediente'] as const,
   detalle: (id: string) => [...expedienteKeys.all, id] as const,
@@ -110,6 +126,15 @@ export function useSupervisores(institucionId: string | undefined) {
     queryFn: () => apiFetch<{ supervisores: Supervisor[] }>(`/api/instituciones/${institucionId}/supervisores`),
     select: (data) => data.supervisores,
     enabled: institucionId !== undefined,
+  });
+}
+
+export function useActualizarSupervisor(institucionId: string, supervisorId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: EditarSupervisorInput) =>
+      apiFetch<{ supervisor: Supervisor }>(`/api/supervisores/${supervisorId}`, { method: 'PATCH', body: JSON.stringify(input) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: supervisoresKeys.lista(institucionId) }),
   });
 }
 

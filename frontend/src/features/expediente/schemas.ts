@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { TipoPrograma } from '../instituciones/api';
-import type { EditarExpedienteInput, Expediente, CrearSupervisorInput } from './api';
+import type { CrearSupervisorInput, EditarExpedienteInput, EditarSupervisorInput, Expediente, Supervisor } from './api';
 
 // Format-only validation (RF-10). The business rules (active institution that accepts the type,
 // supervisor of the institution, period, schedule) are checked again by the backend.
@@ -128,6 +128,28 @@ export const VALORES_NUEVO_SUPERVISOR: NuevoSupervisorValues = {
 export function aSupervisorPayload(v: NuevoSupervisorValues): CrearSupervisorInput {
   const { nombre, apellidoPaterno, correo, ...opcionales } = v;
   const resto = Object.fromEntries(Object.entries(opcionales).filter(([, valor]) => valor !== ''));
+  return { nombre, apellidoPaterno, correo, ...resto };
+}
+
+// The form starts from the supervisor as stored: a missing optional value is an empty text box.
+export function valoresDeSupervisor(s: Supervisor): NuevoSupervisorValues {
+  return {
+    nombre: s.nombre,
+    apellidoPaterno: s.apellidoPaterno,
+    correo: s.correo ?? '',
+    titulo: s.titulo ?? '',
+    apellidoMaterno: s.apellidoMaterno ?? '',
+    puesto: s.puesto ?? '',
+    departamento: s.departamento ?? '',
+    telefono: s.telefono ?? '',
+    extension: s.extension ?? '',
+  };
+}
+
+// PATCH body: an emptied optional field is sent as null so the API clears it.
+export function aEditarSupervisorPayload(v: NuevoSupervisorValues): EditarSupervisorInput {
+  const { nombre, apellidoPaterno, correo, ...opcionales } = v;
+  const resto = Object.fromEntries(Object.entries(opcionales).map(([campo, valor]) => [campo, valor === '' ? null : valor]));
   return { nombre, apellidoPaterno, correo, ...resto };
 }
 

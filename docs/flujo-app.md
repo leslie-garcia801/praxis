@@ -277,14 +277,12 @@ stateDiagram-v2
 
 La API ya tiene estos endpoints, pero la interfaz todavía no los usa:
 
-| Qué falta en la UI | Endpoint existente | Efecto en las pruebas |
+| Qué falta en la UI | Endpoint existente | Efecto |
 | --- | --- | --- |
-| Confirmar el expediente del alumno | `POST /api/expedientes/:id/confirmar` | Un alumno nuevo se queda en PENDIENTE y no puede registrar asistencia |
-| Suspender, reactivar o cancelar un expediente | `PATCH /api/expedientes/:id/estado` | — |
-| Transferir de institución | `POST /api/expedientes/:id/transferir` | — |
-| Asignar el siguiente programa | `POST /api/expedientes/asignar` | — |
-| Editar o confirmar un supervisor | `PATCH /api/supervisores/:id` | La alerta "Supervisores por confirmar" no tiene acción |
-| Validar semanas en nombre del supervisor | — (resto de la tarea 0030) | — |
+| Asignar el siguiente programa | `POST /api/expedientes/asignar` | Hay que hacerlo por la API |
+| Cambiar el supervisor de un expediente ya confirmado (misma institución) | `PATCH /api/expedientes/:id` | La oficina no puede reasignar al alumno; por eso no se puede desactivar un supervisor que aún tiene expedientes activos sin pasar por la API |
 | Listar, editar, desactivar o restablecer la contraseña de usuarios de vinculación | — (necesita backend) | El administrador solo puede crear; si alguien de vinculación olvida su contraseña, no hay forma de recuperarla desde la app |
+
+Ya cubierto por la interfaz, en el detalle del alumno: confirmar el expediente, suspender, reactivar o cancelar, transferir de institución, validar semanas en nombre del supervisor y editar o confirmar al supervisor. En **Editar institución** la oficina lista, agrega, edita y desactiva o reactiva supervisores; un supervisor con expedientes activos (PENDIENTE, EN_PROCESO o SUSPENDIDO) no se puede desactivar.
 
 Mientras tanto, para probar el flujo completo de un alumno ya en proceso, usa los datos demo (`pnpm db:seed:demo` en `backend/`): Ana y Bruno ya tienen expedientes EN_PROCESO.

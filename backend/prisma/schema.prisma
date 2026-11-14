@@ -254,6 +254,8 @@ model Supervisor {
   telefono        String?
   extension       String?
   confirmado      Boolean            @default(false)
+  // A deactivated supervisor is hidden from the selectors and cannot be assigned; the office can reactivate it.
+  activo          Boolean            @default(true)
   expedientes     Expediente[]
   enlaces         EnlaceValidacion[]
 
