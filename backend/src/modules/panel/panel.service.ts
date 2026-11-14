@@ -19,7 +19,7 @@ const ESTADOS_POR_DEFECTO: EstadoExpediente[] = ['EN_PROCESO', 'SUSPENDIDO'];
 const ESTADOS_ALERTAS: EstadoExpediente[] = ['PENDIENTE', 'EN_PROCESO', 'SUSPENDIDO'];
 
 // One row per case file of the office: static data, supervisor and the aggregated attendance figures (query 1).
-type FilaBase = {
+export type FilaBase = {
   id: string;
   tipo: TipoPrograma;
   estado: EstadoExpediente;
@@ -28,9 +28,21 @@ type FilaBase = {
   fecha_termino: string | null;
   institucion_id: string | null;
   institucion_nombre: string | null;
+  institucion_rfc: string | null;
+  departamento: string | null;
+  dias_pactados: number[];
+  hora_entrada: string | null;
+  hora_salida: string | null;
+  programa: string | null;
+  subprograma: string | null;
   supervisor_id: string | null;
   supervisor_nombre: string | null;
   supervisor_confirmado: boolean | null;
+  supervisor_titulo: string | null;
+  supervisor_puesto: string | null;
+  supervisor_correo: string | null;
+  supervisor_telefono: string | null;
+  supervisor_extension: string | null;
   alumno_id: string;
   alumno_nombre: string;
   apellido_paterno: string;
@@ -64,9 +76,21 @@ async function consultarBase(plantelId: string, tipos: TipoPrograma[], estados: 
       e.fecha_termino::text AS fecha_termino,
       e.institucion_id,
       i.nombre AS institucion_nombre,
+      i.rfc AS institucion_rfc,
+      e.departamento,
+      e.dias_pactados,
+      e.hora_entrada,
+      e.hora_salida,
+      e.programa,
+      e.subprograma,
       e.supervisor_id,
       NULLIF(CONCAT_WS(' ', su.nombre, su.apellido_paterno, su.apellido_materno), '') AS supervisor_nombre,
       su.confirmado AS supervisor_confirmado,
+      su.titulo AS supervisor_titulo,
+      su.puesto AS supervisor_puesto,
+      su.correo AS supervisor_correo,
+      su.telefono AS supervisor_telefono,
+      su.extension AS supervisor_extension,
       al.id AS alumno_id,
       al.nombre AS alumno_nombre,
       al.apellido_paterno,
@@ -95,7 +119,7 @@ async function consultarBase(plantelId: string, tipos: TipoPrograma[], estados: 
     WHERE u.plantel_id = ${plantelId}
       AND e.tipo::text IN (${Prisma.join(tipos)})
       AND e.estado::text IN (${Prisma.join(estados)})
-    GROUP BY e.id, i.nombre, su.id, al.id, u.username, c.nombre
+    GROUP BY e.id, i.id, su.id, al.id, u.username, c.nombre
   `);
 }
 
@@ -122,8 +146,16 @@ async function consultarDias(expedienteIds: string[], inicioVentana: FechaISO) {
 
 const nombreCompleto = (f: FilaBase) => [f.alumno_nombre, f.apellido_paterno, f.apellido_materno].filter(Boolean).join(' ');
 
+export type FilaPanel = ReturnType<typeof construirFila>;
+
 // RF-23, RF-24, RN-03b, RN-06a: the office table with its filters and the office alerts. `ahora` is injectable.
 export async function listarPanelAlumnos(user: AuthUser, filtros: ListarPanelQuery, ahora: () => Date = () => new Date()) {
+  const { filas, alertas } = await consultarPanel(user, filtros, ahora);
+  return { alumnos: filas.map(({ fila }) => fila), alertas };
+}
+
+// Same rows as the table, each with the raw query row it came from (RF-26 exports need the extra columns).
+export async function consultarPanel(user: AuthUser, filtros: ListarPanelQuery, ahora: () => Date = () => new Date()) {
   const alcance = alcanceOficina(user);
   if (filtros.tipo && !alcance.includes(filtros.tipo)) throw AppError.forbidden();
 
@@ -161,63 +193,66 @@ export async function listarPanelAlumnos(user: AuthUser, filtros: ListarPanelQue
     diasPorExpediente.set(expediente_id, mapa);
   }
 
-  const alumnos = visibles
-    .map((f) => {
-      const metaMinutos = f.meta_horas * 60;
-      const validados = Number(f.validados);
-      const registrados = Number(f.registrados);
-      const inicio = f.fecha_inicio;
-      const termino = f.fecha_termino;
-      // RN-16: registered minutes count as done for the estimate; only validated ones finish the case file.
-      const estimacion = estimarFechaTermino({
-        minutosFaltantes: Math.max(0, metaMinutos - validados - registrados),
-        minutosPorDia: diasPorExpediente.get(f.id) ?? {},
-        hoy: ahoraFecha,
-      });
-      const riesgo = evaluarRiesgo({
-        tipo: f.tipo,
-        fechaInicio: inicio,
-        fechaTermino: termino,
-        estimacion,
-        completado: validados >= metaMinutos,
-        hoy,
-      });
-      return {
-        expediente: { id: f.id, tipo: f.tipo, estado: f.estado, fechaInicio: inicio, fechaTermino: termino },
-        alumno: {
-          id: f.alumno_id,
-          nombre: nombreCompleto(f),
-          matricula: f.matricula,
-          carrera: f.carrera_nombre,
-          semestre: f.semestre,
-          grupo: f.grupo,
-          turno: f.turno,
-        },
-        institucion: f.institucion_id ? { id: f.institucion_id, nombre: f.institucion_nombre! } : null,
-        minutosValidados: validados,
-        metaMinutos,
-        porcentaje: Math.min(100, Math.floor((validados * 100) / metaMinutos)),
-        minutosRegistrados: registrados,
-        ultimoRegistro: f.ultimo_registro,
-        semanasPendientes: Number(f.semanas_enviadas),
-        fechaEstimada: estimacion.tipo === 'ESTIMADA' ? estimacion.fecha : null,
-        limite: limiteExpediente({ tipo: f.tipo, fechaInicio: inicio, fechaTermino: termino }),
-        riesgo: riesgo as NivelRiesgo,
-        apellidos: `${f.apellido_paterno} ${f.apellido_materno ?? ''} ${f.alumno_nombre}`,
-      };
-    })
-    .filter((f) => !filtros.riesgo || f.riesgo === filtros.riesgo)
+  const filas = visibles
+    .map((f) => ({ f, ...construirFila(f, ahoraFecha, hoy, diasPorExpediente.get(f.id) ?? {}) }))
+    .filter(({ fila }) => !filtros.riesgo || fila.riesgo === filtros.riesgo)
     // At risk first, then by surname.
     .sort(
       (a, b) =>
-        Number(b.riesgo === 'EN_RIESGO') - Number(a.riesgo === 'EN_RIESGO') ||
+        Number(b.fila.riesgo === 'EN_RIESGO') - Number(a.fila.riesgo === 'EN_RIESGO') ||
         a.apellidos.localeCompare(b.apellidos, 'es') ||
-        a.expediente.id.localeCompare(b.expediente.id),
+        a.fila.expediente.id.localeCompare(b.fila.expediente.id),
     )
-    .map(({ apellidos: _apellidos, ...fila }) => fila);
+    .map(({ f, fila }) => ({ fila, base: f }));
 
-  return { alumnos, alertas };
+  return { filas, alertas };
 }
+
+function construirFila(f: FilaBase, ahoraFecha: Date, hoy: FechaISO, minutosPorDia: Record<FechaISO, number>) {
+  const metaMinutos = f.meta_horas * 60;
+  const validados = Number(f.validados);
+  const registrados = Number(f.registrados);
+  const inicio = f.fecha_inicio;
+  const termino = f.fecha_termino;
+  // RN-16: registered minutes count as done for the estimate; only validated ones finish the case file.
+  const estimacion = estimarFechaTermino({
+    minutosFaltantes: Math.max(0, metaMinutos - validados - registrados),
+    minutosPorDia,
+    hoy: ahoraFecha,
+  });
+  const riesgo = evaluarRiesgo({
+    tipo: f.tipo,
+    fechaInicio: inicio,
+    fechaTermino: termino,
+    estimacion,
+    completado: validados >= metaMinutos,
+    hoy,
+  });
+  const fila = {
+    expediente: { id: f.id, tipo: f.tipo, estado: f.estado, fechaInicio: inicio, fechaTermino: termino },
+    alumno: {
+      id: f.alumno_id,
+      nombre: nombreCompleto(f),
+      matricula: f.matricula,
+      carrera: f.carrera_nombre,
+      semestre: f.semestre,
+      grupo: f.grupo,
+      turno: f.turno,
+    },
+    institucion: f.institucion_id ? { id: f.institucion_id, nombre: f.institucion_nombre! } : null,
+    minutosValidados: validados,
+    metaMinutos,
+    porcentaje: Math.min(100, Math.floor((validados * 100) / metaMinutos)),
+    minutosRegistrados: registrados,
+    ultimoRegistro: f.ultimo_registro,
+    semanasPendientes: Number(f.semanas_enviadas),
+    fechaEstimada: estimacion.tipo === 'ESTIMADA' ? estimacion.fecha : null,
+    limite: limiteExpediente({ tipo: f.tipo, fechaInicio: inicio, fechaTermino: termino }),
+    riesgo: riesgo as NivelRiesgo,
+  };
+  return { fila, apellidos: `${f.apellido_paterno} ${f.apellido_materno ?? ''} ${f.alumno_nombre}` };
+}
+
 
 // RF-24: counted over the whole office (never over the table filters).
 function calcularAlertas(base: FilaBase[], hoy: FechaISO) {

@@ -116,6 +116,9 @@ describe('/alumno/expediente (RF-10)', () => {
     await waitFor(() => expect(screen.queryByRole('radio', { name: /Hospital Alfa/ })).not.toBeInTheDocument());
     expect(screen.getByRole('radio', { name: /Clínica Beta/ })).toBeInTheDocument();
     expect(captured.institucionesUrls.some((u) => u.searchParams.get('q') === 'beta')).toBe(true);
+    // Debounced: typing does not issue one request per keystroke.
+    const consultas = captured.institucionesUrls.map((u) => u.searchParams.get('q')).filter(Boolean);
+    expect(consultas).toEqual(['beta']);
   });
 
   it('prácticas: valida término posterior al inicio y entrada anterior a la salida (RN-06)', async () => {

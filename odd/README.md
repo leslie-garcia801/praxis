@@ -74,3 +74,9 @@ Decisiones tomadas y pendientes.
 | 0025 | [Tope diario de 6 h 30 min](tasks/0025-tope-diario.md) | Terminada |
 | 0026 | [Panel de vinculación: tabla, alertas y "en riesgo" (backend)](tasks/0026-panel-backend.md) | Terminada |
 | 0027 | [Panel de vinculación y layout de la oficina (frontend)](tasks/0027-panel-frontend.md) | Terminada |
+| 0028 | [Exportaciones a Excel del panel](tasks/0028-exportaciones-excel.md) | Terminada |
+| 0029 | [PDF de horas y actividades](tasks/0029-reporte-pdf.md) | Terminada |
+| 0030 | [Detalle del alumno, solo lectura](tasks/0030-detalle-alumno.md) | Terminada |
+| 0031 | [Acciones en el detalle del alumno (RF-12, RF-22, edición del supervisor)](tasks/0031-acciones-detalle.md) | Terminada |
+| 0032 | [Debounce en la búsqueda de institución](tasks/0032-debounce-busqueda.md) | Terminada |
+| 0033 | [Restablecer contraseña desde el detalle del alumno (RF-04)](tasks/0033-restablecer-contrasena.md) | Terminada |

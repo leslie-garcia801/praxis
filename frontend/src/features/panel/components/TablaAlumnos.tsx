@@ -30,13 +30,13 @@ function FechaEstimada({ fila }: { fila: FilaPanel }) {
   return <>{fila.riesgo === 'COMPLETADO' ? '—' : 'Sin datos suficientes'}</>;
 }
 
-// The student name links to the detail (task 0030): a real link keeps keyboard and screen reader access.
+// RF-25: the student name opens the detail of the case file.
 function Fila({ fila }: { fila: FilaPanel }) {
   const { alumno } = fila;
   return (
     <tr className="border-b border-border align-top">
       <td className="py-2 pr-3">
-        <Link to={`/vinculacion/expedientes/${fila.expediente.id}`} className="font-medium underline">
+        <Link to={`/vinculacion/expedientes/${fila.expediente.id}`} className="font-medium text-primary underline underline-offset-4">
           {alumno.nombre}
         </Link>
         {alumno.matricula && <div className="text-xs text-slate-700">{alumno.matricula}</div>}

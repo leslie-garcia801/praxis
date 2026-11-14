@@ -4,7 +4,8 @@ import { generarCredencialesQr } from '../../domain/qrInstitucion.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
 import type { AuthUser } from '../../middleware/auth.js';
-import { construirXlsx, leerTabla } from './archivo.js';
+import { construirXlsx } from '../../lib/xlsx.js';
+import { leerTabla } from './archivo.js';
 import type { ErrorFila } from './alumnos.parser.js';
 import {
   ENCABEZADOS_INSTITUCIONES,

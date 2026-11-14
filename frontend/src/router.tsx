@@ -7,7 +7,7 @@ import { AlumnoLayout } from './features/alumno/components/AlumnoLayout';
 import { InicioAlumnoPage } from './features/avance/components/InicioAlumnoPage';
 import { ExpedientePage } from './features/expediente/components/ExpedientePage';
 import { HistorialPage } from './features/historial/components/HistorialPage';
-import { DetalleAlumnoPage } from './features/detalle-alumno/components/DetalleAlumnoPage';
+import { DetalleAlumnoPage } from './features/detalle/components/DetalleAlumnoPage';
 import { PanelPage } from './features/panel/components/PanelPage';
 import { RegistrarPage } from './features/escaneo/components/RegistrarPage';
 import { ValidarSemanasPage } from './features/validacion/components/ValidarSemanasPage';

@@ -48,5 +48,7 @@ export default defineConfig({
     setupFiles: ['test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     css: false,
+    // Default worker count (one per core) causes random 5s timeouts under load.
+    maxWorkers: 4,
   },
 });

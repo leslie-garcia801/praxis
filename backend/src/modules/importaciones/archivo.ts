@@ -93,9 +93,3 @@ function parsearCsv(contenido: string, delimitador: string): Tabla {
 
   return filas;
 }
-
-export function construirXlsx(filas: string[][], nombreHoja: string): Buffer {
-  const libro = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(libro, XLSX.utils.aoa_to_sheet(filas), nombreHoja);
-  return XLSX.write(libro, { type: 'buffer', bookType: 'xlsx' });
-}

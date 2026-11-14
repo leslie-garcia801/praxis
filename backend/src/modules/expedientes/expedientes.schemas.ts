@@ -50,7 +50,7 @@ export const editarExpedienteSchema = z
 export type EditarExpedienteInput = z.output<typeof editarExpedienteSchema>;
 
 // RF-12: every action asks for a reason; it goes to the audit log.
-const motivo = z
+export const motivo = z
   .string('Indica el motivo.')
   .trim()
   .min(1, 'Indica el motivo.')
@@ -84,3 +84,10 @@ export type AsignarProgramaInput = z.output<typeof asignarProgramaSchema>;
 
 export const CAMPOS_SOLO_PRACTICAS = ['fechaTermino', 'diasPactados', 'horaEntrada', 'horaSalida'] as const;
 export const CAMPOS_SOLO_SERVICIO = ['programa', 'subprograma'] as const;
+
+// RF-27: optional calendar range (local days, RN-15). The order is checked in the service so the message is specific.
+const fechaReporte = z.preprocess((v) => (v === '' ? undefined : v), z.iso.date('La fecha debe tener el formato AAAA-MM-DD.').optional());
+
+export const reporteQuerySchema = z.object({ desde: fechaReporte, hasta: fechaReporte });
+
+export type ReporteQuery = z.output<typeof reporteQuerySchema>;

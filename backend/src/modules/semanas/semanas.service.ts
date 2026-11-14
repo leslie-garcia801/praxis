@@ -4,7 +4,8 @@ import { fechaLocal, inicioSemana, sumarDias } from '../../lib/tiempo.js';
 import type { Prisma, SemanaBitacora } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import { cargar } from '../expedientes/expedientes.service.js';
-import type { BitacoraInput } from './semanas.schemas.js';
+import { datosDeResolucion } from '../validacion/validacion.service.js';
+import type { BitacoraInput, ResolverSemanaInput } from './semanas.schemas.js';
 
 type Tx = Prisma.TransactionClient;
 
@@ -94,6 +95,45 @@ export async function enviarSemana(user: AuthUser, id: string, ahora: () => Date
       },
     });
     return aRespuesta(await tx.semanaBitacora.findUniqueOrThrow({ where: { id } }));
+  });
+}
+
+// RF-22: the office resolves a week the supervisor has not resolved. Only ENVIADA weeks can be resolved; the
+// UPDATE is guarded by that state so it cannot race with the supervisor link. `ahora` is injectable for tests.
+export async function resolverSemanaPorOficina(
+  user: AuthUser,
+  id: string,
+  { accion, motivo, comentario }: ResolverSemanaInput,
+  ahora: () => Date = () => new Date(),
+) {
+  const noEnviada = () => conflicto('SEMANA_NO_ENVIADA', 'Solo se puede validar o rechazar una semana enviada y pendiente de validación.');
+  return prisma.$transaction(async (tx) => {
+    const { semana } = await cargarSemana(tx, user, id);
+    if (semana.estado !== 'ENVIADA') throw noEnviada();
+
+    const validar = accion === 'VALIDAR';
+    const momento = ahora();
+    const datos = datosDeResolucion(validar ? { validar: true } : { validar: false, comentario: comentario! }, momento, user.id);
+    const { count } = await tx.semanaBitacora.updateMany({ where: { id, estado: 'ENVIADA' }, data: datos });
+    if (count === 0) throw noEnviada();
+
+    await tx.auditLog.create({
+      data: {
+        usuarioId: user.id,
+        accion: validar ? 'VALIDAR_SEMANA_VINCULACION' : 'RECHAZAR_SEMANA_VINCULACION',
+        entidad: 'SemanaBitacora',
+        entidadId: id,
+        antes: { estado: 'ENVIADA' },
+        despues: { estado: datos.estado, motivo, ...(validar ? {} : { comentario }), enNombreDelSupervisor: true },
+      },
+    });
+    const actualizada = await tx.semanaBitacora.findUniqueOrThrow({ where: { id } });
+    return {
+      ...aRespuesta(actualizada),
+      comentario: actualizada.comentario,
+      validadoEn: actualizada.validadoEn,
+      rechazadaEn: actualizada.rechazadaEn,
+    };
   });
 }
 

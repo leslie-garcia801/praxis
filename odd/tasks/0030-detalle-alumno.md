@@ -1,50 +1,35 @@
-# 0030 — Detalle del alumno y restablecer contraseña (frontend, primera parte)
+# 0030 — Detalle del alumno, solo lectura (backend + frontend)
 
 | Campo | Valor |
 | --- | --- |
-| Estado | Primera parte terminada; la validación en nombre del supervisor sigue pendiente |
+| Estado | Terminada |
 | Iteración | 5 (specs §14) |
-| Specs | RF-04, RN-03b, RN-11, RN-15, specs §4 (roles y permisos) |
-| Proyecto | frontend |
+| Specs | RF-25, RF-29, RN-03b, RN-15 |
+| Proyecto | backend y frontend |
 
 ## Descripción
 
-Agrega la pantalla de detalle del alumno para vinculación y administrador (`/vinculacion/expedientes/:id`), que se abre desde el nombre del alumno en el panel. Muestra los datos del alumno, su expediente y su avance, y permite restablecer su contraseña (RF-04). Consume endpoints que ya existen: `GET /api/expedientes/:id`, `GET /api/expedientes/:id/avance` y `POST /api/alumnos/:id/restablecer-contrasena` (tareas 0012, 0015 y 0003). No hay cambios de backend.
+Pantalla de vinculación con todo lo que la oficina necesita saber de un expediente: datos, avance, historial semana por semana con bitácora, reporte PDF y auditoría. Es **solo lectura**: las acciones (estado, transferir, confirmar, validar a nombre del supervisor, edición) son la tarea 0031 y el encabezado deja el lugar para ellas.
 
 ## Checklist
 
-### Detalle `/vinculacion/expedientes/:id`
-- [x] Ruta dentro de `VinculacionLayout`, bajo `RequireRole [VINCULACION, ADMIN]`
-- [x] `features/detalle-alumno/api.ts`: `useExpedienteDetalle(id)` y `useRestablecerContrasena(alumnoId)`
-- [x] Encabezado con nombre completo y matrícula; secciones **Alumno** (carrera, semestre, grupo, turno), **Expediente** (programa, estado, institución, departamento, supervisor con correo y "Por confirmar", inicio) y **Avance** (horas validadas vs meta, porcentaje, registradas, faltantes y fecha estimada; reutiliza `useAvance`)
-- [x] Carga y error con "Reintentar" (expediente y avance por separado); "Volver al panel"
+### Backend
+- [x] `GET /api/expedientes/:id/auditoria` (`VINCULACION`, `ADMIN`; specs §3 "Ver la auditoría"). Permisos con `cargar` (RN-03b): otra oficina → 403; otro plantel o inexistente → 404; alumno → 403
+- [x] Devuelve `{ limite, truncado, entradas[] }`, de la más reciente a la más antigua, con `id`, `fecha` (ISO UTC), `usuario` (nombre; sin usuario → "Sistema"), `accion`, `entidad`, `antes`, `despues`
+- [x] `GET /api/expedientes/:id` ya devuelve todo lo que la pantalla necesita (alumno, carrera, grupo, turno, institución, departamento, supervisor con contacto para la oficina, periodo, horario, meta): sin cambios en su contrato
+- [x] Pruebas: orden y contenido, no se filtran entradas de otro expediente ni de otra entidad, 401, 403 (alumno, `RN-03b`), 404, 400 por id inválido
 
-### Restablecer contraseña (RF-04)
-- [x] Botón "Restablecer contraseña" que primero pide confirmación: la contraseña actual deja de funcionar y se cierran sus sesiones
-- [x] Al confirmar, muestra la contraseña temporal una sola vez con "Copiar"; "Listo" la oculta
-- [x] Un error de la API se muestra dentro del diálogo, que sigue abierto
-- [x] El bloque de contraseña temporal se extrae a `components/PasswordTemporal.tsx` y lo reutiliza también `CrearUsuarioPage` (sus pruebas siguen pasando)
-
-### Panel
-- [x] El nombre del alumno en la tabla es un enlace al detalle (enlace real, accesible con teclado y lector de pantalla)
-
-### Pruebas (Vitest + RTL + MSW)
-- [x] Cargando, error con reintento y con datos
-- [x] `RF-04`: confirmar, ver la temporal una vez y copiarla; cancelar no llama a la API; el error queda en el diálogo
-- [x] El administrador también ve el botón
-- [x] El nombre en el panel abre el detalle
+### Frontend
+- [x] Ruta `/vinculacion/expedientes/:id` dentro del layout de vinculación; página "Detalle del alumno"
+- [x] Encabezado (nombre, matrícula, tipo, estado), Expediente, Avance (`useAvance`), Historial por semana (`GET /api/asistencias?semana=&expedienteId=`, reutiliza `DiaHistorial`, bitácora en solo lectura), Reporte (`DescargarReporte`) y Auditoría (tabla con acciones en español y cambios `antes → después`)
+- [x] Estados de carga, error con reintento y 403/404 con el mensaje de la API
+- [x] Tabla del panel: el nombre del alumno enlaza al detalle; se quita el botón "Reporte" por fila de la 0029
+- [x] Pruebas con MSW
 
 ## Fuera de alcance
-- Confirmar, suspender, reactivar, cancelar o transferir el expediente (endpoints de la tarea 0013, sin pantalla todavía). Es el siguiente paso natural en esta misma pantalla.
-- Validar semanas en nombre del supervisor (resto de la tarea 0030).
-- Gestión de usuarios de vinculación (listar, desactivar, restablecer): necesita backend nuevo.
+- Acciones de la oficina sobre el expediente (RF-12, RF-22, edición del supervisor): tarea 0031.
 
-## Notas
-
-### Decisiones técnicas
-- Restablecer la contraseña no respeta el alcance de oficina (RN-03b): es soporte, no gestión del expediente (decisión del 2026-11-07, en `backend/src/modules/alumnos/alumnos.service.ts`). La pantalla solo lo expone.
-- El detalle se direcciona por el id del expediente, que es lo que tiene la fila del panel; el id del alumno sale de la respuesta.
-
-### Verificación
-- `pnpm typecheck` y `pnpm lint`: limpios.
-- `pnpm test`: 294 pasan y 4 fallan con `TypeError: object.stream is not a function` en `src/lib/api.test.ts`, `InstitucionesPage.test.tsx` e `InstitucionFormPage.test.tsx` (descarga de archivos). Fallan igual sin estos cambios: es un problema previo del entorno de pruebas, ajeno a esta tarea.
+## Decisiones
+- La auditoría incluye las entidades `Expediente` (su propio id) y `SemanaBitacora` (semanas del expediente). `Asistencia` y `SolicitudCorreccion` no se auditan hoy; `User` queda fuera a propósito (RNF-07).
+- Límite de 200 entradas, sin paginación; si hay más, `truncado: true` y la pantalla lo avisa.
+- Las semanas se navegan con `?semana=` en la URL del detalle.

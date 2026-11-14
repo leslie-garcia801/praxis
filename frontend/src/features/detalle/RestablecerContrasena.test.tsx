@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { buildAvance, buildExpediente, buildFilaPanel, buildMe, buildPanel, buildSupervisor, carrerasEjemplo } from '../../../test/msw/handlers';
+import { buildAvance, buildExpediente, buildMe, buildSupervisor } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import { renderApp } from '../../../test/utils';
 
@@ -55,42 +55,8 @@ function mockRestablecer(respuesta: () => Response = () => HttpResponse.json({ p
   return llamadas;
 }
 
-describe('DetalleAlumnoPage', () => {
+describe('Restablecer contraseña desde el detalle del alumno', () => {
   afterEach(() => vi.restoreAllMocks());
-
-  it('shows a loading state, then the student, the case file and the progress', async () => {
-    mockStaff();
-    mockDetalle();
-    renderApp(RUTA);
-
-    expect(await screen.findByText(/cargando/i)).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Ana López García' })).toBeInTheDocument();
-    expect(screen.getByText('25258000000001')).toBeInTheDocument();
-    expect(screen.getByText(/Programación/)).toBeInTheDocument();
-    expect(screen.getByText('Hospital Alfa')).toBeInTheDocument();
-    expect(screen.getByText(/laura@example.com/)).toBeInTheDocument();
-    expect(screen.getByText('En proceso')).toBeInTheDocument();
-    expect(await screen.findByText(/25 h/)).toBeInTheDocument(); // 1500 validated minutes
-  });
-
-  it('shows an error with retry when the case file cannot be loaded', async () => {
-    mockStaff();
-    let fallar = true;
-    server.use(
-      http.get(`*/api/expedientes/${EXPEDIENTE}`, () =>
-        fallar
-          ? HttpResponse.json({ error: { code: 'NO_ENCONTRADO', message: 'Expediente no encontrado.' } }, { status: 404 })
-          : HttpResponse.json({ expediente }),
-      ),
-      http.get(`*/api/expedientes/${EXPEDIENTE}/avance`, () => HttpResponse.json({ avance: buildAvance() })),
-    );
-    const { user } = renderApp(RUTA);
-
-    expect(await screen.findByText('Expediente no encontrado.')).toBeInTheDocument();
-    fallar = false;
-    await user.click(screen.getByRole('button', { name: 'Reintentar' }));
-    expect(await screen.findByRole('heading', { name: 'Ana López García' })).toBeInTheDocument();
-  });
 
   it('RF-04: resets the password after confirming and shows the temporary one once', async () => {
     mockStaff();
@@ -152,28 +118,5 @@ describe('DetalleAlumnoPage', () => {
     renderApp(RUTA);
 
     expect(await screen.findByRole('button', { name: 'Restablecer contraseña' })).toBeInTheDocument();
-  });
-
-  it('opens from the student name in the panel', async () => {
-    mockStaff();
-    mockDetalle();
-    server.use(
-      http.get('*/api/carreras', () => HttpResponse.json({ carreras: carrerasEjemplo })),
-      http.get('*/api/instituciones', () => HttpResponse.json({ instituciones: [] })),
-      http.get('*/api/panel/alumnos', () =>
-        HttpResponse.json(
-          buildPanel({
-            alumnos: [buildFilaPanel({ expediente: { ...buildFilaPanel().expediente, id: EXPEDIENTE } })],
-          }),
-        ),
-      ),
-    );
-    const { user, router } = renderApp('/vinculacion');
-
-    const enlace = await screen.findByRole('link', { name: buildFilaPanel().alumno.nombre });
-    await user.click(enlace);
-
-    await waitFor(() => expect(router.state.location.pathname).toBe(RUTA));
-    expect(await screen.findByRole('heading', { name: 'Ana López García' })).toBeInTheDocument();
   });
 });
