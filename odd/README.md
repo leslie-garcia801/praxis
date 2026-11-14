@@ -78,3 +78,4 @@ Decisiones tomadas y pendientes.
 | 0029 | [PDF de horas y actividades](tasks/0029-reporte-pdf.md) | Terminada |
 | 0030 | [Detalle del alumno, solo lectura](tasks/0030-detalle-alumno.md) | Terminada |
 | 0031 | [Acciones en el detalle del alumno (RF-12, RF-22, edición del supervisor)](tasks/0031-acciones-detalle.md) | Terminada |
+| 0032 | [Debounce en la búsqueda de institución](tasks/0032-debounce-busqueda.md) | Terminada |

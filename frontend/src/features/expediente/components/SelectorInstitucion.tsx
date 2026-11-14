@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Field } from '@/features/auth/components/Field';
 import { useInstituciones, type TipoPrograma } from '../../instituciones/api';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
+
+const BUSQUEDA_DEBOUNCE_MS = 300;
 
 type Elegida = { id: string; nombre: string; municipio?: string };
 
@@ -18,7 +21,8 @@ type Props = {
 export function SelectorInstitucion({ tipo, valueId, guardada, onChange }: Props) {
   const [q, setQ] = useState('');
   const [elegida, setElegida] = useState<Elegida | null>(guardada);
-  const instituciones = useInstituciones({ tipo, q: q.trim() });
+  const qDebounced = useDebouncedValue(q.trim(), BUSQUEDA_DEBOUNCE_MS);
+  const instituciones = useInstituciones({ tipo, q: qDebounced });
 
   const lista: Elegida[] = instituciones.data ?? [];
   const mostrarElegida = elegida !== null && elegida.id === valueId && !lista.some((i) => i.id === elegida.id);
