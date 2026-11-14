@@ -80,3 +80,4 @@ Decisiones tomadas y pendientes.
 | 0031 | [Acciones en el detalle del alumno (RF-12, RF-22, edición del supervisor)](tasks/0031-acciones-detalle.md) | Terminada |
 | 0032 | [Debounce en la búsqueda de institución](tasks/0032-debounce-busqueda.md) | Terminada |
 | 0034 | [Mostrar u ocultar la contraseña](tasks/0034-mostrar-contrasena.md) | Terminada |
+| 0035 | [Cámara en negro en desarrollo (StrictMode)](tasks/0035-camara-negra-strictmode.md) | Terminada |

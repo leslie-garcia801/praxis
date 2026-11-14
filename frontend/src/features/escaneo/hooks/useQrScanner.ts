@@ -23,6 +23,9 @@ function motivoDe(error: unknown): MotivoErrorCamara {
 
 // Opens the rear camera into the <video> and reads QR codes with @zxing/browser (RF-14).
 // The stream stops on the first result and when the component unmounts.
+// The camera request is deferred one tick so an immediate unmount (React StrictMode in development)
+// cancels it before it starts: zxing's stop() also clears video.srcObject, so a second request on
+// the same <video> would leave the preview black (task 0035).
 export function useQrScanner({ onResult }: QrScannerOptions): QrScannerState {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [state, setState] = useState<Omit<QrScannerState, 'videoRef'>>({ estado: 'iniciando' });
@@ -39,28 +42,31 @@ export function useQrScanner({ onResult }: QrScannerOptions): QrScannerState {
     let controls: IScannerControls | null = null;
     let leido = false;
 
-    const reader = new BrowserQRCodeReader();
-    reader
-      .decodeFromConstraints({ video: { facingMode: 'environment' } }, video, (result, _error, ctrl) => {
-        if (!result || leido || cancelado) return;
-        leido = true;
-        ctrl.stop();
-        onResultRef.current(result.getText());
-      })
-      .then((ctrl) => {
-        if (cancelado || leido) {
+    const timer = setTimeout(() => {
+      const reader = new BrowserQRCodeReader();
+      reader
+        .decodeFromConstraints({ video: { facingMode: 'environment' } }, video, (result, _error, ctrl) => {
+          if (!result || leido || cancelado) return;
+          leido = true;
           ctrl.stop();
-          return;
-        }
-        controls = ctrl;
-        setState({ estado: 'escaneando' });
-      })
-      .catch((error: unknown) => {
-        if (!cancelado) setState({ estado: 'error', motivo: motivoDe(error) });
-      });
+          onResultRef.current(result.getText());
+        })
+        .then((ctrl) => {
+          if (cancelado || leido) {
+            ctrl.stop();
+            return;
+          }
+          controls = ctrl;
+          setState({ estado: 'escaneando' });
+        })
+        .catch((error: unknown) => {
+          if (!cancelado) setState({ estado: 'error', motivo: motivoDe(error) });
+        });
+    }, 0);
 
     return () => {
       cancelado = true;
+      clearTimeout(timer);
       controls?.stop();
     };
   }, []);
