@@ -50,7 +50,7 @@ export const editarExpedienteSchema = z
 export type EditarExpedienteInput = z.output<typeof editarExpedienteSchema>;
 
 // RF-12: every action asks for a reason; it goes to the audit log.
-const motivo = z
+export const motivo = z
   .string('Indica el motivo.')
   .trim()
   .min(1, 'Indica el motivo.')

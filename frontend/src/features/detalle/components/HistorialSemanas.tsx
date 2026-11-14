@@ -6,6 +6,7 @@ import { messageOf } from '../../importaciones/archivo';
 import { DiaHistorial } from '../../historial/components/DiaHistorial';
 import type { EstadoValidacion, SemanaHistorial } from '../../historial/api';
 import { useSemanaDeExpediente } from '../api';
+import { AccionesSemana } from './AccionesSemana';
 
 const PARAM_SEMANA = 'semana';
 
@@ -76,6 +77,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
         </>
       )}
       <BitacoraLectura semana={semana} />
+      {semana.id !== null && semana.estadoValidacion === 'ENVIADA' && <AccionesSemana key={semana.id} semanaId={semana.id} />}
     </>
   );
 }

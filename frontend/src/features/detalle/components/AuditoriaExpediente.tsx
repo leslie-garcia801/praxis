@@ -15,6 +15,8 @@ const TEXTO_ACCION: Record<string, string> = {
   ENVIAR_SEMANA_AUTOMATICO: 'Semana enviada automáticamente',
   VALIDAR_SEMANA: 'Semana validada',
   RECHAZAR_SEMANA: 'Semana rechazada',
+  VALIDAR_SEMANA_VINCULACION: 'Semana validada por vinculación en nombre del supervisor',
+  RECHAZAR_SEMANA_VINCULACION: 'Semana rechazada por vinculación en nombre del supervisor',
 };
 
 const TEXTO_ENTIDAD: Record<string, string> = { Expediente: 'Expediente', SemanaBitacora: 'Semana' };
@@ -32,6 +34,7 @@ const TEXTO_CAMPO: Record<string, string> = {
   programa: 'Programa',
   subprograma: 'Subprograma',
   enviadaEn: 'Enviada',
+  enNombreDelSupervisor: 'En nombre del supervisor',
 };
 
 const TEXTO_ESTADO: Record<string, string> = {
@@ -49,6 +52,7 @@ const TEXTO_ESTADO: Record<string, string> = {
 function valor(clave: string, v: unknown): string {
   if (v === null || v === undefined) return '—';
   if (clave === 'estado' && typeof v === 'string') return TEXTO_ESTADO[v] ?? v;
+  if (typeof v === 'boolean') return v ? 'Sí' : 'No';
   return typeof v === 'string' ? v : JSON.stringify(v);
 }
 

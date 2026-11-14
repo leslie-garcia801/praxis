@@ -131,6 +131,18 @@ export async function obtenerEnlace(enlace: EnlaceVigente) {
 
 export type Resultado = 'VALIDADA' | 'RECHAZADA' | 'YA_RESUELTA';
 
+// RF-22: what a resolution writes on the week. Shared by the supervisor link and the office acting on their behalf;
+// only `validadoPor` differs ("SUPERVISOR" or the office user id).
+export function datosDeResolucion(
+  decision: { validar: true } | { validar: false; comentario: string },
+  momento: Date,
+  validadoPor: string,
+) {
+  return decision.validar
+    ? { estado: 'VALIDADA' as const, validadoPor, validadoEn: momento, comentario: null }
+    : { estado: 'RECHAZADA' as const, comentario: decision.comentario, rechazadaEn: momento };
+}
+
 // RF-21, RF-21a, RF-22, RF-29: resolves the given weeks of the link. Every week must belong to the link (otherwise
 // nothing is resolved). Each week is resolved only while it is still ENVIADA, so a week someone else resolved first
 // answers YA_RESUELTA and is left untouched. The audit entry is written in the same transaction. `ahora` is
@@ -150,9 +162,7 @@ export async function resolverSemanas(enlace: EnlaceVigente, { decisiones }: Dec
       const estado = validar ? 'VALIDADA' : 'RECHAZADA';
       const { count } = await tx.semanaBitacora.updateMany({
         where: { id: d.semanaId, estado: 'ENVIADA' },
-        data: validar
-          ? { estado, validadoPor: 'SUPERVISOR', validadoEn: momento, comentario: null }
-          : { estado, comentario: d.comentario, rechazadaEn: momento },
+        data: datosDeResolucion(validar ? { validar: true } : { validar: false, comentario: d.comentario! }, momento, 'SUPERVISOR'),
       });
       if (count === 0) {
         salida.push({ semanaId: d.semanaId, resultado: 'YA_RESUELTA' });

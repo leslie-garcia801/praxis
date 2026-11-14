@@ -9,7 +9,9 @@ import { nombreSupervisor } from '../../expediente/nombreSupervisor';
 import { DIAS } from '../../expediente/schemas';
 import { DescargarReporte } from '../../reporte/components/DescargarReporte';
 import { useExpedienteDetalle, type ExpedienteDetalle } from '../api';
+import { AccionesExpediente } from './AccionesExpediente';
 import { AuditoriaExpediente } from './AuditoriaExpediente';
+import { EditarSupervisor } from './EditarSupervisor';
 import { HistorialSemanas } from './HistorialSemanas';
 
 const TEXTO_ESTADO = {
@@ -50,7 +52,7 @@ function Encabezado({ expediente }: { expediente: ExpedienteDetalle }) {
       <p className="text-slate-800">
         {alumno.carrera} · Semestre {alumno.semestre} · Grupo {alumno.grupo} · {TEXTO_TURNO[alumno.turno]}
       </p>
-      {/* Task 0031: the office actions (estado, transferir, confirmar, validar por el supervisor) go here. */}
+      <AccionesExpediente expediente={expediente} />
     </header>
   );
 }
@@ -88,6 +90,7 @@ function DatosExpediente({ expediente }: { expediente: ExpedienteDetalle }) {
         )}
         <Dato etiqueta="Meta">{formatHoras(expediente.metaHoras * 60)}</Dato>
       </dl>
+      {supervisor && <EditarSupervisor key={`${supervisor.id}-${supervisor.correo}-${supervisor.nombre}`} supervisor={supervisor} />}
     </section>
   );
 }
