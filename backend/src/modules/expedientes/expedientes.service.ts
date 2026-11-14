@@ -207,6 +207,11 @@ export async function editarExpediente(user: AuthUser, id: string, input: Editar
         select: { institucionId: true },
       });
       if (!supervisor) throw new AppError(400, 'SUPERVISOR_INVALIDO', 'El supervisor no existe.');
+      // Shared lock: a deactivation running at the same time waits for this case file and then counts it.
+      const [vigente] = await tx.$queryRaw<{ activo: boolean }[]>`SELECT activo FROM supervisores WHERE id = ${supervisorId} FOR SHARE`;
+      if (!vigente?.activo) {
+        throw new AppError(400, 'SUPERVISOR_INACTIVO', 'El supervisor está desactivado. Elige otro.');
+      }
       if (supervisor.institucionId !== institucionId) {
         throw new AppError(
           400,

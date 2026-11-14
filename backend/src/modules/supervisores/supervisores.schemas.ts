@@ -44,6 +44,7 @@ export const editarSupervisorSchema = z
     departamento: textoOpcional(150).nullable(),
     telefono: textoOpcional(30).nullable(),
     extension: textoOpcional(20).nullable(),
+    activo: z.boolean('El estado del supervisor no es válido.'),
   })
   .partial()
   .refine((v) => Object.values(v).some((x) => x !== undefined), 'Indica al menos un campo para editar.');

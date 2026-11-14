@@ -88,6 +88,7 @@ describe('supervisores (RF-09)', () => {
         telefono: '8112345678',
         extension: '12',
         confirmado: true,
+        activo: true,
       });
       expect(res.body.supervisores.map((s: { id: string }) => s.id)).toContain(pendiente.id);
     });
@@ -295,6 +296,113 @@ describe('supervisores (RF-09)', () => {
       const logs = await prisma.auditLog.findMany({ where: { entidadId: s.id } });
       expect(logs).toHaveLength(1);
       expect(logs[0]).toMatchObject({ usuarioId: vinculacionId, accion: 'EDITAR_SUPERVISOR', entidad: 'Supervisor', antes: { puesto: 'Jefe' }, despues: { puesto: 'Director' } });
+    });
+
+    describe('activo (deactivate and reactivate)', () => {
+      let matriculas = 0;
+      // An active case file of the given state assigned to the supervisor.
+      const conExpediente = async (supervisorId: string, estado: 'PENDIENTE' | 'EN_PROCESO' | 'SUSPENDIDO' | 'FINALIZADO' | 'CANCELADO') => {
+        matriculas++;
+        const alumno = await crearAlumnoPrecargado({ plantelId, matricula: `2531905177${String(matriculas).padStart(4, '0')}`, password: PASSWORD_PRUEBA });
+        return crearExpediente({ alumnoId: alumno.alumno!.id, estado, institucionId, datos: { supervisorId } });
+      };
+
+      it('RF-09: vinculación deactivates a supervisor with no active case files, and reactivates it', async () => {
+        const s = await crearSupervisor({ institucionId });
+        expect(s.activo).toBe(true);
+
+        const baja = await editar(s.id, { activo: false });
+        expect(baja.status).toBe(200);
+        expect(baja.body.supervisor).toMatchObject({ id: s.id, activo: false });
+        expect((await prisma.supervisor.findUniqueOrThrow({ where: { id: s.id } })).activo).toBe(false);
+
+        const alta = await editar(s.id, { activo: true });
+        expect(alta.status).toBe(200);
+        expect(alta.body.supervisor.activo).toBe(true);
+      });
+
+      it('RF-09: refuses to deactivate a supervisor with PENDIENTE, EN_PROCESO or SUSPENDIDO case files', async () => {
+        const s = await crearSupervisor({ institucionId });
+        await conExpediente(s.id, 'PENDIENTE');
+        await conExpediente(s.id, 'EN_PROCESO');
+        await conExpediente(s.id, 'SUSPENDIDO');
+
+        const res = await editar(s.id, { activo: false });
+
+        expect(res.status).toBe(409);
+        expect(res.body.error.code).toBe('SUPERVISOR_CON_EXPEDIENTES');
+        expect(res.body.error.message).toBe('Este supervisor tiene 3 expedientes activos. Cámbiales el supervisor antes de desactivarlo.');
+        expect(res.body.error.details).toEqual({ expedientes: 3 });
+        expect((await prisma.supervisor.findUniqueOrThrow({ where: { id: s.id } })).activo).toBe(true);
+      });
+
+      it('RF-09: the message is singular with one active case file', async () => {
+        const s = await crearSupervisor({ institucionId });
+        await conExpediente(s.id, 'EN_PROCESO');
+
+        const res = await editar(s.id, { activo: false });
+
+        expect(res.status).toBe(409);
+        expect(res.body.error.message).toBe('Este supervisor tiene 1 expediente activo. Cámbiale el supervisor antes de desactivarlo.');
+      });
+
+      it('RF-09: finished and cancelled case files do not block the deactivation', async () => {
+        const s = await crearSupervisor({ institucionId });
+        await conExpediente(s.id, 'FINALIZADO');
+        await conExpediente(s.id, 'CANCELADO');
+
+        expect((await editar(s.id, { activo: false })).status).toBe(200);
+      });
+
+      it('RF-09: a supervisor that is already inactive can still be reactivated while others have case files', async () => {
+        const s = await crearSupervisor({ institucionId, datos: { activo: false } });
+        await conExpediente(s.id, 'CANCELADO');
+
+        expect((await editar(s.id, { activo: true })).status).toBe(200);
+      });
+
+      it('RF-29: audits the change of activo with the previous and new value', async () => {
+        const s = await crearSupervisor({ institucionId });
+
+        await editar(s.id, { activo: false });
+
+        const logs = await prisma.auditLog.findMany({ where: { entidadId: s.id } });
+        expect(logs).toHaveLength(1);
+        expect(logs[0]).toMatchObject({ accion: 'EDITAR_SUPERVISOR', antes: { activo: true }, despues: { activo: false } });
+      });
+
+      it('400 when activo is not a boolean', async () => {
+        const s = await crearSupervisor({ institucionId });
+
+        expect((await editar(s.id, { activo: 'no' })).status).toBe(400);
+      });
+
+      it('RF-09: the student does not see a deactivated supervisor; the office sees it flagged', async () => {
+        const inst = (await crearInstitucion({ plantelId })).id;
+        const activo = await crearSupervisor({ institucionId: inst, datos: { nombre: 'Activo' } });
+        const inactivo = await crearSupervisor({ institucionId: inst, datos: { nombre: 'Inactivo', activo: false } });
+
+        const alumno = await listar(inst, cookieAlumno);
+        expect(alumno.body.supervisores.map((x: { id: string }) => x.id)).toEqual([activo.id]);
+        expect(alumno.body.supervisores[0]).not.toHaveProperty('activo');
+
+        const oficina = await listar(inst);
+        expect(oficina.body.supervisores).toHaveLength(2);
+        expect(oficina.body.supervisores.find((x: { id: string }) => x.id === inactivo.id)).toMatchObject({ activo: false });
+        expect(oficina.body.supervisores.find((x: { id: string }) => x.id === activo.id)).toMatchObject({ activo: true });
+      });
+
+      it('RF-09: a deactivated supervisor cannot be assigned to a case file', async () => {
+        const inactivo = await crearSupervisor({ institucionId, datos: { activo: false } });
+        matriculas++;
+        const alumno = await crearAlumnoPrecargado({ plantelId, matricula: `2531905177${String(matriculas).padStart(4, '0')}`, password: PASSWORD_PRUEBA });
+        const expediente = await crearExpediente({ alumnoId: alumno.alumno!.id, tipo: 'PRACTICAS', estado: 'PENDIENTE', institucionId });
+
+        const res = await pedir('patch', `/expedientes/${expediente.id}`, { supervisorId: inactivo.id });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error.code).toBe('SUPERVISOR_INACTIVO');
+      });
     });
 
     it('RF-29: no audit entry when nothing changed', async () => {
