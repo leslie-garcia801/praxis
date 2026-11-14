@@ -176,7 +176,7 @@ describe('/vinculacion/instituciones (RF-05, RF-06)', () => {
         http.post(`*/api/instituciones/${ID}/qr`, () => {
           qrCalls += 1;
           codigo = 'NEW777';
-          return new HttpResponse(new Blob(['%PDF']), {
+          return new HttpResponse(new TextEncoder().encode('%PDF'), {
             headers: {
               'Content-Type': 'application/pdf',
               'Content-Disposition': 'attachment; filename="qr-hospital-alfa.pdf"',
@@ -209,7 +209,7 @@ describe('/vinculacion/instituciones (RF-05, RF-06)', () => {
         http.get(LISTA_URL, () => HttpResponse.json({ instituciones: [buildInstitucion()] })),
         http.post(`*/api/instituciones/${ID}/qr`, () => {
           qrCalls += 1;
-          return new HttpResponse(new Blob(['%PDF']));
+          return new HttpResponse(new TextEncoder().encode('%PDF'));
         }),
       );
       const { user } = renderApp('/vinculacion/instituciones');

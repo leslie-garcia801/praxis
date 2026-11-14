@@ -13,7 +13,7 @@ function mockReporte(archivo = 'reporte-25319051769999-2026-11-12.pdf') {
   server.use(
     http.get('*/api/expedientes/:id/reporte.pdf', ({ request, params }) => {
       requests.push({ id: String(params.id), query: new URL(request.url).searchParams });
-      return new HttpResponse(new Blob(['%PDF']), {
+      return new HttpResponse(new TextEncoder().encode('%PDF'), {
         headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${archivo}"` },
       });
     }),
@@ -98,7 +98,7 @@ describe('DescargarReporte (RF-27)', () => {
     server.use(
       http.get('*/api/expedientes/:id/reporte.pdf', async () => {
         await espera;
-        return new HttpResponse(new Blob(['%PDF']), { headers: { 'Content-Disposition': 'attachment; filename="r.pdf"' } });
+        return new HttpResponse(new TextEncoder().encode('%PDF'), { headers: { 'Content-Disposition': 'attachment; filename="r.pdf"' } });
       }),
     );
     const { user } = renderApp('/alumno');

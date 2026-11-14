@@ -220,7 +220,7 @@ describe('/vinculacion/expedientes/:id student detail (RF-25, RF-29, RN-03b)', (
     server.use(
       http.get('*/api/expedientes/:id/reporte.pdf', ({ params }) => {
         ids.push(String(params.id));
-        return new HttpResponse(new Blob(['%PDF']), { headers: { 'Content-Disposition': 'attachment; filename="reporte.pdf"' } });
+        return new HttpResponse(new TextEncoder().encode('%PDF'), { headers: { 'Content-Disposition': 'attachment; filename="reporte.pdf"' } });
       }),
     );
     const { user } = renderApp(RUTA);
