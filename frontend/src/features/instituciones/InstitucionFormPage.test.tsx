@@ -294,6 +294,107 @@ describe('/vinculacion/instituciones/:id/editar (RF-08)', () => {
     expect(seccion.queryByRole('group', { name: 'Datos del supervisor nuevo' })).not.toBeInTheDocument();
   });
 
+  describe('RF-09: edit, deactivate and reactivate a supervisor', () => {
+    // Serves the list from `lista` and applies every PATCH to it, like the API would.
+    function mockSupervisores(lista: Record<string, unknown>[], rechazo?: { code: string; message: string }) {
+      const patches: Record<string, unknown>[] = [];
+      server.use(
+        http.get(`*/api/instituciones/${ID}`, () => HttpResponse.json({ institucion: buildInstitucion() })),
+        http.get(`*/api/instituciones/${ID}/supervisores`, () => HttpResponse.json({ supervisores: lista })),
+        http.patch('*/api/supervisores/:id', async ({ request, params }) => {
+          const body = (await request.json()) as Record<string, unknown>;
+          patches.push(body);
+          if (rechazo) return apiError(rechazo.code, rechazo.message, 409);
+          const i = lista.findIndex((x) => x.id === params.id);
+          lista[i] = { ...lista[i], ...body };
+          return HttpResponse.json({ supervisor: lista[i] });
+        }),
+      );
+      return patches;
+    }
+
+    it('edits the data of a supervisor and clears an optional field', async () => {
+      mockStaff();
+      const lista = [buildSupervisor({ puesto: 'Gerente', telefono: '8112345678', correo: 'laura@example.com', activo: true })];
+      const patches = mockSupervisores(lista);
+      const { user } = renderApp(RUTA);
+
+      const seccion = within(await screen.findByRole('region', { name: 'Supervisores' }));
+      await user.click(await seccion.findByRole('button', { name: 'Editar a Lic. Laura Mendoza Ruiz' }));
+      const grupo = within(seccion.getByRole('group', { name: 'Editar supervisor' }));
+      expect(grupo.getByLabelText('Nombre')).toHaveValue('Laura');
+      expect(grupo.getByLabelText('Correo')).toHaveValue('laura@example.com');
+      await user.clear(grupo.getByLabelText('Puesto (opcional)'));
+      await user.type(grupo.getByLabelText('Puesto (opcional)'), 'Directora');
+      await user.clear(grupo.getByLabelText('Teléfono (opcional)'));
+      await user.click(grupo.getByRole('button', { name: 'Guardar cambios' }));
+
+      expect(await seccion.findByText(/Directora/)).toBeInTheDocument();
+      expect(patches[0]).toMatchObject({ nombre: 'Laura', apellidoPaterno: 'Mendoza', correo: 'laura@example.com', puesto: 'Directora', telefono: null });
+      expect(seccion.queryByRole('group', { name: 'Editar supervisor' })).not.toBeInTheDocument();
+    });
+
+    it('shows the validation message and does not call the API when the correo is invalid', async () => {
+      mockStaff();
+      const patches = mockSupervisores([buildSupervisor({ activo: true })]);
+      const { user } = renderApp(RUTA);
+
+      const seccion = within(await screen.findByRole('region', { name: 'Supervisores' }));
+      await user.click(await seccion.findByRole('button', { name: /^Editar a / }));
+      const grupo = within(seccion.getByRole('group', { name: 'Editar supervisor' }));
+      await user.clear(grupo.getByLabelText('Correo'));
+      await user.type(grupo.getByLabelText('Correo'), 'no-es-correo');
+      await user.click(grupo.getByRole('button', { name: 'Guardar cambios' }));
+
+      expect(await grupo.findByText('El correo no es válido.')).toBeInTheDocument();
+      expect(patches).toHaveLength(0);
+    });
+
+    it('cancels the edit without saving', async () => {
+      mockStaff();
+      const patches = mockSupervisores([buildSupervisor({ activo: true })]);
+      const { user } = renderApp(RUTA);
+
+      const seccion = within(await screen.findByRole('region', { name: 'Supervisores' }));
+      await user.click(await seccion.findByRole('button', { name: /^Editar a / }));
+      await user.click(seccion.getByRole('button', { name: 'Cancelar' }));
+
+      expect(seccion.queryByRole('group', { name: 'Editar supervisor' })).not.toBeInTheDocument();
+      expect(patches).toHaveLength(0);
+    });
+
+    it('deactivates a supervisor and then reactivates it', async () => {
+      mockStaff();
+      const patches = mockSupervisores([buildSupervisor({ activo: true })]);
+      const { user } = renderApp(RUTA);
+
+      const seccion = within(await screen.findByRole('region', { name: 'Supervisores' }));
+      await user.click(await seccion.findByRole('button', { name: 'Desactivar a Lic. Laura Mendoza Ruiz' }));
+      expect(await seccion.findByText('Inactivo')).toBeInTheDocument();
+      expect(patches[0]).toEqual({ activo: false });
+
+      await user.click(seccion.getByRole('button', { name: 'Reactivar a Lic. Laura Mendoza Ruiz' }));
+      await waitFor(() => expect(seccion.queryByText('Inactivo')).not.toBeInTheDocument());
+      expect(patches[1]).toEqual({ activo: true });
+    });
+
+    it('shows why a supervisor with active case files cannot be deactivated', async () => {
+      mockStaff();
+      mockSupervisores([buildSupervisor({ activo: true })], {
+        code: 'SUPERVISOR_CON_EXPEDIENTES',
+        message: 'Este supervisor tiene 2 expedientes activos. Cámbiales el supervisor antes de desactivarlo.',
+      });
+      const { user } = renderApp(RUTA);
+
+      const seccion = within(await screen.findByRole('region', { name: 'Supervisores' }));
+      await user.click(await seccion.findByRole('button', { name: /^Desactivar a / }));
+
+      expect(await seccion.findByRole('alert')).toHaveTextContent('Este supervisor tiene 2 expedientes activos. Cámbiales el supervisor antes de desactivarlo.');
+      expect(seccion.queryByText('Inactivo')).not.toBeInTheDocument();
+      expect(seccion.getByRole('button', { name: /^Desactivar a / })).toBeInTheDocument();
+    });
+  });
+
   it('PATCHes the changes: marks inactive, clears the cupo and replaces the carreras', async () => {
     mockStaff();
     let body: Record<string, unknown> = {};
