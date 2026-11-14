@@ -50,6 +50,7 @@ export type SupervisorSinConfirmar = {
 
 // Always computed over the whole office: the filters do not affect them.
 export type Alertas = {
+  alumnosPorConfirmar: AlertaExpedientes;
   sinRegistros: AlertaExpedientes;
   semanasSinValidar: AlertaExpedientes;
   turnosIncompletos: AlertaExpedientes;

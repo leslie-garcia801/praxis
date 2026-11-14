@@ -32,7 +32,8 @@ export function PanelPage() {
   const alertaParam = searchParams.get(PARAM_ALERTA);
   const alerta = esClaveAlerta(alertaParam) ? alertaParam : null;
 
-  const panel = usePanelAlumnos(filtros);
+  // Pending students are not in the default table (EN_PROCESO and SUSPENDIDO), so their alert asks for them.
+  const panel = usePanelAlumnos(alerta === 'alumnosPorConfirmar' ? { ...filtros, estado: 'PENDIENTE' } : filtros);
 
   // RN-03b: only users who see both offices (oficina null) and the admin pick the program type.
   const usuario = me.data?.usuario;

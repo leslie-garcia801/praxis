@@ -18,7 +18,7 @@ export function AlertasPanel({ alertas, activa, onSeleccionar }: Props) {
 
   return (
     <section aria-label="Alertas" className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {CLAVES.map((clave) => {
           const seleccionada = activa === clave;
           return (
