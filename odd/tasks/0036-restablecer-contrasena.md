@@ -9,7 +9,7 @@
 
 ## Descripción
 
-Agrega al encabezado del detalle del alumno (`/vinculacion/expedientes/:id`, tareas 0030 y 0031) el botón "Restablecer contraseña" para vinculación y administrador. Consume `POST /api/alumnos/:id/restablecer-contrasena` (tarea 0003); no hay cambios de backend.
+Agrega al encabezado del detalle del alumno (`/vinculacion/expedientes/:id`, tareas 0030 y 0031) el botón "Restablecer contraseña" para vinculación y administrador. Consume `POST /api/alumnos/:id/restablecer-contrasena` (tarea 0003); no hay cambios de backend en esta tarea. El mismo PR también incluyó el seed de demo, los nombres de oficina en la interfaz (RN-03b) y los textos de error del backend que los usan; esos cambios quedaron en sus propios commits.
 
 ## Checklist
 

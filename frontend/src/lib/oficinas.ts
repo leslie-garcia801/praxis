@@ -18,11 +18,10 @@ const NOMBRE_PANEL: Record<Oficina, string> = {
 export const AMBAS_OFICINAS = 'Ambas oficinas';
 
 // Destination when the student's program is unknown; keep in sync with the backend messages.
-export const AMBAS_OFICINAS_DESTINO = 'la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación';
+export const AMBAS_OFICINAS_DESTINO = `la ${NOMBRE_OFICINA.PRACTICAS} o a la de Servicio Social y Titulación`;
 
 // Student messages: they name the office of the student's program, or both when there is none yet.
-export const ACUDE_A_TU_OFICINA =
-  'Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación, según tu programa.';
+export const ACUDE_A_TU_OFICINA = `Acude a ${AMBAS_OFICINAS_DESTINO}, según tu programa.`;
 
 export function acudeALaOficina(tipo: Oficina): string {
   return `Acude a la ${NOMBRE_OFICINA[tipo]}.`;

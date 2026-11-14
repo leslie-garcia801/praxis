@@ -38,7 +38,7 @@ La app no tiene registro abierto: el primer usuario lo crea el seed.
 | `pnpm db:seed:demo` | Dos usuarios de vinculación (una por oficina), tres instituciones con QR y supervisores, y cuatro alumnos en distintos momentos del flujo | `SEED_DEMO_PASSWORD` (12+ caracteres) |
 
 - Entra en `http://localhost:5173` con `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD`. Al primer inicio la app pide cambiar la contraseña; desde ahí la del `.env` ya no sirve, y volver a correr el seed **no** la restablece.
-- El seed demo es solo para desarrollo (no corre con `NODE_ENV=production`) y no hace nada si sus datos ya existen. Requiere haber corrido `pnpm db:seed` antes.
+- El seed demo es solo para desarrollo: no corre con `NODE_ENV=production` y se niega a correr si `DATABASE_URL` no apunta a `localhost` o `127.0.0.1` y no hace nada si sus datos ya existen. Requiere haber corrido `pnpm db:seed` antes.
 - Al terminar, el seed demo imprime los usuarios, las matrículas y el código corto y el enlace QR de cada institución. **Guarda esa salida**: el token del QR no se puede recuperar después; si lo pierdes, descarga un QR nuevo desde la app.
 
 | Usuario demo | Inicia sesión con | Sirve para probar |

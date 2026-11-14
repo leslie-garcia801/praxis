@@ -92,7 +92,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 | `pnpm prisma studio` | Explorador visual de la base en el navegador |
 | `pnpm db:seed` | Crea el plantel CBTIS 258 y el primer administrador (se puede repetir; no sobrescribe nada) |
 | `node dist/scripts/seed.js` | El mismo seed en Railway, con la versión compilada |
-| `pnpm db:seed:demo` | Solo desarrollo: usuarios de vinculación, instituciones con QR, supervisores y alumnos de prueba. Requiere `pnpm db:seed` antes; si los datos ya existen, no hace nada |
+| `pnpm db:seed:demo` | Solo desarrollo (se niega con `NODE_ENV=production` o con una base que no sea local): usuarios de vinculación, instituciones con QR, supervisores y alumnos de prueba. Requiere `pnpm db:seed` antes; si los datos ya existen, no hace nada |
 
 ## Probar la API a mano
 
