@@ -1,9 +1,12 @@
-import { ACUDE_A_TU_OFICINA, acudeALaOficina } from '@/lib/oficinas';
-import { Link } from 'react-router';
+import { useEffect, useState } from 'react';
+import { ACUDE_A_TU_OFICINA, NOMBRE_OFICINA, acudeALaOficina } from '@/lib/oficinas';
+import { Link, useLocation, useNavigate } from 'react-router';
+import { AvisoTemporal } from '@/components/AvisoTemporal';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { PendientesAlumno } from '@/features/bitacora/components/PendientesAlumno';
 import { useMe, type Me } from '@/features/auth/api';
+import { useExpediente } from '@/features/expediente/api';
 import { DescargarReporte } from '@/features/reporte/components/DescargarReporte';
 import { esHoy, formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
 import { useAvance, type Avance } from '../api';
@@ -112,26 +115,56 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
   );
 }
 
-function Contenido({ expediente }: { expediente: Expediente | null }) {
-  if (!expediente) return <Aviso>{`No tienes un expediente activo. ${ACUDE_A_TU_OFICINA}`}</Aviso>;
-  if (expediente.estado === 'PENDIENTE') {
+// RF-10: PENDIENTE either lacks data the student must fill in, or is complete and waits for the office.
+function PendienteContenido({ expediente }: { expediente: Expediente }) {
+  const detalle = useExpediente(expediente.id);
+  if (detalle.data && detalle.data.faltantes.length === 0) {
     return (
       <>
-        <Aviso>Completa tu expediente para empezar a registrar</Aviso>
-        <Button asChild className="h-12 w-full">
-          <Link to="/alumno/expediente">Completar expediente</Link>
-        </Button>
+        <Aviso>{`Tu expediente está pendiente de confirmar. La ${NOMBRE_OFICINA[expediente.tipo]} lo revisará y podrás registrar cuando lo confirme.`}</Aviso>
+        <Link to="/alumno/expediente" className={linkClass}>
+          Revisar mi expediente
+        </Link>
       </>
     );
   }
+  return (
+    <>
+      <Aviso>Completa tu expediente para empezar a registrar</Aviso>
+      <Button asChild className="h-12 w-full">
+        <Link to="/alumno/expediente">Completar expediente</Link>
+      </Button>
+    </>
+  );
+}
+
+function Contenido({ expediente }: { expediente: Expediente | null }) {
+  if (!expediente) return <Aviso>{`No tienes un expediente activo. ${ACUDE_A_TU_OFICINA}`}</Aviso>;
+  if (expediente.estado === 'PENDIENTE') return <PendienteContenido expediente={expediente} />;
   return <AvanceContenido expediente={expediente} />;
+}
+
+// A message handed over by the previous screen (navigation state). It is shown once, not again on reload.
+function useAvisoDeNavegacion(): string | null {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [aviso] = useState(() => (location.state as { aviso?: string } | null)?.aviso ?? null);
+  const hayAviso = Boolean((location.state as { aviso?: string } | null)?.aviso);
+
+  useEffect(() => {
+    if (hayAviso) void navigate(location.pathname, { replace: true, state: null });
+  }, [hayAviso, location.pathname, navigate]);
+
+  return aviso;
 }
 
 export function InicioAlumnoPage() {
   const me = useMe();
+  const aviso = useAvisoDeNavegacion();
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
       <h1 className="text-2xl font-bold">Mi avance</h1>
+      {aviso && <AvisoTemporal>{aviso}</AvisoTemporal>}
       {me.data && <Contenido expediente={me.data.expedienteActivo} />}
     </main>
   );

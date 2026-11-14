@@ -2,6 +2,7 @@ import { NOMBRE_OFICINA } from '@/lib/oficinas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/features/auth/components/Field';
 import { messageOf } from '../../importaciones/archivo';
@@ -21,6 +22,7 @@ import { SelectorSupervisor } from './SelectorSupervisor';
 export function FormularioExpediente({ expediente }: { expediente: Expediente }) {
   const { tipo } = expediente;
   const practicas = tipo === 'PRACTICAS';
+  const navigate = useNavigate();
   const guardar = useGuardarExpediente(expediente.id);
   const [faltantes, setFaltantes] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,13 @@ export function FormularioExpediente({ expediente }: { expediente: Expediente })
     setFaltantes(null);
     try {
       const { expediente: guardado } = await guardar.mutateAsync(aPayload(tipo, values));
+      if (guardado.faltantes.length === 0) {
+        // Complete: back to the home, which says the office still has to confirm it.
+        void navigate('/alumno', {
+          state: { aviso: `Listo. La ${NOMBRE_OFICINA[tipo]} revisará tu expediente para confirmarlo` },
+        });
+        return;
+      }
       setFaltantes(guardado.faltantes);
     } catch (e) {
       setError(messageOf(e));
@@ -123,20 +132,14 @@ export function FormularioExpediente({ expediente }: { expediente: Expediente })
           {error}
         </p>
       )}
-      {faltantes && (
+      {faltantes && faltantes.length > 0 && (
         <div role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
-          {faltantes.length === 0 ? (
-            <p>Listo. La {NOMBRE_OFICINA[expediente.tipo]} revisará tu expediente para confirmarlo</p>
-          ) : (
-            <>
-              <p>Aún falta completar:</p>
-              <ul className="list-disc pl-5">
-                {faltantes.map((f) => (
-                  <li key={f}>{etiquetaFaltante(f)}</li>
-                ))}
-              </ul>
-            </>
-          )}
+          <p>Aún falta completar:</p>
+          <ul className="list-disc pl-5">
+            {faltantes.map((f) => (
+              <li key={f}>{etiquetaFaltante(f)}</li>
+            ))}
+          </ul>
         </div>
       )}
       <Button type="submit" size="lg" className="h-12 w-full" disabled={guardar.isPending}>

@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildAvance, buildExpedienteActivo, buildMe } from '../../../test/msw/handlers';
+import { buildAvance, buildExpediente, buildExpedienteActivo, buildMe } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import { renderApp } from '../../../test/utils';
 
@@ -143,6 +143,34 @@ describe('/alumno home (RF-18)', () => {
     expect(screen.getByRole('link', { name: 'Completar expediente' })).toHaveAttribute('href', '/alumno/expediente');
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Registrar' })).not.toBeInTheDocument();
+  });
+
+  it('RF-10: PENDIENTE with every data filled says it waits for the office to confirm', async () => {
+    mockAlumno(buildExpedienteActivo({ estado: 'PENDIENTE', tipo: 'SERVICIO_SOCIAL' }));
+    server.use(
+      http.get('*/api/expedientes/:id', () => HttpResponse.json({ expediente: buildExpediente({ faltantes: [] }) })),
+    );
+    renderApp('/alumno');
+    expect(
+      await screen.findByText(
+        'Tu expediente está pendiente de confirmar. La Oficina de Servicio Social y Titulación lo revisará y podrás registrar cuando lo confirme.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Completa tu expediente para empezar a registrar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Registrar' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Revisar mi expediente' })).toHaveAttribute('href', '/alumno/expediente');
+  });
+
+  it('RF-10: PENDIENTE with missing data keeps asking to complete the expediente', async () => {
+    mockAlumno(buildExpedienteActivo({ estado: 'PENDIENTE' }));
+    server.use(
+      http.get('*/api/expedientes/:id', () =>
+        HttpResponse.json({ expediente: buildExpediente({ faltantes: ['supervisorId'] }) }),
+      ),
+    );
+    renderApp('/alumno');
+    expect(await screen.findByText('Completa tu expediente para empezar a registrar')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Completar expediente' })).toBeInTheDocument();
   });
 
   it('RN-13: con expediente suspendido no se puede registrar', async () => {
