@@ -157,7 +157,7 @@ describe('/alumno home (RF-18)', () => {
     expect(screen.queryByRole('link', { name: 'Registrar' })).not.toBeInTheDocument();
   });
 
-  it('RN-03b: el aviso de suspensión nombra la oficina del programa del alumno', async () => {
+  it('el aviso de suspensión nombra la oficina del programa del alumno (specs §4)', async () => {
     mockAlumno(buildExpedienteActivo({ estado: 'SUSPENDIDO', tipo: 'PRACTICAS', metaHoras: 240 }));
     mockAvance();
     renderApp('/alumno');

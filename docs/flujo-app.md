@@ -157,7 +157,6 @@ flowchart TD
 
 - Cualquier oficina puede restablecer la contraseña de cualquier alumno del plantel: es soporte, no gestión del expediente.
 - Si el alumno nunca activó su cuenta, restablecer se la crea; también sirve cuando la activación falla porque su nombre no coincide.
-- "En riesgo" sigue la regla RN-06a; el panel solo muestra lo que calcula la API.
 
 ## Alumno
 
