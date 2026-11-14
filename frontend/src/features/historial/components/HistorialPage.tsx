@@ -1,3 +1,4 @@
+import { ACUDE_A_TU_OFICINA } from '@/lib/oficinas';
 import { Link, useSearchParams } from 'react-router';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { Button } from '@/components/ui/button';
@@ -77,7 +78,7 @@ export function HistorialPage() {
       {historial.isPending && <p>Cargando tu historial…</p>}
       {sinExpediente && (
         <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
-          No tienes un expediente. Acude a vinculación.
+          No tienes un expediente. {ACUDE_A_TU_OFICINA}
         </p>
       )}
       {historial.isError && !sinExpediente && (

@@ -64,6 +64,7 @@ Archivo `.env` (nunca se sube a git). Plantilla en `.env.example`.
 | `SEED_ADMIN_EMAIL` | Solo para el seed | Correo del primer administrador |
 | `SEED_ADMIN_PASSWORD` | Solo para el seed | Contraseña inicial, al menos 12 caracteres; se pide cambiarla al entrar |
 | `SEED_ADMIN_NOMBRE` | No (`Administrador`) | Nombre visible del primer administrador |
+| `SEED_DEMO_PASSWORD` | Solo para el seed demo | Contraseña de todos los usuarios demo, al menos 12 caracteres |
 | `RESEND_API_KEY`, `MAIL_FROM` | En iteración 4 | Envío de correos al supervisor |
 | `APP_TIMEZONE` | No | Fijo en `America/Monterrey` (RN-15) |
 
@@ -91,6 +92,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 | `pnpm prisma studio` | Explorador visual de la base en el navegador |
 | `pnpm db:seed` | Crea el plantel CBTIS 258 y el primer administrador (se puede repetir; no sobrescribe nada) |
 | `node dist/scripts/seed.js` | El mismo seed en Railway, con la versión compilada |
+| `pnpm db:seed:demo` | Solo desarrollo: usuarios de vinculación, instituciones con QR, supervisores y alumnos de prueba. Requiere `pnpm db:seed` antes; si los datos ya existen, no hace nada |
 
 ## Probar la API a mano
 
@@ -171,7 +173,7 @@ pnpm prisma migrate diff --from-config-datasource --to-schema prisma/schema.pris
 ## Pruebas
 
 - Las pruebas de rutas usan **Supertest** sobre `app.ts` y una base **real** (`app_test`), sin mocks de Prisma. Así también se prueban las restricciones SQL.
-- Toda regla de negocio tiene una prueba que la nombra: `it('RN-04: acredita máximo 300 minutos por día')`.
+- Toda regla de negocio tiene una prueba que la nombra: `it('RN-04: acredita máximo 390 minutos por día')`.
 - Toda ruta nueva prueba: caso feliz, validación inválida, sin sesión (401) y rol incorrecto (403).
 - `test/setup.ts` vacía `app_test` al comienzo de **cada archivo** de pruebas, y solo si el nombre de la base termina en `_test`. Dentro de un archivo, las pruebas comparten los datos que arman con `test/factories.ts`.
 

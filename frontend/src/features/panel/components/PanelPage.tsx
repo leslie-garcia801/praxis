@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useMe } from '@/features/auth/api';
 import { ApiError } from '@/lib/api';
 import { messageOf } from '../../importaciones/archivo';
+import { tituloPanel } from '@/lib/oficinas';
 import { CLAVES_FILTRO, usePanelAlumnos, type ClaveFiltro, type FiltrosPanel as Filtros } from '../api';
 import { esClaveAlerta, TITULO_ALERTA } from '../alertas';
 import { AlertasPanel } from './AlertasPanel';
@@ -52,7 +53,7 @@ export function PanelPage() {
 
   return (
     <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6">
-      <h1 className="text-2xl font-bold">Panel de vinculación</h1>
+      <h1 className="text-2xl font-bold">{me.data ? tituloPanel(me.data.usuario) : 'Panel'}</h1>
 
       {panel.data && (
         <AlertasPanel alertas={panel.data.alertas} activa={alerta} onSeleccionar={(clave) => cambiarParam(PARAM_ALERTA, clave)} />

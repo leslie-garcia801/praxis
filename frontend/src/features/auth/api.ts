@@ -1,3 +1,4 @@
+import { AMBAS_OFICINAS_DESTINO } from '@/lib/oficinas';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError, apiFetch } from '@/lib/api';
 import { authClient } from '@/lib/auth';
@@ -66,7 +67,7 @@ export type Outcome = { ok: true } | { ok: false; message: string };
 
 const SIGN_IN_FALLBACK = 'No se pudo iniciar sesión. Intenta de nuevo.';
 const RATE_LIMIT_MESSAGE = 'Demasiados intentos. Espera un minuto e intenta de nuevo.';
-const INACTIVE_MESSAGE = 'Tu cuenta está desactivada. Acude a vinculación.';
+const INACTIVE_MESSAGE = `Tu cuenta está desactivada. Acude a ${AMBAS_OFICINAS_DESTINO}.`;
 
 type AuthClientError = { status?: number; code?: string } | null | undefined;
 
@@ -105,9 +106,9 @@ export type IdentityInput = { matricula: string; nombre: string; apellidoPaterno
 
 const ACTIVATION_MESSAGES: Record<string, string> = {
   // Exact copy from RF-02 (no trailing period).
-  MATRICULA_NO_REGISTRADA: 'Tu matrícula no está registrada; acude a vinculación',
+  MATRICULA_NO_REGISTRADA: `Tu matrícula no está registrada; acude a ${AMBAS_OFICINAS_DESTINO}`,
   NOMBRE_NO_COINCIDE:
-    'El nombre no coincide con el registrado. Revisa cómo lo escribiste o acude a vinculación.',
+    `El nombre no coincide con el registrado. Revisa cómo lo escribiste o acude a ${AMBAS_OFICINAS_DESTINO}.`,
   CUENTA_INACTIVA: INACTIVE_MESSAGE,
   CUENTA_YA_ACTIVADA: 'Tu cuenta ya está activada; inicia sesión.',
   CORREO_EN_USO: 'Ese correo ya está registrado en otra cuenta.',

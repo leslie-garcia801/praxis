@@ -170,3 +170,11 @@ export function useAuditoria(id: string) {
     queryFn: () => apiFetch<Auditoria>(`/api/expedientes/${id}/auditoria`),
   });
 }
+
+// RF-04: the temporary password is returned once and never cached.
+export function useRestablecerContrasena(alumnoId: string) {
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ passwordTemporal: string }>(`/api/alumnos/${alumnoId}/restablecer-contrasena`, { method: 'POST' }),
+  });
+}

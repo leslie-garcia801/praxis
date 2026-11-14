@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { decidirAccion, motivoRechazoExpediente, resolverInstante, type MotivoRechazoExpediente } from '../../domain/asistencias.js';
 import { calcularMinutosAcreditables, cerrarTurnoAbierto } from '../../domain/horas.js';
 import { hashTokenQr } from '../../domain/qrInstitucion.js';
+import { NOMBRE_OFICINA, type TipoPrograma } from '../../domain/oficinas.js';
 import type { Asistencia, Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
@@ -14,7 +15,7 @@ type Tx = Prisma.TransactionClient;
 const RECHAZOS: Record<MotivoRechazoExpediente, { code: string; message: string }> = {
   EXPEDIENTE_SUSPENDIDO: {
     code: 'EXPEDIENTE_SUSPENDIDO',
-    message: 'Tu expediente está suspendido y no permite registrar asistencia. Acude a vinculación.',
+    message: 'Tu expediente está suspendido y no permite registrar asistencia.',
   },
   EXPEDIENTE_NO_ACTIVO: {
     code: 'EXPEDIENTE_NO_ACTIVO',
@@ -25,6 +26,12 @@ const RECHAZOS: Record<MotivoRechazoExpediente, { code: string; message: string 
     message: 'Todavía no inicia tu periodo, por lo que no se registró la asistencia.',
   },
 };
+
+// RN-13: a suspended student is told which office to go to, by the program of their case file.
+function mensajeRechazo(motivo: MotivoRechazoExpediente, tipo: TipoPrograma): string {
+  const { message } = RECHAZOS[motivo];
+  return motivo === 'EXPEDIENTE_SUSPENDIDO' ? `${message} Acude a la ${NOMBRE_OFICINA[tipo]}.` : message;
+}
 
 const conflicto = (code: string, message: string) => new AppError(409, code, message);
 
@@ -137,7 +144,7 @@ async function escanear(tx: Tx, user: AuthUser, input: EscaneoInput, ahora: Date
   }
   const rechazoEstado = motivoRechazoExpediente({ estado: expediente.estado, fechaInicio: null, fechaEscaneo: '' });
   if (rechazoEstado && rechazoEstado !== 'ANTES_DE_FECHA_INICIO') {
-    throw conflicto(RECHAZOS[rechazoEstado].code, RECHAZOS[rechazoEstado].message);
+    throw conflicto(RECHAZOS[rechazoEstado].code, mensajeRechazo(rechazoEstado, expediente.tipo));
   }
 
   // The token is stored hashed (RNF-06); the short code is compared as typed (uppercase).
@@ -169,7 +176,7 @@ async function escanear(tx: Tx, user: AuthUser, input: EscaneoInput, ahora: Date
     fechaInicio: expediente.fechaInicio ? expediente.fechaInicio.toISOString().slice(0, 10) : null,
     fechaEscaneo,
   });
-  if (rechazoFecha) throw conflicto(RECHAZOS[rechazoFecha].code, RECHAZOS[rechazoFecha].message);
+  if (rechazoFecha) throw conflicto(RECHAZOS[rechazoFecha].code, mensajeRechazo(rechazoFecha, expediente.tipo));
 
   const abierto = await tx.asistencia.findFirst({ where: { expedienteId: expediente.id, estado: 'ABIERTA' } });
   const decision = decidirAccion(abierto, instante);

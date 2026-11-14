@@ -2,17 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { useMe } from '@/features/auth/api';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
-
-type Oficina = 'SERVICIO_SOCIAL' | 'PRACTICAS' | null;
-
-const TEXTO_OFICINA: Record<'SERVICIO_SOCIAL' | 'PRACTICAS', string> = {
-  SERVICIO_SOCIAL: 'Servicio social',
-  PRACTICAS: 'Prácticas',
-};
-
-function textoOficina(oficina: Oficina): string {
-  return oficina ? TEXTO_OFICINA[oficina] : 'Ambas oficinas';
-}
+import { etiquetaPerfil } from '@/lib/oficinas';
 
 type Enlace = { to: string; label: string; end?: boolean };
 
@@ -64,8 +54,8 @@ export function VinculacionLayout() {
           </nav>
           <div className="flex items-center gap-3 md:ml-auto">
             {data && (
-              <p role="group" aria-label="Oficina" className="rounded-full bg-muted px-3 py-1 text-sm">
-                {textoOficina(data.usuario.oficina)}
+              <p role="group" aria-label="Perfil" className="rounded-full bg-muted px-3 py-1 text-sm">
+                {etiquetaPerfil(data.usuario)}
               </p>
             )}
             <SignOutButton />

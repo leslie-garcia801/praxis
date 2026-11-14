@@ -13,6 +13,7 @@ import { AccionesExpediente } from './AccionesExpediente';
 import { AuditoriaExpediente } from './AuditoriaExpediente';
 import { EditarSupervisor } from './EditarSupervisor';
 import { HistorialSemanas } from './HistorialSemanas';
+import { RestablecerContrasenaButton } from './RestablecerContrasenaButton';
 
 const TEXTO_ESTADO = {
   PENDIENTE: 'Pendiente',
@@ -53,6 +54,7 @@ function Encabezado({ expediente }: { expediente: ExpedienteDetalle }) {
         {alumno.carrera} · Semestre {alumno.semestre} · Grupo {alumno.grupo} · {TEXTO_TURNO[alumno.turno]}
       </p>
       <AccionesExpediente expediente={expediente} />
+      <RestablecerContrasenaButton alumnoId={alumno.id} nombre={nombre} />
     </header>
   );
 }

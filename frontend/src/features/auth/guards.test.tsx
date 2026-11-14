@@ -52,14 +52,14 @@ describe('route guards (RF-03, RF-04, RN-03b)', () => {
   it('RF-03: the root goes to the home of the role', async () => {
     signedInAs({ rol: 'VINCULACION' });
     const { router } = renderApp('/');
-    expect(await screen.findByRole('heading', { name: 'Panel de vinculación' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Panel de Servicio Social y Titulación' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/vinculacion');
   });
 
   it('RF-03: an admin lands on /vinculacion', async () => {
     signedInAs({ rol: 'ADMIN' });
     const { router } = renderApp('/entrar');
-    expect(await screen.findByRole('heading', { name: 'Panel de vinculación' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Panel general' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/vinculacion');
   });
 
@@ -73,7 +73,7 @@ describe('route guards (RF-03, RF-04, RN-03b)', () => {
   it('RN-03b: vinculación reaching /alumno is sent to /vinculacion', async () => {
     signedInAs({ rol: 'VINCULACION' });
     const { router } = renderApp('/alumno');
-    expect(await screen.findByRole('heading', { name: 'Panel de vinculación' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Panel de Servicio Social y Titulación' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/vinculacion');
   });
 
@@ -108,7 +108,7 @@ describe('route guards (RF-03, RF-04, RN-03b)', () => {
     server.use(
       http.get('*/api/me', () =>
         HttpResponse.json(
-          { error: { code: 'CUENTA_INACTIVA', message: 'Tu cuenta está desactivada. Acude a vinculación.' } },
+          { error: { code: 'CUENTA_INACTIVA', message: 'Tu cuenta está desactivada. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.' } },
           { status: 403 },
         ),
       ),

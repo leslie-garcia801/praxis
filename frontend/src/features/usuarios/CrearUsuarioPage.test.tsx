@@ -31,7 +31,7 @@ function mockCreate(capture?: (body: unknown) => void) {
 async function openForm() {
   mockRol('ADMIN');
   const ctx = renderApp('/vinculacion/usuarios/nuevo');
-  await screen.findByRole('heading', { name: 'Crear usuario de vinculación' });
+  await screen.findByRole('heading', { name: 'Crear usuario de oficina' });
   return ctx;
 }
 
@@ -49,7 +49,7 @@ describe('/vinculacion/usuarios/nuevo', () => {
   it('shows the temporary password once with a copy button and the first sign-in notice (RF-04)', async () => {
     mockCreate();
     const { user } = await openForm();
-    await fill(user, 'Prácticas');
+    await fill(user, 'Oficina de Prácticas Profesionales');
     await submit(user);
 
     expect(await screen.findByText(PASSWORD)).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe('/vinculacion/usuarios/nuevo', () => {
     const { user } = await openForm();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-    await fill(user, 'Prácticas');
+    await fill(user, 'Oficina de Prácticas Profesionales');
     await submit(user);
     await user.click(await screen.findByRole('button', { name: 'Copiar' }));
     expect(writeText).toHaveBeenCalledWith(PASSWORD);
@@ -97,7 +97,7 @@ describe('/vinculacion/usuarios/nuevo', () => {
     let sent: unknown;
     mockCreate((b) => (sent = b));
     const { user } = await openForm();
-    await fill(user, 'Servicio Social');
+    await fill(user, 'Oficina de Servicio Social y Titulación');
     await submit(user);
     await screen.findByText(PASSWORD);
     expect(sent).toMatchObject({ oficina: 'SERVICIO_SOCIAL' });
@@ -113,7 +113,7 @@ describe('/vinculacion/usuarios/nuevo', () => {
       ),
     );
     const { user } = await openForm();
-    await fill(user, 'Prácticas');
+    await fill(user, 'Oficina de Prácticas Profesionales');
     await submit(user);
     const message = await screen.findByText('Ese correo ya está registrado en otra cuenta.');
     expect(screen.getByLabelText('Correo')).toHaveAccessibleDescription(message.textContent ?? '');
@@ -127,7 +127,7 @@ describe('/vinculacion/usuarios/nuevo', () => {
       ),
     );
     const { user } = await openForm();
-    await fill(user, 'Prácticas');
+    await fill(user, 'Oficina de Prácticas Profesionales');
     await submit(user);
     expect(await screen.findByRole('alert')).toHaveTextContent('Algo salió mal.');
   });
@@ -135,7 +135,7 @@ describe('/vinculacion/usuarios/nuevo', () => {
   it('"Crear otro usuario" clears the password and resets the form', async () => {
     mockCreate();
     const { user, queryClient } = await openForm();
-    await fill(user, 'Prácticas');
+    await fill(user, 'Oficina de Prácticas Profesionales');
     await submit(user);
     await screen.findByText(PASSWORD);
     await user.click(screen.getByRole('button', { name: 'Crear otro usuario' }));
@@ -166,6 +166,6 @@ describe('access to the user creation screen (RN-03b)', () => {
 
     await router.navigate('/vinculacion/usuarios/nuevo');
     await waitFor(() => expect(router.state.location.pathname).toBe('/vinculacion'));
-    expect(screen.queryByRole('heading', { name: 'Crear usuario de vinculación' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Crear usuario de oficina' })).not.toBeInTheDocument();
   });
 });

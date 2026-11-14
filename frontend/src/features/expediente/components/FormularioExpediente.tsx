@@ -1,3 +1,4 @@
+import { NOMBRE_OFICINA } from '@/lib/oficinas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -71,6 +72,7 @@ export function FormularioExpediente({ expediente }: { expediente: Expediente })
         institucionId={institucionId || undefined}
         valueId={supervisorId}
         onChange={(id) => setValue('supervisorId', id)}
+        tipo={expediente.tipo}
       />
 
       <Field
@@ -124,7 +126,7 @@ export function FormularioExpediente({ expediente }: { expediente: Expediente })
       {faltantes && (
         <div role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
           {faltantes.length === 0 ? (
-            <p>Listo. Vinculación revisará tu expediente para confirmarlo</p>
+            <p>Listo. La {NOMBRE_OFICINA[expediente.tipo]} revisará tu expediente para confirmarlo</p>
           ) : (
             <>
               <p>Aún falta completar:</p>

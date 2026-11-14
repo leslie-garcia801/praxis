@@ -54,7 +54,7 @@ describe('/entrar (RF-03)', () => {
 
     await fillAndSubmit(user, 'vinculacion@cbtis258.edu.mx');
 
-    expect(await screen.findByRole('heading', { name: 'Panel de vinculación' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Panel de Servicio Social y Titulación' })).toBeInTheDocument();
     expect(hits).toEqual([
       { endpoint: 'email', body: { email: 'vinculacion@cbtis258.edu.mx', password: 'Secreta123' } },
     ]);
@@ -95,13 +95,13 @@ describe('/entrar (RF-03)', () => {
 
   it('RF-03: a deactivated account shows the CUENTA_INACTIVA message', async () => {
     mockSignIn([], () =>
-      HttpResponse.json({ code: 'CUENTA_INACTIVA', message: 'Tu cuenta está desactivada. Acude a vinculación.' }, { status: 403 }),
+      HttpResponse.json({ code: 'CUENTA_INACTIVA', message: 'Tu cuenta está desactivada. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.' }, { status: 403 }),
     );
     const { user } = renderApp('/entrar');
 
     await fillAndSubmit(user, '25319051769999');
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Tu cuenta está desactivada. Acude a vinculación.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tu cuenta está desactivada. Acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación.');
   });
 
   it('RNF-06: the rate limit (429) shows a wait message', async () => {

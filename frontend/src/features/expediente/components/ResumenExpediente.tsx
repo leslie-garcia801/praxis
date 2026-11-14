@@ -1,3 +1,4 @@
+import { NOMBRE_OFICINA } from '@/lib/oficinas';
 import { formatFecha } from '@/lib/tiempo';
 import type { Expediente } from '../api';
 import { DIAS } from '../schemas';
@@ -18,8 +19,8 @@ export function ResumenExpediente({ expediente }: { expediente: Expediente }) {
   const dias = DIAS.filter((d) => expediente.diasPactados.includes(d.valor)).map((d) => d.nombre);
   const aviso =
     expediente.estado === 'SUSPENDIDO'
-      ? 'Tu expediente está suspendido; para cambios acude a vinculación'
-      : 'Tu expediente ya fue confirmado; para cambios acude a vinculación';
+      ? `Tu expediente está suspendido; para cambios acude a la ${NOMBRE_OFICINA[expediente.tipo]}`
+      : `Tu expediente ya fue confirmado; para cambios acude a la ${NOMBRE_OFICINA[expediente.tipo]}`;
 
   return (
     <>

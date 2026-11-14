@@ -7,17 +7,54 @@ PWA para que los alumnos registren su asistencia de **servicio social (480 h)** 
 ## Inicio rápido
 
 ```bash
-# 1. Base de datos: PostgreSQL local con las bases app_dev y app_test
-#    (PostgreSQL nativo, o bien: docker compose up -d)
+# 1. Base de datos: PostgreSQL local, nativo o con Docker (docker compose up -d crea app_dev y app_test).
+#    Usa solo uno: los dos escuchan en el puerto 5432.
 
-# 2. API en http://localhost:3000
-cd backend && pnpm install && pnpm prisma migrate deploy && pnpm dev
+# 2. Variables: copia los ejemplos y llénalos
+#    backend/.env       ← backend/.env.example       (DATABASE_URL apunta a la base de desarrollo)
+#    backend/.env.test  ← backend/.env.test.example  (base de prueba; su nombre debe terminar en _test)
 
-# 3. PWA en http://localhost:5173
+# 3. API en http://localhost:3000
+cd backend
+pnpm install
+pnpm prisma migrate deploy      # aplica las migraciones a la base de .env
+pnpm db:seed                    # plantel, carreras y primer administrador
+pnpm db:seed:demo               # opcional: datos de prueba (vinculación, instituciones, alumnos)
+pnpm dev
+
+# 4. PWA en http://localhost:5173
 cd frontend && pnpm install && pnpm dev
 ```
 
 Comprueba que todo responde: `curl http://localhost:3000/api/health` → `{"status":"ok"}`.
+
+### Seed: sin él no puedes entrar
+
+La app no tiene registro abierto: el primer usuario lo crea el seed.
+
+| Comando | Qué crea | Variables en `backend/.env` |
+| --- | --- | --- |
+| `pnpm db:seed` | Plantel CBTIS 258, las 8 carreras y el primer administrador | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` (12+ caracteres), `SEED_ADMIN_NOMBRE` opcional |
+| `pnpm db:seed:demo` | Dos usuarios de vinculación (una por oficina), tres instituciones con QR y supervisores, y cuatro alumnos en distintos momentos del flujo | `SEED_DEMO_PASSWORD` (12+ caracteres) |
+
+- Entra en `http://localhost:5173` con `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD`. Al primer inicio la app pide cambiar la contraseña; desde ahí la del `.env` ya no sirve, y volver a correr el seed **no** la restablece.
+- El seed demo es solo para desarrollo (no corre con `NODE_ENV=production`) y no hace nada si sus datos ya existen. Requiere haber corrido `pnpm db:seed` antes.
+- Al terminar, el seed demo imprime los usuarios, las matrículas y el código corto y el enlace QR de cada institución. **Guarda esa salida**: el token del QR no se puede recuperar después; si lo pierdes, descarga un QR nuevo desde la app.
+
+| Usuario demo | Inicia sesión con | Sirve para probar |
+| --- | --- | --- |
+| Vinculación Servicio Social | `vinculacion.ss@example.com` | Panel, instituciones e importaciones de su oficina |
+| Vinculación Prácticas | `vinculacion.pp@example.com` | Lo mismo, para prácticas |
+| Ana López García | `25258000000001` | Servicio social en proceso: semanas validadas, enviada y en borrador; registrar asistencia |
+| Bruno Martínez Ruiz | `25258000000002` | Prácticas con poco avance y una semana rechazada (aparece en riesgo) |
+| Carla Hernández Soto | `25258000000003` | Expediente pendiente: completar institución y supervisor |
+| Diego Ramírez Cruz | `25258000000004` | Activar la cuenta (no tiene contraseña) |
+
+Todos, menos Diego, usan `SEED_DEMO_PASSWORD`. Los correos son de `example.com`, así que ningún enlace de validación llega a una persona real.
+
+Para revisar las tablas y los datos que creó el seed, abre **Prisma Studio** desde `backend/` con `pnpm prisma studio`. Se abre en el navegador (por defecto en `http://localhost:5555`) y usa la base de `DATABASE_URL` de tu `.env`. Ahí puedes consultar y también editar registros, así que úsalo con cuidado.
+
+Para ver cómo se usa la app pantalla por pantalla en cada rol, consulta [`docs/flujo-app.md`](docs/flujo-app.md).
 
 Guías detalladas:
 
@@ -33,6 +70,7 @@ Guías detalladas:
 ├── README.md
 ├── CLAUDE.md              # convenciones para el asistente de código
 ├── docs/specs.md          # especificaciones del MVP
+├── docs/flujo-app.md      # flujo de la interfaz por rol (diagramas)
 ├── odd/tasks/             # una tarea por archivo .md, con checklist
 ├── docker-compose.yml     # PostgreSQL local opcional (dev y test)
 ├── backend/               # Node + Express + Prisma → Railway
@@ -156,7 +194,7 @@ flowchart LR
   B -- No --> E[Aviso de error,<br/>no se registra]
   B -- Sí --> C{¿Hay turno abierto?}
   C -- No --> D[Registra entrada]
-  C -- Sí --> F[Registra salida<br/>mín. 15 min · tope 5 h/día]
+  C -- Sí --> F[Registra salida<br/>mín. 15 min · tope 6 h 30 min/día]
   F --> G[Actualiza avance]
 ```
 
@@ -184,8 +222,9 @@ sequenceDiagram
   participant M as Resend
   participant S as Supervisor
   A->>API: Guarda bitácora (mín. 50 caracteres)
-  A->>API: Envía la semana
-  API->>M: Correo con enlace (token con hash, 14 días)
+  A->>API: Envía la semana (o se envía sola el lunes)
+  Note over API: Tarea de los lunes (pnpm job:resumen-semanal)
+  API->>M: Un correo por supervisor con todas sus semanas enviadas<br/>(token con hash, 14 días)
   M->>S: Enlace /validar/:token
   S->>API: Ve turnos y bitácoras de todos sus alumnos
   alt Valida
@@ -198,6 +237,8 @@ sequenceDiagram
 ```
 
 ### Registro sin conexión
+
+> **Pendiente (iteración 6).** Hoy, si no hay red, la pantalla de registro ofrece "Reintentar" con el mismo identificador; la cola en IndexedDB todavía no existe. El diagrama muestra el diseño previsto.
 
 ```mermaid
 sequenceDiagram
@@ -219,7 +260,7 @@ sequenceDiagram
 | --- | --- |
 | RN-02 | Meta: 480 h servicio social, 240 h prácticas |
 | RN-03 | Un solo expediente activo por alumno |
-| RN-04 | Máximo 5 h acreditables por día |
+| RN-04 | Máximo 6 h 30 min (390 min) acreditables por día |
 | RN-09 | Un turno de menos de 15 min no se acredita |
 | RN-11 | Solo las horas validadas cuentan para finalizar |
 | RN-15 | Horas guardadas en UTC, mostradas en `America/Monterrey` |
@@ -229,7 +270,7 @@ La lista completa está en la sección 5 de [`docs/specs.md`](docs/specs.md).
 ## Forma de trabajo
 
 - Se trabaja **una iteración a la vez** (specs, sección 14). Cada tarea vive en `odd/tasks/` con su checklist.
-- Toda regla de negocio tiene al menos una prueba que la nombra, por ejemplo `it('RN-04: acredita máximo 300 minutos por día')`.
+- Toda regla de negocio tiene al menos una prueba que la nombra, por ejemplo `it('RN-04: acredita máximo 390 minutos por día')`.
 - Un cambio está terminado solo si `pnpm test` y `pnpm typecheck` pasan en el proyecto que se tocó.
 - Commits con [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/): `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
 
@@ -238,10 +279,12 @@ La lista completa está en la sección 5 de [`docs/specs.md`](docs/specs.md).
 | Iteración | Entregable | Estado |
 | --- | --- | --- |
 | 0 | Andamiaje: proyectos, base de datos, migración inicial | ✅ |
-| 1 | Autenticación, importación de alumnos, usuarios por oficina | ⏳ |
-| 2 | Catálogo e importación de instituciones, QR | — |
-| 3 | Expediente, escaneo, cálculo de horas, avance | — |
-| 4 | Bitácora, validación por enlace y correo | — |
-| 5 | Panel de vinculación, Excel y PDF | — |
+| 1 | Autenticación, importación de alumnos, usuarios por oficina | ✅ |
+| 2 | Catálogo e importación de instituciones, QR | ✅ |
+| 3 | Expediente, escaneo, cálculo de horas, avance | 🟡 Falta la pantalla de vinculación para confirmar, suspender o transferir expedientes (el backend ya existe) |
+| 4 | Bitácora, validación por enlace y correo | ✅ |
+| 5 | Panel de vinculación, Excel y PDF | 🟡 Panel listo; faltan la exportación a Excel y el reporte PDF (RF-27) |
 | 6 | Registro sin conexión, recordatorios, pruebas en dispositivos | — |
 | 7 | Piloto con Programación | — |
+
+✅ terminada · 🟡 en curso · — sin empezar. El detalle de cada tarea está en `odd/tasks/`, y los huecos de la interfaz, al final de [`docs/flujo-app.md`](docs/flujo-app.md).

@@ -59,7 +59,7 @@ describe('/cambiar-contrasena (RF-04)', () => {
 
     await fill(user, 'Temporal123', 'NuevaClave456');
 
-    expect(await screen.findByRole('heading', { name: 'Panel de vinculación' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Panel de Servicio Social y Titulación' })).toBeInTheDocument();
   });
 
   it('RF-04: a wrong current password is reported on that field', async () => {

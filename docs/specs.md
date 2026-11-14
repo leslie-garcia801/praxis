@@ -216,7 +216,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 - Una matrícula existente se actualiza; no se duplica.
 
 **RF-02 Activación de cuenta.** El alumno entra con su matrícula, confirma su nombre y crea una contraseña.
-- Si la matrícula no está precargada, se muestra: "Tu matrícula no está registrada; acude a vinculación".
+- Si la matrícula no está precargada, se muestra: "Tu matrícula no está registrada; acude a la Oficina de Prácticas Profesionales o a la de Servicio Social y Titulación".
 - El correo es opcional.
 
 **RF-03 Inicio de sesión** con matrícula (alumno) o correo (vinculación) y contraseña. La sesión usa una cookie httpOnly y dura 30 días en el celular.
