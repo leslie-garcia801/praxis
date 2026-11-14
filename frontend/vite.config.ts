@@ -1,12 +1,16 @@
 /// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+// `pnpm dev:lan` (mode "lan"): self-signed HTTPS so a phone on the same network can use the camera,
+// which browsers only allow on secure origins. Plain `pnpm dev` stays on http://localhost.
+export default defineConfig(({ mode }) => ({
   plugins: [
+    ...(mode === 'lan' ? [basicSsl()] : []),
     react(),
     tailwindcss(),
     VitePWA({
@@ -51,4 +55,4 @@ export default defineConfig({
     // Default worker count (one per core) causes random 5s timeouts under load.
     maxWorkers: 4,
   },
-});
+}));

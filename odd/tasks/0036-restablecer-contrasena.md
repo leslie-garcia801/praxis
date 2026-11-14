@@ -1,4 +1,4 @@
-# 0033 — Restablecer contraseña del alumno desde el detalle (frontend)
+# 0036 — Restablecer contraseña del alumno desde el detalle (frontend)
 
 | Campo | Valor |
 | --- | --- |
