@@ -19,6 +19,10 @@ export type Supervisor = {
   puesto: string | null;
   departamento: string | null;
   confirmado: boolean;
+  // Only the office and the admin receive these; the student view omits them.
+  correo?: string | null;
+  telefono?: string | null;
+  extension?: string | null;
 };
 
 export type Expediente = {

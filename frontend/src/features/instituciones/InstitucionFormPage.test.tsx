@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildInstitucion, buildMe, carrerasEjemplo } from '../../../test/msw/handlers';
+import { buildInstitucion, buildMe, buildSupervisor, carrerasEjemplo } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import { renderApp } from '../../../test/utils';
 
@@ -173,6 +173,13 @@ describe('/vinculacion/instituciones/nueva (RF-05, RF-08)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Alguna de las carreras indicadas no existe.');
   });
 
+  it('does not offer supervisors before the institution exists', async () => {
+    mockStaff();
+    renderApp('/vinculacion/instituciones/nueva');
+    await screen.findByLabelText('Nombre de la institución');
+    expect(screen.queryByRole('region', { name: 'Supervisores' })).not.toBeInTheDocument();
+  });
+
   it('does not offer the QR download before the institution exists', async () => {
     mockStaff();
     renderApp('/vinculacion/instituciones/nueva');
@@ -232,6 +239,59 @@ describe('/vinculacion/instituciones/:id/editar (RF-08)', () => {
     expect(screen.getByLabelText('Activa')).toBeChecked();
     expect(screen.getByText('ABC234')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Descargar QR de Hospital Alfa' })).toBeInTheDocument();
+  });
+
+  it('RF-09: lists the supervisors of the institution with their contact data', async () => {
+    mockStaff();
+    server.use(
+      http.get(`*/api/instituciones/${ID}`, () => HttpResponse.json({ institucion: buildInstitucion() })),
+      http.get(`*/api/instituciones/${ID}/supervisores`, () =>
+        HttpResponse.json({
+          supervisores: [
+            buildSupervisor({ correo: 'laura@example.com', telefono: '8112345678' }),
+            buildSupervisor({ id: 'sup-2', nombre: 'Pedro', apellidoPaterno: 'Salas', apellidoMaterno: null, titulo: null, confirmado: false }),
+          ],
+        }),
+      ),
+    );
+    renderApp(RUTA);
+
+    const seccion = within(await screen.findByRole('region', { name: 'Supervisores' }));
+    expect(await seccion.findByText('Lic. Laura Mendoza Ruiz')).toBeInTheDocument();
+    expect(seccion.getByText(/laura@example\.com/)).toBeInTheDocument();
+    expect(seccion.getByText('Pedro Salas')).toBeInTheDocument();
+    expect(seccion.getByText('Por confirmar')).toBeInTheDocument();
+  });
+
+  it('RF-09: the office adds a supervisor to the institution', async () => {
+    mockStaff();
+    let creados: Record<string, unknown>[] = [];
+    server.use(
+      http.get(`*/api/instituciones/${ID}`, () => HttpResponse.json({ institucion: buildInstitucion() })),
+      http.get(`*/api/instituciones/${ID}/supervisores`, () =>
+        HttpResponse.json({ supervisores: creados.map((c) => buildSupervisor({ ...c, id: 'sup-nuevo', titulo: null, apellidoMaterno: null })) }),
+      ),
+      http.post(`*/api/instituciones/${ID}/supervisores`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        creados = [...creados, body];
+        return HttpResponse.json({ supervisor: buildSupervisor({ ...body, id: 'sup-nuevo' }) }, { status: 201 });
+      }),
+    );
+    const { user } = renderApp(RUTA);
+
+    const seccion = within(await screen.findByRole('region', { name: 'Supervisores' }));
+    expect(await seccion.findByText('Aún no hay supervisores en esta institución.')).toBeInTheDocument();
+    await user.click(seccion.getByRole('button', { name: 'Nuevo supervisor' }));
+    const grupo = within(seccion.getByRole('group', { name: 'Datos del supervisor nuevo' }));
+    await user.type(grupo.getByLabelText('Nombre'), 'Marta');
+    await user.type(grupo.getByLabelText('Apellido paterno'), 'Reyes');
+    await user.type(grupo.getByLabelText('Correo'), 'marta@example.com');
+    await user.click(grupo.getByRole('button', { name: 'Agregar supervisor' }));
+
+    expect(await seccion.findByText('Marta Reyes')).toBeInTheDocument();
+    expect(creados[0]).toMatchObject({ nombre: 'Marta', apellidoPaterno: 'Reyes', correo: 'marta@example.com' });
+    // The form closes once the supervisor is added.
+    expect(seccion.queryByRole('group', { name: 'Datos del supervisor nuevo' })).not.toBeInTheDocument();
   });
 
   it('PATCHes the changes: marks inactive, clears the cupo and replaces the carreras', async () => {

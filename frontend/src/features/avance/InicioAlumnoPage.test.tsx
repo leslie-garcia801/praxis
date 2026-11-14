@@ -1,14 +1,25 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildAvance, buildExpediente, buildExpedienteActivo, buildMe } from '../../../test/msw/handlers';
+import { buildAvance, buildExpediente, buildExpedienteActivo, buildMe, buildSupervisor } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import { renderApp } from '../../../test/utils';
 
 const AVANCE_URL = '*/api/expedientes/:id/avance';
 
+// The expediente behind the home: confirmed, with its institution and supervisor (what the student sees of them).
+const detalleExpediente = buildExpediente({
+  estado: 'EN_PROCESO',
+  institucion: { id: '33333333-3333-4333-8333-333333333333', nombre: 'Hospital Alfa' },
+  supervisor: buildSupervisor(),
+  faltantes: [],
+});
+
 function mockAlumno(expediente: Record<string, unknown> | null = buildExpedienteActivo()) {
-  server.use(http.get('*/api/me', () => HttpResponse.json(buildMe({ expedienteActivo: expediente }))));
+  server.use(
+    http.get('*/api/me', () => HttpResponse.json(buildMe({ expedienteActivo: expediente }))),
+    http.get('*/api/expedientes/:id', () => HttpResponse.json({ expediente: detalleExpediente })),
+  );
 }
 
 function mockAvance(overrides: Record<string, unknown> = {}) {
@@ -22,6 +33,14 @@ describe('/alumno layout and routes', () => {
     expect(await screen.findByRole('heading', { name: 'Mi avance' })).toBeInTheDocument();
     expect(screen.getByText('Praxis')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+  });
+
+  it('shows who is signed in: full name and control number, on every student screen', async () => {
+    mockAlumno(null);
+    renderApp('/alumno');
+    const header = within(await screen.findByRole('banner'));
+    expect(await header.findByText('Ana María López García')).toBeInTheDocument();
+    expect(header.getByText('25319051769999')).toBeInTheDocument();
   });
 });
 
@@ -171,6 +190,15 @@ describe('/alumno home (RF-18)', () => {
     renderApp('/alumno');
     expect(await screen.findByText('Completa tu expediente para empezar a registrar')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Completar expediente' })).toBeInTheDocument();
+  });
+
+  it('RF-10: a running expediente shows its institution and supervisor, with a way to open it', async () => {
+    mockAlumno(buildExpedienteActivo({ estado: 'EN_PROCESO' }));
+    mockAvance();
+    renderApp('/alumno');
+    expect(await screen.findByText('Hospital Alfa')).toBeInTheDocument();
+    expect(screen.getByText('Lic. Laura Mendoza Ruiz')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Mi expediente' })).toHaveAttribute('href', '/alumno/expediente');
   });
 
   it('RN-13: con expediente suspendido no se puede registrar', async () => {
