@@ -9,6 +9,7 @@ import { messageOf } from '../../importaciones/archivo';
 import { useCarreras, useGuardarInstitucion, useInstitucion, type Carrera, type Institucion } from '../api';
 import { aPayload, institucionFormSchema, VALORES_NUEVA, valoresDe, type InstitucionFormValues } from '../schemas';
 import { DescargarQrButton } from './DescargarQrButton';
+import { SupervisoresInstitucion } from './SupervisoresInstitucion';
 
 const LISTA = '/vinculacion/instituciones';
 
@@ -73,6 +74,7 @@ export function InstitucionFormPage() {
     <Shell titulo={titulo}>
       {/* The form mounts once with the loaded data; later refetches (e.g. after a QR) must not reset it. */}
       <Formulario key={id ?? 'nueva'} id={id} carreras={carreras.data} inicial={institucion.data} />
+      {id && <SupervisoresInstitucion institucionId={id} />}
     </Shell>
   );
 }
