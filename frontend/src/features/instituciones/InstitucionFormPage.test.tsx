@@ -280,7 +280,7 @@ describe('/vinculacion/instituciones/:id/editar (RF-08)', () => {
       http.get(`*/api/instituciones/${ID}`, () => HttpResponse.json({ institucion: buildInstitucion({ codigoCorto: codigo }) })),
       http.post(`*/api/instituciones/${ID}/qr`, () => {
         codigo = 'NEW777';
-        return new HttpResponse(new Blob(['%PDF']), {
+        return new HttpResponse(new TextEncoder().encode('%PDF'), {
           headers: { 'Content-Disposition': 'attachment; filename="qr-hospital-alfa.pdf"' },
         });
       }),

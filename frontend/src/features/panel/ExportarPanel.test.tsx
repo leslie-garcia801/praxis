@@ -30,7 +30,7 @@ function mockExport(ruta: 'alumnos.xlsx' | 'edumedia.xlsx', archivo: string) {
   server.use(
     http.get(`*/api/panel/${ruta}`, ({ request }) => {
       requests.push(new URL(request.url).searchParams);
-      return new HttpResponse(new Blob(['xlsx']), {
+      return new HttpResponse(new TextEncoder().encode('xlsx'), {
         headers: { 'Content-Type': XLSX_MIME, 'Content-Disposition': `attachment; filename="${archivo}"` },
       });
     }),
@@ -94,7 +94,7 @@ describe('exportar desde el panel (RF-26)', () => {
     server.use(
       http.get('*/api/panel/alumnos.xlsx', async () => {
         await espera;
-        return new HttpResponse(new Blob(['xlsx']), {
+        return new HttpResponse(new TextEncoder().encode('xlsx'), {
           headers: { 'Content-Disposition': 'attachment; filename="alumnos-2026-11-12.xlsx"' },
         });
       }),

@@ -64,12 +64,13 @@ describe('downloadFile', () => {
     vi.unstubAllGlobals();
   });
 
+  // Mock download bodies are bytes, not `new Blob(...)`: jsdom's Blob has no stream(), so Node's Response rejects it.
   it('POSTs, saves the blob under the Content-Disposition filename and returns it', async () => {
     let method = '';
     server.use(
       http.post('*/api/archivo', ({ request }) => {
         method = request.method;
-        return new HttpResponse(new Blob(['%PDF-1.7']), {
+        return new HttpResponse(new TextEncoder().encode('%PDF-1.7'), {
           headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="qr-hospital-alfa.pdf"' },
         });
       }),
@@ -84,7 +85,7 @@ describe('downloadFile', () => {
   });
 
   it('falls back to a generic filename when the header is missing', async () => {
-    server.use(http.post('*/api/archivo', () => new HttpResponse(new Blob(['x']))));
+    server.use(http.post('*/api/archivo', () => new HttpResponse(new TextEncoder().encode('x'))));
     await expect(downloadFile('/api/archivo', { method: 'POST' })).resolves.toBe('descarga');
   });
 
