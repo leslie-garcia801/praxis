@@ -6,6 +6,7 @@ React + Vite + TypeScript. Se despliega en Vercel con Root Directory `frontend`.
 
 ```bash
 pnpm dev            # Vite en :5173, con proxy /api → http://localhost:3000
+pnpm dev:lan        # igual, pero con HTTPS autofirmado y abierto a la red local (cámara desde el celular; ver odd/tasks/0033)
 pnpm build          # tsc -b && vite build
 pnpm preview        # prueba el build, incluido el service worker
 pnpm test           # vitest run
