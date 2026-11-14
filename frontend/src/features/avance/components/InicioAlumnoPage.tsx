@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { PendientesAlumno } from '@/features/bitacora/components/PendientesAlumno';
 import { useMe, type Me } from '@/features/auth/api';
 import { useExpediente } from '@/features/expediente/api';
+import { nombreSupervisor } from '@/features/expediente/nombreSupervisor';
 import { DescargarReporte } from '@/features/reporte/components/DescargarReporte';
 import { esHoy, formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
 import { useAvance, type Avance } from '../api';
@@ -54,6 +55,27 @@ function textoTurno(turnoAbierto: Avance['turnoAbierto']): string {
   if (!turnoAbierto) return 'Sin turno abierto';
   const desde = `Turno abierto desde las ${formatHora(turnoAbierto.entrada)}`;
   return esHoy(turnoAbierto.entrada) ? desde : `${desde} del ${formatFecha(turnoAbierto.entrada)}`;
+}
+
+// Where the student does the work and who validates it: institution and supervisor, plus the full expediente.
+function DatosExpediente({ expedienteId }: { expedienteId: string }) {
+  const detalle = useExpediente(expedienteId);
+  const { institucion, supervisor } = detalle.data ?? {};
+  return (
+    <section aria-label="Mi expediente" className="flex flex-col gap-2 rounded-lg border p-3">
+      {detalle.data && (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-slate-800">
+          <dt>Institución</dt>
+          <dd className="text-right font-medium">{institucion?.nombre ?? 'Sin asignar'}</dd>
+          <dt>Supervisor</dt>
+          <dd className="text-right font-medium">{supervisor ? nombreSupervisor(supervisor) : 'Sin asignar'}</dd>
+        </dl>
+      )}
+      <Link to="/alumno/expediente" className={linkClass}>
+        Mi expediente
+      </Link>
+    </section>
+  );
 }
 
 function AvanceContenido({ expediente }: { expediente: Expediente }) {
@@ -109,6 +131,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
       <Link to="/alumno/historial" className={linkClass}>
         Historial
       </Link>
+      <DatosExpediente expedienteId={expediente.id} />
       <PendientesAlumno />
       <DescargarReporte expedienteId={expediente.id} />
     </>
