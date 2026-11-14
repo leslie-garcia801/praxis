@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { changePassword, meKey } from '../api';
 import { cambiarContrasenaSchema, type CambiarContrasenaValues } from '../schemas';
 import { AuthShell, FormAlert } from './AuthShell';
-import { Field } from './Field';
+import { PasswordField } from './PasswordField';
 import { SignOutButton } from './SignOutButton';
 
 const GENERIC_MESSAGE = 'No se pudo completar la solicitud. Intenta de nuevo.';
@@ -50,27 +50,24 @@ export function CambiarContrasenaPage() {
       description="Tu contraseña es temporal. Crea una nueva para continuar."
     >
       <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} noValidate className="flex flex-col gap-4">
-        <Field
+        <PasswordField
           id="passwordActual"
           label="Contraseña actual"
-          type="password"
           autoComplete="current-password"
           error={errors.passwordActual?.message}
           {...register('passwordActual')}
         />
-        <Field
+        <PasswordField
           id="passwordNueva"
           label="Contraseña nueva"
-          type="password"
           hint="Mínimo 8 caracteres."
           autoComplete="new-password"
           error={errors.passwordNueva?.message}
           {...register('passwordNueva')}
         />
-        <Field
+        <PasswordField
           id="confirmar"
           label="Confirmar contraseña nueva"
-          type="password"
           autoComplete="new-password"
           error={errors.confirmar?.message}
           {...register('confirmar')}

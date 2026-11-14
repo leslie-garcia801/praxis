@@ -22,6 +22,7 @@ import {
 import { AuthShell, FormAlert } from './AuthShell';
 import { AvisoPrivacidad } from './AvisoPrivacidad';
 import { Field } from './Field';
+import { PasswordField } from './PasswordField';
 
 const SIGN_IN_LINK = (
   <Link to="/entrar" className="font-medium underline underline-offset-4">
@@ -154,19 +155,17 @@ function PasswordStep({ identity, onBack }: { identity: IdentidadValues; onBack:
 
   return (
     <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} noValidate className="flex flex-col gap-4">
-      <Field
+      <PasswordField
         id="password"
         label="Contraseña"
-        type="password"
         hint="Mínimo 8 caracteres."
         autoComplete="new-password"
         error={errors.password?.message}
         {...register('password')}
       />
-      <Field
+      <PasswordField
         id="confirmar"
         label="Confirmar contraseña"
-        type="password"
         autoComplete="new-password"
         error={errors.confirmar?.message}
         {...register('confirmar')}

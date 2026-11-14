@@ -32,7 +32,7 @@ test('RF-02: a pre-loaded student activates the account and lands on the home sc
   await page.getByRole('button', { name: 'Cerrar sesión' }).click();
   await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await page.getByLabel('Matrícula o correo').fill(alumno.matricula);
-  await page.getByLabel('Contraseña').fill('Secreta12345');
+  await page.getByLabel('Contraseña', { exact: true }).fill('Secreta12345');
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page.getByRole('heading', { name: 'Mi avance' })).toBeVisible();
 });

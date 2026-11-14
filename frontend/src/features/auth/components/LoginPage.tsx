@@ -8,6 +8,7 @@ import { meKey, signIn } from '../api';
 import { loginSchema, type LoginValues } from '../schemas';
 import { AuthShell, FormAlert } from './AuthShell';
 import { Field } from './Field';
+import { PasswordField } from './PasswordField';
 
 // RF-03. On success the session query is refreshed; PublicOnly then redirects by role / debeCambiar.
 export function LoginPage() {
@@ -41,10 +42,9 @@ export function LoginPage() {
           error={errors.identificador?.message}
           {...register('identificador')}
         />
-        <Field
+        <PasswordField
           id="password"
           label="Contraseña"
-          type="password"
           autoComplete="current-password"
           error={errors.password?.message}
           {...register('password')}
