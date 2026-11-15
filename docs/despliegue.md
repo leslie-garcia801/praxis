@@ -63,11 +63,24 @@ La contraseña lleva 12+ caracteres y la app pide cambiarla al primer inicio de 
 
 ## 6. Correo semanal al supervisor (RF-21a)
 
-Crea un **segundo servicio** en Railway desde el mismo repo (Root Directory `backend`, mismas variables que la API) y en *Settings*:
+Crea un **segundo servicio** en Railway desde el mismo repo (fork, rama `main`):
 
-- **Start Command:** `node dist/scripts/resumenSemanal.js`
-- **Cron Schedule:** `0 14 * * 1` (Railway usa UTC: lunes 14:00 UTC = lunes 8:00 en Monterrey, sin horario de verano)
-- Sin chequeo de salud ni migraciones previas: ese servicio no escucha en ningún puerto.
+1. **Root Directory:** `backend`.
+2. **Config as code:** pon la ruta `/backend/railway.cron.json`. Ese archivo define el arranque (`node dist/scripts/resumenSemanal.js`), el horario `0 14 * * 1` (Railway usa UTC: lunes 14:00 UTC = lunes 8:00 en Monterrey, sin horario de verano) y que no se reinicie. Es un archivo distinto de `railway.json` a propósito: así el servicio no hereda el arranque `pnpm start` ni el chequeo de salud de la API, porque el cron no escucha en ningún puerto.
+3. **Variables:** las mismas que la API (la tarea arranca con la misma validación de entorno). Lo más cómodo es copiarlas con *Variables → Raw Editor*. Sin `RESEND_API_KEY` y `MAIL_FROM` no arranca.
+4. No hace falta Pre-deploy Command: las migraciones las corre la API.
+
+El servicio se despliega una vez al crearse y después solo corre los lunes. Cada ejecución aparece en *Deployments* con sus logs: ahí se ve cuántos supervisores se notificaron y los envíos fallidos.
+
+### Disparar el correo sin esperar al lunes (pruebas y demo)
+
+Con el CLI de Railway enlazado al proyecto (`railway link`, servicio de la API), desde cualquier carpeta:
+
+```bash
+railway ssh -- node dist/scripts/resumenSemanal.js --forzar
+```
+
+`--forzar` salta la protección de 12 horas que evita mandar dos enlaces seguidos al mismo supervisor. Úsalo solo en pruebas o en el demo. La tarea envía las semanas en `ENVIADA`, y también envía sola las semanas ya cerradas que sigan en borrador. Con `MAIL_FROM=onboarding@resend.dev` solo llega el correo si el supervisor tiene la dirección de tu cuenta de Resend.
 
 ## Si algo falla
 
