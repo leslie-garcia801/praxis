@@ -98,5 +98,5 @@ railway ssh -- node dist/scripts/resumenSemanal.js --forzar
 - [ ] Inicio de sesión del administrador, y cambio de contraseña
 - [ ] Crear un usuario de vinculación e importar un Excel de prueba
 - [ ] Instalar la app en un iPhone y en un Android, y probar la cámara (necesita HTTPS)
-- [ ] Enviar un enlace de validación a un correo real
+- [ ] Enviar un enlace de validación a un correo real (guía paso a paso: [`prueba-supervisor.md`](prueba-supervisor.md))
 - [ ] Respaldos automáticos de la base activados en Railway (RNF-08)
