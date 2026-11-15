@@ -8,6 +8,7 @@ import { InicioAlumnoPage } from './features/avance/components/InicioAlumnoPage'
 import { ExpedientePage } from './features/expediente/components/ExpedientePage';
 import { HistorialPage } from './features/historial/components/HistorialPage';
 import { DetalleAlumnoPage } from './features/detalle/components/DetalleAlumnoPage';
+import { CorreccionesPendientesPage } from './features/correcciones/components/CorreccionesPendientesPage';
 import { PanelPage } from './features/panel/components/PanelPage';
 import { RegistrarPage } from './features/escaneo/components/RegistrarPage';
 import { ValidarSemanasPage } from './features/validacion/components/ValidarSemanasPage';
@@ -55,6 +56,7 @@ export const routes: RouteObject[] = [
         children: [
           { path: '/vinculacion', element: <PanelPage /> },
           { path: '/vinculacion/expedientes/:id', element: <DetalleAlumnoPage /> },
+          { path: '/vinculacion/correcciones', element: <CorreccionesPendientesPage /> },
           { path: '/vinculacion/importar/alumnos', element: <ImportarAlumnosPage /> },
           { path: '/vinculacion/importar/instituciones', element: <ImportarInstitucionesPage /> },
           { path: '/vinculacion/instituciones', element: <InstitucionesPage /> },

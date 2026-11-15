@@ -1,5 +1,5 @@
 import { ErrorConReintento } from '@/components/ErrorConReintento';
-import { formatFecha, formatHora } from '@/lib/tiempo';
+import { diaMonterrey, formatDiaCorto, formatFecha, formatHora } from '@/lib/tiempo';
 import { messageOf } from '../../importaciones/archivo';
 import { useAuditoria, type EntradaAuditoria } from '../api';
 
@@ -17,9 +17,21 @@ const TEXTO_ACCION: Record<string, string> = {
   RECHAZAR_SEMANA: 'Semana rechazada',
   VALIDAR_SEMANA_VINCULACION: 'Semana validada por vinculación en nombre del supervisor',
   RECHAZAR_SEMANA_VINCULACION: 'Semana rechazada por vinculación en nombre del supervisor',
+  CORREGIR_ASISTENCIA: 'Turno corregido (corrección aprobada)',
+  RECHAZAR_CORRECCION: 'Corrección de turno rechazada',
 };
 
-const TEXTO_ENTIDAD: Record<string, string> = { Expediente: 'Expediente', SemanaBitacora: 'Semana' };
+const TEXTO_ENTIDAD: Record<string, string> = {
+  Expediente: 'Expediente',
+  SemanaBitacora: 'Semana',
+  Asistencia: 'Turno',
+  SolicitudCorreccion: 'Solicitud de corrección',
+};
+
+// Internal identifiers stored for traceability; they mean nothing on screen.
+const CAMPOS_OCULTOS = new Set(['solicitudId', 'asistenciaId']);
+// Instants of a shift (RF-17), shown as "martes 10 14:00" in Monterrey time.
+const CAMPOS_INSTANTE = new Set(['entrada', 'salida']);
 
 const TEXTO_CAMPO: Record<string, string> = {
   estado: 'Estado',
@@ -35,6 +47,9 @@ const TEXTO_CAMPO: Record<string, string> = {
   subprograma: 'Subprograma',
   enviadaEn: 'Enviada',
   enNombreDelSupervisor: 'En nombre del supervisor',
+  entrada: 'Entrada',
+  salida: 'Salida',
+  minutosAcreditables: 'Minutos acreditables',
 };
 
 const TEXTO_ESTADO: Record<string, string> = {
@@ -47,18 +62,22 @@ const TEXTO_ESTADO: Record<string, string> = {
   ENVIADA: 'Enviada',
   VALIDADA: 'Validada',
   RECHAZADA: 'Rechazada',
+  ABIERTA: 'Abierta',
+  CERRADA: 'Cerrada',
+  INCOMPLETA: 'Incompleta',
 };
 
 function valor(clave: string, v: unknown): string {
   if (v === null || v === undefined) return '—';
   if (clave === 'estado' && typeof v === 'string') return TEXTO_ESTADO[v] ?? v;
+  if (CAMPOS_INSTANTE.has(clave) && typeof v === 'string') return `${formatDiaCorto(diaMonterrey(v))} ${formatHora(v)}`;
   if (typeof v === 'boolean') return v ? 'Sí' : 'No';
   return typeof v === 'string' ? v : JSON.stringify(v);
 }
 
 // Compact "campo: antes → después" lines for the fields that changed (or that the entry only sets).
 function cambios(antes: EntradaAuditoria['antes'], despues: EntradaAuditoria['despues']): string[] {
-  const claves = [...new Set([...Object.keys(antes ?? {}), ...Object.keys(despues ?? {})])];
+  const claves = [...new Set([...Object.keys(antes ?? {}), ...Object.keys(despues ?? {})])].filter((c) => !CAMPOS_OCULTOS.has(c));
   return claves
     .filter((c) => JSON.stringify(antes?.[c]) !== JSON.stringify(despues?.[c]))
     .map((c) => `${TEXTO_CAMPO[c] ?? c}: ${valor(c, antes?.[c])} → ${valor(c, despues?.[c])}`);

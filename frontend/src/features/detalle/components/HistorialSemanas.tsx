@@ -70,7 +70,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
         <>
           <div className="flex max-w-md flex-col gap-4">
             {semana.dias.map((dia) => (
-              <DiaHistorial key={dia.fecha} dia={dia} />
+              <DiaHistorial key={dia.fecha} dia={dia} vista="oficina" />
             ))}
           </div>
           <p className="text-lg font-semibold">Total de la semana: {formatHoras(semana.totales.minutosAcreditables)}</p>

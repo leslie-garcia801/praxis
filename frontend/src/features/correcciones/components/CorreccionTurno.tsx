@@ -10,26 +10,40 @@ import { diaMonterrey, formatHora, instanteMonterrey, sumarDias } from '@/lib/ti
 import type { Turno } from '../../historial/api';
 import { useSolicitarCorreccion, type Correccion } from '../api';
 import { correccionSchema, type CorreccionOutput, type CorreccionValues } from '../schemas';
+import { ResolverCorreccion } from './ResolverCorreccion';
 
 const ERROR_RED = 'No se pudo enviar la solicitud. Revisa tu conexión e intenta de nuevo.';
 
-function EstadoCorreccion({ correccion }: { correccion: Correccion }) {
+export type VistaHistorial = 'alumno' | 'oficina';
+
+const horas = (c: Correccion) => `${formatHora(c.entradaNueva)} – ${formatHora(c.salidaNueva)}`;
+
+function EstadoCorreccion({ correccion, vista }: { correccion: Correccion; vista: VistaHistorial }) {
+  const oficina = vista === 'oficina';
   switch (correccion.estado) {
     case 'PENDIENTE':
-      return (
-        <p className="text-slate-800">
-          {`Corrección en revisión: ${formatHora(correccion.entradaNueva)} – ${formatHora(correccion.salidaNueva)}`}
-        </p>
+      return oficina ? (
+        <div className="mt-1 flex flex-col gap-2 border-t pt-2 text-slate-800">
+          <p className="font-medium">{`Corrección solicitada: ${horas(correccion)}`}</p>
+          <p>Motivo del alumno: «{correccion.motivo}»</p>
+          <ResolverCorreccion correccionId={correccion.id} />
+        </div>
+      ) : (
+        <p className="text-slate-800">{`Corrección en revisión: ${horas(correccion)}`}</p>
       );
     case 'RECHAZADA':
       return (
         <div className="flex flex-col gap-0.5 text-slate-800">
           <p className="font-medium">Corrección rechazada</p>
-          {correccion.comentario && <p>Comentario de tu oficina: «{correccion.comentario}»</p>}
+          {correccion.comentario && (
+            <p>
+              {oficina ? 'Comentario para el alumno' : 'Comentario de tu oficina'}: «{correccion.comentario}»
+            </p>
+          )}
         </div>
       );
     case 'APROBADA':
-      return <p className="text-slate-800">Turno corregido por tu oficina</p>;
+      return <p className="text-slate-800">{oficina ? 'Turno corregido (corrección aprobada)' : 'Turno corregido por tu oficina'}</p>;
   }
 }
 
@@ -114,13 +128,14 @@ function FormCorreccion({ turno, onCerrar }: { turno: Turno; onCerrar: () => voi
   );
 }
 
-// RF-17: the state of the shift's latest correction request and, when the API allows it, the request form.
-export function CorreccionTurno({ turno }: { turno: Turno }) {
+// RF-17: the state of the shift's latest correction request. The student gets the request form when the API allows
+// it; the office resolves a pending request in place.
+export function CorreccionTurno({ turno, vista = 'alumno' }: { turno: Turno; vista?: VistaHistorial }) {
   const [abierto, setAbierto] = useState(false);
 
   return (
     <>
-      {turno.correccion && <EstadoCorreccion correccion={turno.correccion} />}
+      {turno.correccion && <EstadoCorreccion correccion={turno.correccion} vista={vista} />}
       {turno.puedeSolicitarCorreccion &&
         (abierto ? (
           <FormCorreccion turno={turno} onCerrar={() => setAbierto(false)} />

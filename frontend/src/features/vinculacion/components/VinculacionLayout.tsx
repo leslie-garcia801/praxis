@@ -8,6 +8,7 @@ type Enlace = { to: string; label: string; end?: boolean };
 
 const ENLACES: Enlace[] = [
   { to: '/vinculacion', label: 'Panel', end: true },
+  { to: '/vinculacion/correcciones', label: 'Correcciones' },
   { to: '/vinculacion/instituciones', label: 'Instituciones' },
   { to: '/vinculacion/importar/alumnos', label: 'Importar alumnos' },
   { to: '/vinculacion/importar/instituciones', label: 'Importar instituciones' },
