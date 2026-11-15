@@ -265,6 +265,7 @@ export async function borrarPlantel(plantelId: string) {
   const expedientes = await prisma.expediente.findMany({ where: { alumno: { usuarioId: { in: ids } } }, select: { id: true } });
   await prisma.auditLog.deleteMany({ where: { entidadId: { in: expedientes.map((e) => e.id) } } });
   const expedienteIds = expedientes.map((e) => e.id);
+  await prisma.solicitudCorreccion.deleteMany({ where: { asistencia: { expedienteId: { in: expedienteIds } } } });
   await prisma.asistencia.deleteMany({ where: { expedienteId: { in: expedienteIds } } });
   await prisma.semanaBitacora.deleteMany({ where: { expedienteId: { in: expedienteIds } } });
   await prisma.expediente.deleteMany({ where: { alumno: { usuarioId: { in: ids } } } });

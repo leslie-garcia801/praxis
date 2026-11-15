@@ -83,3 +83,4 @@ Decisiones tomadas y pendientes.
 | 0034 | [Mostrar u ocultar la contraseña](tasks/0034-mostrar-contrasena.md) | Terminada |
 | 0035 | [Cámara en negro en desarrollo (StrictMode)](tasks/0035-camara-negra-strictmode.md) | Terminada |
 | 0036 | [Restablecer contraseña desde el detalle del alumno (RF-04)](tasks/0036-restablecer-contrasena.md) | Terminada |
+| 0037 | [El alumno solicita la corrección de un turno (RF-17, backend)](tasks/0037-solicitar-correccion.md) | Terminada |

@@ -1,8 +1,10 @@
+import { turnoCorregible } from '../../domain/correcciones.js';
 import { calcularMinutosAcreditables } from '../../domain/horas.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
 import { fechaLocal, inicioSemana, instanteLocal, sumarDias } from '../../lib/tiempo.js';
 import type { AuthUser } from '../../middleware/auth.js';
+import { aCorreccion } from '../correcciones/correcciones.service.js';
 import { cargar } from '../expedientes/expedientes.service.js';
 import { ESTADOS_EDITABLES, ESTADOS_QUE_ENVIAN, semanaCerrada } from '../semanas/semanas.service.js';
 import type { HistorialQuery } from './asistencias.schemas.js';
@@ -49,6 +51,8 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
       entrada: { gte: instanteLocal(sumarDias(inicio, -1), '00:00'), lt: instanteLocal(sumarDias(inicio, 8), '00:00') },
     },
     orderBy: { entrada: 'asc' },
+    // RF-17: the latest correction request of each shift.
+    include: { correcciones: { orderBy: { creadoEn: 'desc' }, take: 1 } },
   });
   const { porDia } = calcularMinutosAcreditables(turnos);
   const bitacora = await prisma.semanaBitacora.findFirst({
@@ -61,6 +65,12 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
     puedeEditar &&
     semanaCerrada(bitacora!.semanaInicio, ahora()) &&
     (ESTADOS_QUE_ENVIAN as readonly string[]).includes(expediente.estado);
+
+  // RF-17: only the student asks for corrections, one pending request per shift at a time.
+  const puedeCorregir = (estadoTurno: (typeof turnos)[number]['estado'], estadoUltima: string | undefined) =>
+    user.rol === 'ALUMNO' &&
+    estadoUltima !== 'PENDIENTE' &&
+    turnoCorregible({ estadoTurno, estadoSemana: bitacora?.estado ?? null, estadoExpediente: expediente.estado }) === null;
 
   const dias = fechas.map((fecha) => {
     const resumen = porDia[fecha] ?? { minutos: 0, acreditables: 0 };
@@ -75,6 +85,8 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
           estado: t.estado,
           minutosAcreditables: t.minutosAcreditables,
           sinConexion: t.sinConexion,
+          correccion: t.correcciones[0] ? aCorreccion(t.correcciones[0]) : null,
+          puedeSolicitarCorreccion: puedeCorregir(t.estado, t.correcciones[0]?.estado),
         })),
       minutosDia: resumen.minutos,
       minutosAcreditablesDia: resumen.acreditables,

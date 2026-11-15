@@ -371,8 +371,12 @@ model SolicitudCorreccion {
   motivo       String
   estado       EstadoSolicitud @default(PENDIENTE)
   resueltoPor  String?         @map("resuelto_por")
+  // Reason given by the office when it rejects the request (shown to the student).
+  comentario   String?
+  resueltoEn   DateTime?       @map("resuelto_en") @db.Timestamptz
   creadoEn     DateTime        @default(now()) @map("creado_en") @db.Timestamptz
 
+  // Partial unique index in the migration: one PENDIENTE request per attendance (una_correccion_pendiente).
   @@index([asistenciaId])
   @@map("solicitudes_correccion")
 }
