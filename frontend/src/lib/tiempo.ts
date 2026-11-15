@@ -60,11 +60,41 @@ export function hoyMonterrey(ahora: Date = new Date()): string {
   return diaMonterreyFormat.format(ahora);
 }
 
+const partesMonterrey = new Intl.DateTimeFormat('en-CA', {
+  timeZone: TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+// Milliseconds the Monterrey wall clock is ahead of UTC at `instante` (negative: UTC-6).
+function desfaseMonterrey(instante: number): number {
+  const p = Object.fromEntries(partesMonterrey.formatToParts(new Date(instante)).map((x) => [x.type, x.value]));
+  const pared = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute));
+  return pared - Math.floor(instante / 60_000) * 60_000;
+}
+
+// ISO instant of a Monterrey calendar date ('YYYY-MM-DD') and time ('HH:MM'), for times typed in forms (RN-15).
+export function instanteMonterrey(fecha: string, hora: string): string {
+  const pared = Date.parse(`${fecha}T${hora}:00Z`);
+  const aprox = pared - desfaseMonterrey(pared);
+  return new Date(pared - desfaseMonterrey(aprox)).toISOString();
+}
+
 // Moves a calendar date by n days. Works at UTC noon so the day never shifts.
 export function sumarDias(fecha: string, n: number): string {
   const d = new Date(`${fecha}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
+}
+
+// Monday ('YYYY-MM-DD') of the week of a calendar date; weeks run Monday to Sunday (RF-19).
+export function lunesDeSemana(fecha: string): string {
+  const diaSemana = new Date(`${fecha}T12:00:00Z`).getUTCDay();
+  return sumarDias(fecha, -((diaSemana + 6) % 7));
 }
 
 const diaCortoFormat = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'long', day: 'numeric' });

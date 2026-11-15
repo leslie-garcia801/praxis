@@ -1,12 +1,14 @@
 import { TOPE_DIARIO_TEXTO } from '@/lib/reglas';
 import { diaMonterrey, formatDiaCorto, formatHora, formatHoras } from '@/lib/tiempo';
+import { CorreccionTurno } from '../../correcciones/components/CorreccionTurno';
 import type { DiaHistorial as Dia, Turno } from '../api';
 
 // "10:11 – 16:18"; the exit carries its day when it is not the day of the entry (crosses midnight).
 function textoRango(turno: Turno): string {
   const entrada = formatHora(turno.entrada);
   if (turno.estado === 'ABIERTA') return `${entrada} – en curso`;
-  if (!turno.salida) return `${entrada} – Sin salida registrada`;
+  // RN-08: the automatic 23:59 close is not a real exit.
+  if (!turno.salida || turno.estado === 'INCOMPLETA') return `${entrada} – Sin salida registrada`;
   const salida = formatHora(turno.salida);
   const otroDia = diaMonterrey(turno.salida) !== diaMonterrey(turno.entrada);
   return `${entrada} – ${otroDia ? `${salida} (${formatDiaCorto(diaMonterrey(turno.salida))})` : salida}`;
@@ -20,6 +22,7 @@ function TurnoItem({ turno }: { turno: Turno }) {
         <span className="text-slate-800">Acreditado: {formatHoras(turno.minutosAcreditables)}</span>
       )}
       {turno.sinConexion && <span className="text-sm text-slate-700">Registrado sin conexión</span>}
+      <CorreccionTurno turno={turno} />
     </li>
   );
 }

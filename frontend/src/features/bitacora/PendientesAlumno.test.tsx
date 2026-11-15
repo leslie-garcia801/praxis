@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildAvance, buildExpedienteActivo, buildMe, buildPendiente } from '../../../test/msw/handlers';
+import { buildAvance, buildCorreccion, buildExpedienteActivo, buildMe, buildPendiente } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import { renderApp } from '../../../test/utils';
 
@@ -118,5 +118,55 @@ describe('/alumno pendientes (RF-18, RF-22, RN-17)', () => {
     await screen.findByText('Completa tu expediente para empezar a registrar');
     expect(screen.queryByRole('heading', { name: 'Pendientes' })).not.toBeInTheDocument();
     expect(pedidas).toBe(0);
+  });
+});
+
+describe('/alumno pendientes: correcciones (RF-17, RF-18)', () => {
+  const mockCorrecciones = (correcciones: Record<string, unknown>[]) =>
+    server.use(http.get('*/api/correcciones', () => HttpResponse.json({ correcciones })));
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-12T18:00:00Z'));
+    mockInicio([]);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('RF-17: a request in review links to the week of its shift', async () => {
+    mockCorrecciones([{ ...buildCorreccion(), turno: { entrada: '2026-11-10T15:00:00.000Z' } }]);
+    renderApp('/alumno');
+    const enlace = await screen.findByRole('link', { name: 'Tu corrección del martes 10 está en revisión' });
+    expect(enlace).toHaveAttribute('href', '/alumno/historial?semana=2026-11-09');
+    expect(screen.queryByText('No tienes pendientes')).not.toBeInTheDocument();
+  });
+
+  it('RF-17: a recently rejected request shows the office comment', async () => {
+    mockCorrecciones([
+      {
+        ...buildCorreccion({ estado: 'RECHAZADA', comentario: 'Tu supervisor no lo confirma.', resueltoEn: '2026-11-11T18:00:00.000Z' }),
+        turno: { entrada: '2026-11-10T15:00:00.000Z' },
+      },
+    ]);
+    renderApp('/alumno');
+    expect(await screen.findByRole('link', { name: 'Tu oficina rechazó la corrección del martes 10' })).toBeInTheDocument();
+    expect(screen.getByText('Comentario de tu oficina: «Tu supervisor no lo confirma.»')).toBeInTheDocument();
+  });
+
+  it('RF-17: only the latest request of each shift counts, and old rejections or approvals are not pending', async () => {
+    const turno = { entrada: '2026-11-10T15:00:00.000Z' };
+    mockCorrecciones([
+      { ...buildCorreccion({ id: 'nueva' }), turno },
+      { ...buildCorreccion({ id: 'vieja', estado: 'RECHAZADA', comentario: 'No.', resueltoEn: '2026-11-11T12:00:00.000Z' }), turno },
+      {
+        ...buildCorreccion({ id: 'antigua', asistenciaId: 'otro', estado: 'RECHAZADA', comentario: 'No.', resueltoEn: '2026-11-01T12:00:00.000Z' }),
+        turno: { entrada: '2026-10-28T15:00:00.000Z' },
+      },
+      { ...buildCorreccion({ id: 'aprobada', asistenciaId: 'otro2', estado: 'APROBADA' }), turno: { entrada: '2026-11-03T15:00:00.000Z' } },
+    ]);
+    renderApp('/alumno');
+    const lista = await screen.findByRole('list', { name: 'Pendientes' });
+    const items = within(lista).getAllByRole('listitem');
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent('Tu corrección del martes 10 está en revisión');
   });
 });

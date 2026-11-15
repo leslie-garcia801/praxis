@@ -8,6 +8,8 @@ import {
   formatHoras,
   formatRangoSemana,
   hoyMonterrey,
+  instanteMonterrey,
+  lunesDeSemana,
   sumarDias,
 } from './tiempo';
 
@@ -63,5 +65,28 @@ describe('tiempo (RN-15, America/Monterrey)', () => {
   it('RN-15: hoyMonterrey and diaMonterrey use the Monterrey calendar day', () => {
     expect(hoyMonterrey(new Date('2026-11-12T05:45:00Z'))).toBe('2026-11-11');
     expect(diaMonterrey('2026-11-12T07:00:00Z')).toBe('2026-11-12');
+  });
+});
+
+describe('instanteMonterrey (RN-15)', () => {
+  it('RN-15: turns a Monterrey calendar date and time into a UTC instant', () => {
+    expect(instanteMonterrey('2026-11-10', '09:00')).toBe('2026-11-10T15:00:00.000Z');
+    expect(instanteMonterrey('2026-11-10', '23:30')).toBe('2026-11-11T05:30:00.000Z');
+    expect(instanteMonterrey('2026-11-10', '00:00')).toBe('2026-11-10T06:00:00.000Z');
+  });
+
+  it('round-trips with formatHora and diaMonterrey', () => {
+    const iso = instanteMonterrey('2026-07-15', '14:45');
+    expect(formatHora(iso)).toBe('14:45');
+    expect(diaMonterrey(iso)).toBe('2026-07-15');
+  });
+});
+
+describe('lunesDeSemana (RF-19)', () => {
+  it('returns the Monday of the week, Monday to Sunday', () => {
+    expect(lunesDeSemana('2026-11-09')).toBe('2026-11-09');
+    expect(lunesDeSemana('2026-11-10')).toBe('2026-11-09');
+    expect(lunesDeSemana('2026-11-15')).toBe('2026-11-09');
+    expect(lunesDeSemana('2026-11-16')).toBe('2026-11-16');
   });
 });

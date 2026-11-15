@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
+import type { Correccion } from '../correcciones/api';
 
 // Contract of GET /api/asistencias?semana= (backend/src/modules/asistencias, task 0015).
 // The API groups the shifts, computes the minutes and applies the daily cap; the frontend only formats.
@@ -14,6 +15,9 @@ export type Turno = {
   estado: EstadoTurno;
   minutosAcreditables: number | null;
   sinConexion: boolean;
+  // RF-17 (task 0037): the latest correction request and whether the student may request one now.
+  correccion: Correccion | null;
+  puedeSolicitarCorreccion: boolean;
 };
 
 export type DiaHistorial = {

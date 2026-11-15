@@ -146,6 +146,22 @@ export function buildPendiente(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Builds a correction request (GET /api/correcciones and historial `correccion`, tasks 0037 and 0038).
+export function buildCorreccion(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '77777777-7777-4777-8777-777777777777',
+    asistenciaId: 'turno-2026-11-10-0',
+    entradaNueva: '2026-11-10T15:00:00.000Z',
+    salidaNueva: '2026-11-10T20:00:00.000Z',
+    motivo: 'Olvidé registrar mi salida al terminar.',
+    estado: 'PENDIENTE',
+    comentario: null,
+    creadoEn: '2026-11-11T16:00:00.000Z',
+    resueltoEn: null,
+    ...overrides,
+  };
+}
+
 // Builds a supervisor as the student sees it (GET /api/instituciones/:id/supervisores, task 0012).
 export function buildSupervisor(overrides: Record<string, unknown> = {}) {
   return {
@@ -232,6 +248,7 @@ export const handlers = [
   http.get('*/api/health', () => HttpResponse.json({ status: 'ok' })),
   http.get('*/api/me', () => HttpResponse.json(unauthorizedBody, { status: 401 })),
   http.get('*/api/semanas/pendientes', () => HttpResponse.json({ pendientes: [] })),
+  http.get('*/api/correcciones', () => HttpResponse.json({ correcciones: [] })),
   // The vinculación panel (home of the office layout) loads these on every visit to /vinculacion.
   http.get('*/api/panel/alumnos', () => HttpResponse.json(buildPanel())),
   http.get('*/api/carreras', () => HttpResponse.json({ carreras: [] })),
