@@ -62,7 +62,7 @@ const aAsistencia = (a: Asistencia) => ({
 
 // Recomputes RN-04 / RN-09 for every shift that touches the local days between `desde` and `hasta`
 // and persists the per-shift values. Returns the summary of the `fechaResumen` day.
-async function recalcularDias(tx: Tx, expedienteId: string, desde: string, hasta: string, fechaResumen: string) {
+export async function recalcularDias(tx: Tx, expedienteId: string, desde: string, hasta: string, fechaResumen: string) {
   // One extra day on each side so shifts crossing midnight are split with all their neighbours.
   const inicioVentana = instanteLocal(sumarDias(desde, -1), '00:00');
   const finVentana = inicioDelDiaSiguiente(instanteLocal(sumarDias(hasta, 1), '12:00'));
@@ -87,7 +87,7 @@ async function recalcularDias(tx: Tx, expedienteId: string, desde: string, hasta
 }
 
 // Postgres constraint violations (specs 8.3) are conflicts, never 500s.
-function errorDeRestriccion(err: unknown): AppError | null {
+export function errorDeRestriccion(err: unknown): AppError | null {
   const texto = [err instanceof Error ? err.message : '', JSON.stringify((err as { meta?: unknown })?.meta ?? ''), String((err as { cause?: unknown })?.cause ?? '')].join(' ');
   if (texto.includes('un_turno_abierto')) {
     return conflicto('TURNO_ABIERTO_EXISTENTE', 'Ya tienes un turno abierto. Intenta de nuevo.');

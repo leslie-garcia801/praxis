@@ -84,3 +84,4 @@ Decisiones tomadas y pendientes.
 | 0035 | [Cámara en negro en desarrollo (StrictMode)](tasks/0035-camara-negra-strictmode.md) | Terminada |
 | 0036 | [Restablecer contraseña desde el detalle del alumno (RF-04)](tasks/0036-restablecer-contrasena.md) | Terminada |
 | 0037 | [El alumno solicita la corrección de un turno (RF-17, backend)](tasks/0037-solicitar-correccion.md) | Terminada |
+| 0038 | [Vinculación aprueba o rechaza correcciones (RF-17, backend)](tasks/0038-resolver-correccion.md) | Terminada |

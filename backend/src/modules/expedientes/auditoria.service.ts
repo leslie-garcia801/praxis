@@ -6,18 +6,22 @@ import { cargar } from './expedientes.service.js';
 // No pagination yet: the newest entries are enough for a review screen. The response says when it was cut.
 export const LIMITE_AUDITORIA = 200;
 
-// Entities of the audit log tied to a case file: the case file itself and its weekly logbooks (SemanaBitacora).
-// Asistencia and SolicitudCorreccion rows are not audited by the code today, so there is nothing to include.
+// Entities of the audit log tied to a case file: the case file itself, its weekly logbooks (SemanaBitacora), its
+// corrected shifts (Asistencia) and its rejected correction requests (SolicitudCorreccion, RF-17).
 // Alumno-level data (User) is deliberately left out (RNF-07).
 export async function listarAuditoria(user: AuthUser, id: string) {
   await cargar(prisma, user, id);
 
   const semanas = await prisma.semanaBitacora.findMany({ where: { expedienteId: id }, select: { id: true } });
+  const asistencias = await prisma.asistencia.findMany({ where: { expedienteId: id }, select: { id: true } });
+  const solicitudes = await prisma.solicitudCorreccion.findMany({ where: { asistencia: { expedienteId: id } }, select: { id: true } });
   const filas = await prisma.auditLog.findMany({
     where: {
       OR: [
         { entidad: 'Expediente', entidadId: id },
         { entidad: 'SemanaBitacora', entidadId: { in: semanas.map((s) => s.id) } },
+        { entidad: 'Asistencia', entidadId: { in: asistencias.map((a) => a.id) } },
+        { entidad: 'SolicitudCorreccion', entidadId: { in: solicitudes.map((s) => s.id) } },
       ],
     },
     orderBy: [{ fecha: 'desc' }, { id: 'desc' }],
