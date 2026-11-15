@@ -90,3 +90,13 @@ describe('lunesDeSemana (RF-19)', () => {
     expect(lunesDeSemana('2026-11-16')).toBe('2026-11-16');
   });
 });
+
+describe('isoConOffset', () => {
+  it('RF-16: conserva el instante y escribe el desfase del dispositivo', async () => {
+    const { isoConOffset } = await import('./tiempo');
+    const ahora = new Date(Date.UTC(2026, 10, 16, 14, 5, 7));
+    const iso = isoConOffset(ahora);
+    expect(iso).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
+    expect(new Date(iso).getTime()).toBe(ahora.getTime());
+  });
+});

@@ -127,3 +127,13 @@ export function formatRangoSemana(inicio: string, fin: string): string {
   }
   return `${a.getUTCDate()} al ${diaMesFormat.format(b)}`;
 }
+
+// ISO 8601 string of an instant with the device's own UTC offset ("2026-11-16T08:05:07-06:00").
+// Used for offline records, where the server needs the device clock (RN-14). Not a display format.
+export function isoConOffset(fecha: Date = new Date()): string {
+  const desfase = -fecha.getTimezoneOffset();
+  const signo = desfase >= 0 ? '+' : '-';
+  const dos = (n: number) => String(Math.trunc(n)).padStart(2, '0');
+  const local = new Date(fecha.getTime() + desfase * 60_000).toISOString().slice(0, 19);
+  return `${local}${signo}${dos(Math.abs(desfase) / 60)}:${dos(Math.abs(desfase) % 60)}`;
+}
