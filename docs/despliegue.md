@@ -63,14 +63,15 @@ La contraseña lleva 12+ caracteres y la app pide cambiarla al primer inicio de 
 
 ## 6. Correo semanal al supervisor (RF-21a)
 
-Crea un **segundo servicio** en Railway desde el mismo repo (fork, rama `main`):
+Crea un **segundo servicio** en Railway desde el mismo repo (fork, rama `main`) y configúralo **a mano en el panel**. En este proyecto Railway no aplicó los archivos de configuración (`railway.json`, ni uno específico para el cron), así que no dependas de ellos:
 
-1. **Root Directory:** `backend`.
-2. **Config as code:** pon la ruta `/backend/railway.cron.json`. Ese archivo define el arranque (`node dist/scripts/resumenSemanal.js`), el horario `0 14 * * 1` (Railway usa UTC: lunes 14:00 UTC = lunes 8:00 en Monterrey, sin horario de verano) y que no se reinicie. Es un archivo distinto de `railway.json` a propósito: así el servicio no hereda el arranque `pnpm start` ni el chequeo de salud de la API, porque el cron no escucha en ningún puerto.
-3. **Variables:** las mismas que la API (la tarea arranca con la misma validación de entorno). Lo más cómodo es copiarlas con *Variables → Raw Editor*. Sin `RESEND_API_KEY` y `MAIL_FROM` no arranca.
-4. No hace falta Pre-deploy Command: las migraciones las corre la API.
+1. **Settings → Source → Root Directory:** `backend`.
+2. **Settings → Deploy → Custom Start Command:** `node dist/scripts/resumenSemanal.js`. Si el log muestra `API listening`, el comando no se aplicó y está levantando otra API.
+3. **Settings → Deploy → Cron Schedule:** `0 14 * * 1` (Railway usa UTC: lunes 14:00 UTC = lunes 8:00 en Monterrey, sin horario de verano).
+4. **Variables:** las mismas que la API (la tarea arranca con la misma validación de entorno). Lo más cómodo es copiarlas con *Variables → Raw Editor*. Sin `RESEND_API_KEY` y `MAIL_FROM` no arranca.
+5. No hace falta Pre-deploy Command: las migraciones las corre la API. Deja vacío *Config as code*.
 
-El servicio se despliega una vez al crearse y después solo corre los lunes. Cada ejecución aparece en *Deployments* con sus logs: ahí se ve cuántos supervisores se notificaron y los envíos fallidos.
+El servicio se despliega una vez al crearse y después solo corre los lunes. La primera ejecución debe imprimir "Resumen semanal" con sus contadores y terminar sola. Cada ejecución aparece en *Deployments*, con cuántos supervisores se notificaron y los envíos fallidos.
 
 ### Disparar el correo sin esperar al lunes (pruebas y demo)
 
