@@ -9,6 +9,7 @@ const TEXTO_ACCION: Record<string, string> = {
   SUSPENDER_EXPEDIENTE: 'Expediente suspendido',
   REACTIVAR_EXPEDIENTE: 'Expediente reactivado',
   CANCELAR_EXPEDIENTE: 'Baja del expediente',
+  FINALIZAR_EXPEDIENTE: 'Expediente finalizado',
   TRANSFERIR_EXPEDIENTE: 'Expediente transferido',
   ASIGNAR_PROGRAMA: 'Programa asignado',
   ENVIAR_SEMANA: 'Semana enviada por el alumno',
@@ -50,6 +51,8 @@ const TEXTO_CAMPO: Record<string, string> = {
   entrada: 'Entrada',
   salida: 'Salida',
   minutosAcreditables: 'Minutos acreditables',
+  minutosValidados: 'Minutos validados',
+  metaMinutos: 'Meta (minutos)',
 };
 
 const TEXTO_ESTADO: Record<string, string> = {

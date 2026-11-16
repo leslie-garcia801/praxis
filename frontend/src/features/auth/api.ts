@@ -37,6 +37,8 @@ export type Me = {
     fechaTermino: string | null;
     institucion: { id: string; nombre: string } | null;
   } | null;
+  // RF-18: programs the student already finished (FINALIZADO), oldest first.
+  programasFinalizados: ('SERVICIO_SOCIAL' | 'PRACTICAS')[];
 };
 
 export const meKey = ['me'] as const;

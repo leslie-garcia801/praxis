@@ -48,11 +48,15 @@ function expedienteEn(estado: string) {
   });
 }
 
-function mockDetalle(estado: string, semana = buildSemana({ id: null })) {
+// The progress the office sees: the goal reached (nothing missing) or `faltan` minutes short of it.
+const avanceConFaltantes = (faltan: number) =>
+  buildAvance({ expedienteId: ID, metaMinutos: 14400, minutosValidados: 14400 - faltan, minutosFaltantes: faltan });
+
+function mockDetalle(estado: string, semana = buildSemana({ id: null }), avance: Record<string, unknown> = buildAvance({ expedienteId: ID })) {
   server.use(
     http.get('*/api/me', () => HttpResponse.json(buildMe({ rol: 'VINCULACION', oficina: 'PRACTICAS' }))),
     http.get(`*/api/expedientes/${ID}`, () => HttpResponse.json({ expediente: expedienteEn(estado) })),
-    http.get(`*/api/expedientes/${ID}/avance`, () => HttpResponse.json({ avance: buildAvance({ expedienteId: ID }) })),
+    http.get(`*/api/expedientes/${ID}/avance`, () => HttpResponse.json({ avance })),
     http.get(`*/api/expedientes/${ID}/auditoria`, () => HttpResponse.json({ limite: 200, truncado: false, entradas: [] })),
     http.get('*/api/asistencias', () => HttpResponse.json({ semana })),
   );
@@ -80,7 +84,7 @@ function capturar(metodo: 'patch' | 'post', ruta: string, respuesta: unknown, st
 describe('/vinculacion/expedientes/:id office actions (RF-12, RF-22, RN-12, RN-03b)', () => {
   it.each([
     ['PENDIENTE', ['Confirmar', 'Cancelar']],
-    ['EN_PROCESO', ['Suspender', 'Cancelar', 'Transferir']],
+    ['EN_PROCESO', ['Suspender', 'Finalizar', 'Cancelar', 'Transferir']],
     ['SUSPENDIDO', ['Reactivar', 'Cancelar', 'Transferir']],
   ])('RF-12: shows the actions of a %s case file', async (estado, botones) => {
     mockDetalle(estado);
@@ -155,6 +159,100 @@ describe('/vinculacion/expedientes/:id office actions (RF-12, RF-22, RN-12, RN-0
     await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Sí, continuar' }));
 
     await waitFor(() => expect(cuerpos).toEqual([{ accion: 'CANCELAR', motivo: 'El alumno se dio de baja' }]));
+  });
+
+  describe('RF-12: Finalizar (the goal must be validated)', () => {
+    it('is disabled with the reason while hours are missing, and sends nothing', async () => {
+      mockDetalle('EN_PROCESO', buildSemana({ id: null }), avanceConFaltantes(750));
+      const cuerpos = capturar('patch', `*/api/expedientes/${ID}/estado`, { expediente: expedienteEn('FINALIZADO') });
+      const { user } = renderApp(RUTA);
+      const acciones = await esperarDetalle();
+
+      const boton = await waitFor(() => {
+        const b = acciones.getByRole('button', { name: 'Finalizar' });
+        expect(b).toBeDisabled();
+        return b;
+      });
+      expect(acciones.getByText('Faltan 12 h 30 min validadas para la meta.')).toBeInTheDocument();
+      expect(boton).toHaveAccessibleDescription('Faltan 12 h 30 min validadas para la meta.');
+      await user.click(boton);
+      expect(screen.queryByRole('form', { name: 'Finalizar expediente' })).not.toBeInTheDocument();
+      expect(cuerpos).toHaveLength(0);
+    });
+
+    it('is disabled while the progress loads', async () => {
+      mockDetalle('EN_PROCESO');
+      server.use(http.get(`*/api/expedientes/${ID}/avance`, () => new Promise(() => {})));
+      renderApp(RUTA);
+      const acciones = await esperarDetalle();
+
+      expect(acciones.getByRole('button', { name: 'Finalizar' })).toBeDisabled();
+    });
+
+    it('is enabled with the goal validated, asks the reason and a confirmation, then sends FINALIZAR and refreshes', async () => {
+      mockDetalle('EN_PROCESO', buildSemana({ id: null }), avanceConFaltantes(0));
+      let lecturas = 0;
+      server.use(
+        http.get(`*/api/expedientes/${ID}`, () => {
+          lecturas++;
+          return HttpResponse.json({ expediente: expedienteEn(lecturas > 1 ? 'FINALIZADO' : 'EN_PROCESO') });
+        }),
+        http.get('*/api/expedientes/candidatos', () => HttpResponse.json({ candidatos: [] })),
+      );
+      const cuerpos = capturar('patch', `*/api/expedientes/${ID}/estado`, { expediente: expedienteEn('FINALIZADO') });
+      const { user } = renderApp(RUTA);
+      const acciones = await esperarDetalle();
+
+      const boton = acciones.getByRole('button', { name: 'Finalizar' });
+      await waitFor(() => expect(boton).toBeEnabled());
+      expect(acciones.queryByText(/Faltan/)).not.toBeInTheDocument();
+      await user.click(boton);
+      const form = within(screen.getByRole('form', { name: 'Finalizar expediente' }));
+      await user.click(form.getByRole('button', { name: 'Finalizar expediente' }));
+      expect(await form.findByText('Indica el motivo.')).toBeInTheDocument();
+
+      await user.type(form.getByLabelText('Motivo'), 'Cumplió la meta');
+      await user.click(form.getByRole('button', { name: 'Finalizar expediente' }));
+      const dialogo = within(await screen.findByRole('alertdialog'));
+      expect(dialogo.getByText(/cierra el expediente/i)).toBeInTheDocument();
+      expect(dialogo.getByText(/otra oficina/i)).toBeInTheDocument();
+      expect(cuerpos).toHaveLength(0);
+      await user.click(dialogo.getByRole('button', { name: 'Sí, continuar' }));
+
+      await waitFor(() => expect(cuerpos).toEqual([{ accion: 'FINALIZAR', motivo: 'Cumplió la meta' }]));
+      // The detail is read again after the action, and the case file now has no actions.
+      await waitFor(() => expect(lecturas).toBeGreaterThan(1));
+      await waitFor(() => expect(screen.queryByRole('group', { name: 'Acciones del expediente' })).not.toBeInTheDocument());
+    });
+
+    it('shows the API error when the server says the goal is not reached', async () => {
+      mockDetalle('EN_PROCESO', buildSemana({ id: null }), avanceConFaltantes(0));
+      server.use(
+        http.patch(`*/api/expedientes/${ID}/estado`, () =>
+          HttpResponse.json({ error: { code: 'META_NO_ALCANZADA', message: 'Faltan 1 min validadas para la meta.' } }, { status: 409 }),
+        ),
+      );
+      const { user } = renderApp(RUTA);
+      const acciones = await esperarDetalle();
+
+      const boton = acciones.getByRole('button', { name: 'Finalizar' });
+      await waitFor(() => expect(boton).toBeEnabled());
+      await user.click(boton);
+      const form = within(screen.getByRole('form', { name: 'Finalizar expediente' }));
+      await user.type(form.getByLabelText('Motivo'), 'Cumplió la meta');
+      await user.click(form.getByRole('button', { name: 'Finalizar expediente' }));
+      await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Sí, continuar' }));
+
+      expect(await form.findByRole('alert')).toHaveTextContent('Faltan 1 min validadas para la meta.');
+    });
+
+    it('is not offered for a suspended case file (it must be reactivated first)', async () => {
+      mockDetalle('SUSPENDIDO', buildSemana({ id: null }), avanceConFaltantes(0));
+      renderApp(RUTA);
+      const acciones = await esperarDetalle();
+
+      expect(acciones.queryByRole('button', { name: 'Finalizar' })).not.toBeInTheDocument();
+    });
   });
 
   it('RN-12: transfers to another institution, asks for confirmation and opens the new case file', async () => {

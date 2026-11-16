@@ -11,6 +11,7 @@ import {
 } from './expedientes.schemas.js';
 import {
   asignarPrograma,
+  listarCandidatos,
   cambiarEstado,
   confirmarExpediente,
   editarExpediente,
@@ -36,6 +37,12 @@ expedientesRouter.get('/', requireSession(), requireRol('VINCULACION', 'ADMIN'),
 expedientesRouter.post('/asignar', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
   const { alumnoIds } = asignarProgramaSchema.parse(req.body);
   res.json(await asignarPrograma(getAuth(req).user, alumnoIds));
+});
+
+// RF-01, RN-03b: students of the plantel the user's office can assign the next program to.
+// Registered before the `/:id` routes so "candidatos" is not read as an id.
+expedientesRouter.get('/candidatos', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
+  res.json({ candidatos: await listarCandidatos(getAuth(req).user) });
 });
 
 expedientesRouter.get('/:id',requireSession(), requireRol('ALUMNO', 'VINCULACION', 'ADMIN'), async (req, res) => {

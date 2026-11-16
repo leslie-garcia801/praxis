@@ -190,7 +190,15 @@ function PendienteContenido({ expediente }: { expediente: Expediente }) {
   );
 }
 
-function Contenido({ expediente }: { expediente: Expediente | null }) {
+const NOMBRE_TERMINADO = { SERVICIO_SOCIAL: 'tu servicio social', PRACTICAS: 'tus prácticas profesionales' } as const;
+
+// RF-18: nothing is running, but the student has finished a program (the office finalized it).
+function textoTerminaste(programas: Me['programasFinalizados']): string {
+  return `Terminaste ${programas.map((p) => NOMBRE_TERMINADO[p]).join(' y ')}.`;
+}
+
+function Contenido({ expediente, programasFinalizados }: { expediente: Expediente | null; programasFinalizados: Me['programasFinalizados'] }) {
+  if (!expediente && programasFinalizados.length > 0) return <Aviso>{textoTerminaste(programasFinalizados)}</Aviso>;
   if (!expediente) return <Aviso>{`No tienes un expediente activo. ${ACUDE_A_TU_OFICINA}`}</Aviso>;
   if (expediente.estado === 'PENDIENTE') return <PendienteContenido expediente={expediente} />;
   return <AvanceContenido expediente={expediente} />;
@@ -235,7 +243,7 @@ export function InicioAlumnoPage() {
       {aviso && <AvisoTemporal>{aviso}</AvisoTemporal>}
       {(!enLinea || sinSesion) && <AvisoSinConexion />}
       <EstadoRegistrosPendientes />
-      {me.data && <Contenido expediente={me.data.expedienteActivo} />}
+      {me.data && <Contenido expediente={me.data.expedienteActivo} programasFinalizados={me.data.programasFinalizados} />}
       {sinSesion && <ContenidoSinConexion />}
     </main>
   );

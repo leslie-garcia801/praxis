@@ -160,7 +160,7 @@ describe('acciones de vinculación sobre el expediente (RF-11, RF-12, RN-12, RN-
       ['falta el motivo', { accion: 'SUSPENDER' }],
       ['motivo vacío', { accion: 'SUSPENDER', motivo: '   ' }],
       ['motivo demasiado largo', { accion: 'SUSPENDER', motivo: 'x'.repeat(501) }],
-      ['acción desconocida', { accion: 'FINALIZAR', motivo: 'Motivo' }],
+      ['acción desconocida', { accion: 'TERMINAR', motivo: 'Motivo' }],
       ['falta la acción', { motivo: 'Motivo' }],
       ['campo desconocido', { accion: 'SUSPENDER', motivo: 'Motivo', estado: 'CANCELADO' }],
     ])('RF-12: 400 si %s', async (_caso, body) => {
@@ -201,6 +201,145 @@ describe('acciones de vinculación sobre el expediente (RF-11, RF-12, RN-12, RN-
       const c = await caso();
       expect((await pedir('patch', `/${c.id}/estado`, { accion: 'SUSPENDER', motivo: 'Motivo' }, cookieOtroPlantel)).status).toBe(404);
       expect((await pedir('patch', `/${randomUUID()}/estado`, { accion: 'SUSPENDER', motivo: 'Motivo' })).status).toBe(404);
+    });
+  });
+
+  describe('PATCH /api/expedientes/:id/estado con FINALIZAR (RF-11, RF-12, RN-03a, specs 11.2, 8.4)', () => {
+    // Prácticas goal = 240 h = 14400 min. 14000 transferred + a validated week of 400 reach it exactly.
+    const finalizable = async ({
+      estado = 'EN_PROCESO' as EstadoExpediente,
+      transferidos = 14000,
+      validados = [400] as number[],
+      tipo = 'PRACTICAS' as TipoPrograma,
+    } = {}) => {
+      const c = await caso({ tipo, estado, semestreAlumno: 6, datos: { minutosTransferidos: transferidos } });
+      if (validados.length > 0) await crearSemana({ expedienteId: c.id, semanaInicio: '2026-03-02', estado: 'VALIDADA', minutos: validados });
+      return c;
+    };
+    const finalizar = (id: string, cookie: string | null = cookiePracticas, motivo = 'Cumplió la meta') =>
+      pedir('patch', `/${id}/estado`, { accion: 'FINALIZAR', motivo }, cookie);
+
+    it('RF-12: finalizar con la meta validada deja FINALIZADO, guarda finalizadoEn y audita el motivo', async () => {
+      const c = await finalizable();
+      const antes = Date.now();
+
+      const res = await finalizar(c.id, cookiePracticas, '  Cumplió la meta  ');
+
+      expect(res.status).toBe(200);
+      expect(res.body.expediente).toMatchObject({ id: c.id, estado: 'FINALIZADO' });
+      const fila = await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } });
+      expect(fila.estado).toBe('FINALIZADO');
+      expect(fila.finalizadoEn!.getTime()).toBeGreaterThanOrEqual(antes - 1000);
+      expect(fila.finalizadoEn!.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
+      expect(res.body.expediente.finalizadoEn).toBe(fila.finalizadoEn!.toISOString());
+      const filas = await auditoria(c.id, 'FINALIZAR_EXPEDIENTE');
+      expect(filas).toHaveLength(1);
+      expect(filas[0]).toMatchObject({
+        entidad: 'Expediente',
+        antes: { estado: 'EN_PROCESO' },
+        despues: { estado: 'FINALIZADO', motivo: 'Cumplió la meta', minutosValidados: 14400, metaMinutos: 14400 },
+      });
+    });
+
+    it('RF-12: el admin también puede finalizar', async () => {
+      const c = await finalizable();
+      expect((await finalizar(c.id, cookieAdmin)).status).toBe(200);
+    });
+
+    it('specs 8.4: los minutos transferidos cuentan para la meta, igual que en el avance', async () => {
+      const c = await finalizable({ transferidos: 14400, validados: [] });
+      const avance = await pedir('get', `/${c.id}/avance`);
+      expect(avance.body.avance).toMatchObject({ minutosValidados: 14400, metaMinutos: 14400, minutosFaltantes: 0 });
+
+      expect((await finalizar(c.id)).status).toBe(200);
+    });
+
+    it('RF-12: sin llegar a la meta responde 409 META_NO_ALCANZADA con lo que falta, y no cambia nada', async () => {
+      // 13000 transferred + 300 validated = 13300; 1100 min missing = 18 h 20 min. An unvalidated week does not count.
+      const c = await finalizable({ transferidos: 13000, validados: [300] });
+      await crearSemana({ expedienteId: c.id, semanaInicio: '2026-03-09', estado: 'ENVIADA', minutos: [500] });
+
+      const res = await finalizar(c.id);
+
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe('META_NO_ALCANZADA');
+      expect(res.body.error.message).toBe('Faltan 18 h 20 min validadas para la meta.');
+      const fila = await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } });
+      expect(fila.estado).toBe('EN_PROCESO');
+      expect(fila.finalizadoEn).toBeNull();
+      expect(await prisma.auditLog.count({ where: { entidadId: c.id } })).toBe(0);
+    });
+
+    it.each([
+      [1, 'Faltan 1 min validadas para la meta.'],
+      [45, 'Faltan 45 min validadas para la meta.'],
+      [120, 'Faltan 2 h validadas para la meta.'],
+    ])('RF-12: el mensaje de lo que falta (%i min)', async (faltan, mensaje) => {
+      const c = await finalizable({ transferidos: 14400 - faltan, validados: [] });
+      const res = await finalizar(c.id);
+      expect(res.status).toBe(409);
+      expect(res.body.error.message).toBe(mensaje);
+    });
+
+    it.each(['PENDIENTE', 'SUSPENDIDO', 'FINALIZADO', 'CANCELADO'] as const)(
+      'RF-12: finalizar desde %s responde 409 TRANSICION_NO_PERMITIDA aunque la meta esté cumplida',
+      async (desde) => {
+        const c = await finalizable({ estado: desde });
+
+        const res = await finalizar(c.id);
+
+        expect(res.status).toBe(409);
+        expect(res.body.error.code).toBe('TRANSICION_NO_PERMITIDA');
+        expect((await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } })).estado).toBe(desde);
+        expect(await prisma.auditLog.count({ where: { entidadId: c.id } })).toBe(0);
+      },
+    );
+
+    it('RF-12: 400 sin motivo', async () => {
+      const c = await finalizable();
+      const res = await pedir('patch', `/${c.id}/estado`, { accion: 'FINALIZAR' });
+      expect(res.status).toBe(400);
+      expect((await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } })).estado).toBe('EN_PROCESO');
+    });
+
+    it('RF-12: 401 sin sesión', async () => {
+      const c = await finalizable();
+      expect((await finalizar(c.id, null)).status).toBe(401);
+    });
+
+    it('RF-12: 403 para el alumno, aunque sea su expediente', async () => {
+      const c = await finalizable();
+      expect((await finalizar(c.id, await c.cookie())).status).toBe(403);
+      expect((await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } })).estado).toBe('EN_PROCESO');
+    });
+
+    it('RN-03b: 403 para vinculación de otra oficina y 404 en otro plantel', async () => {
+      const c = await finalizable();
+      expect((await finalizar(c.id, cookieServicio)).status).toBe(403);
+      expect((await finalizar(c.id, cookieOtroPlantel)).status).toBe(404);
+      expect((await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } })).estado).toBe('EN_PROCESO');
+    });
+
+    it('RF-12: dos solicitudes simultáneas de finalizar solo ganan una', async () => {
+      const c = await finalizable();
+
+      const respuestas = await Promise.all([finalizar(c.id), finalizar(c.id)]);
+
+      expect(respuestas.map((r) => r.status).sort()).toEqual([200, 409]);
+      expect(await auditoria(c.id, 'FINALIZAR_EXPEDIENTE')).toHaveLength(1);
+    });
+
+    it('RN-03a: tras finalizar, el alumno es candidato del otro programa para la otra oficina', async () => {
+      const c = await finalizable({ tipo: 'PRACTICAS' });
+      const antes = await pedir('get', '/candidatos', undefined, cookieServicio);
+      expect(antes.body.candidatos.map((x: { alumnoId: string }) => x.alumnoId)).not.toContain(c.alumnoId);
+
+      expect((await finalizar(c.id)).status).toBe(200);
+
+      const despues = await pedir('get', '/candidatos', undefined, cookieServicio);
+      const fila = despues.body.candidatos.find((x: { alumnoId: string }) => x.alumnoId === c.alumnoId);
+      expect(fila).toMatchObject({ programaTerminado: 'PRACTICAS', tipoAsignable: 'SERVICIO_SOCIAL' });
+      expect(fila.terminadoEn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
   });
 

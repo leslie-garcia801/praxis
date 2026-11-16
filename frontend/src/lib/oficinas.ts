@@ -15,6 +15,12 @@ const NOMBRE_PANEL: Record<Oficina, string> = {
   SERVICIO_SOCIAL: 'Panel de Servicio Social y Titulación',
 };
 
+// Name of each program as shown on screen.
+export const NOMBRE_PROGRAMA: Record<Oficina, string> = {
+  SERVICIO_SOCIAL: 'Servicio social',
+  PRACTICAS: 'Prácticas profesionales',
+};
+
 export const AMBAS_OFICINAS = 'Ambas oficinas';
 
 // Destination when the student's program is unknown; keep in sync with the backend messages.

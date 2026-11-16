@@ -104,3 +104,6 @@ Decisiones tomadas y pendientes.
 | 0055 | [Actualizar flujo de la app y estado del README](tasks/0055-actualizar-documentacion.md) | Terminada |
 | 0056 | [Gestionar usuarios de vinculación (RF-04, RF-29, RN-03b, backend)](tasks/0056-usuarios-oficina-backend.md) | Terminada |
 | 0057 | [Pantalla de usuarios de oficina (RF-04, RF-29, RN-03b, frontend)](tasks/0057-usuarios-oficina-frontend.md) | Terminada |
+| 0058 | [Candidatos al siguiente programa y auditoría del supervisor (RF-01, RF-29, RN-03b, backend)](tasks/0058-candidatos-asignacion.md) | Terminada |
+| 0059 | [Pantalla "Asignar programa" y "Cambiar supervisor" (RF-01, RF-12, RF-29, RN-03b, frontend)](tasks/0059-asignar-programa-frontend.md) | Terminada |
+| 0060 | [La oficina finaliza un expediente (RF-11, RF-12, RF-29, RN-03a, RN-03b, backend y frontend)](tasks/0060-finalizar-expediente.md) | Terminada |

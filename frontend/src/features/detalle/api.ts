@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
+import { candidatosKeys } from '../asignacion/api';
 import { avanceKeys } from '../avance/api';
 import type { SemanaHistorial } from '../historial/api';
 import { supervisoresKeys, type Expediente } from '../expediente/api';
@@ -86,12 +87,15 @@ function useInvalidarDetalle() {
       queryClient.invalidateQueries({ queryKey: avanceKeys.all }),
       queryClient.invalidateQueries({ queryKey: panelKeys.all }),
       queryClient.invalidateQueries({ queryKey: supervisoresKeys.all }),
+      // Finalizing a case file makes the student a candidate for the next program (RF-01).
+      queryClient.invalidateQueries({ queryKey: candidatosKeys.all }),
     ]);
 }
 
-export type AccionEstado = 'SUSPENDER' | 'REACTIVAR' | 'CANCELAR';
+export type AccionEstado = 'SUSPENDER' | 'REACTIVAR' | 'CANCELAR' | 'FINALIZAR';
 
-// RF-11, RF-12: PATCH /api/expedientes/:id/estado. The reason is mandatory and audited.
+// RF-11, RF-12: PATCH /api/expedientes/:id/estado. The reason is mandatory and audited. FINALIZAR answers
+// 409 META_NO_ALCANZADA while the validated hours are short of the goal.
 export function useCambiarEstado(id: string) {
   const invalidar = useInvalidarDetalle();
   return useMutation({
@@ -160,6 +164,19 @@ export function useEditarSupervisor(supervisorId: string) {
   return useMutation({
     mutationFn: (input: EditarSupervisorInput) =>
       apiFetch<{ supervisor: unknown }>(`/api/supervisores/${supervisorId}`, { method: 'PATCH', body: JSON.stringify(input) }),
+    onSuccess: invalidar,
+  });
+}
+
+// RF-10, RF-29: PATCH /api/expedientes/:id with only `supervisorId`; the change is audited by the server.
+export function useCambiarSupervisor(expedienteId: string) {
+  const invalidar = useInvalidarDetalle();
+  return useMutation({
+    mutationFn: (supervisorId: string) =>
+      apiFetch<{ expediente: ExpedienteDetalle }>(`/api/expedientes/${expedienteId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ supervisorId }),
+      }),
     onSuccess: invalidar,
   });
 }

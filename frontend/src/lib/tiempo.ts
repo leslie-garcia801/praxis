@@ -115,6 +115,11 @@ export function formatDiaCorto(fecha: string): string {
   return diaCortoFormat.format(enCalendario(fecha)).replace(',', '');
 }
 
+// "16 de noviembre de 2026" for a calendar date ('YYYY-MM-DD').
+export function formatFechaLarga(fecha: string): string {
+  return diaMesAnioFormat.format(enCalendario(fecha));
+}
+
 // "9 al 15 de noviembre"; "26 de octubre al 1 de noviembre" across months; with years across years.
 export function formatRangoSemana(inicio: string, fin: string): string {
   const a = enCalendario(inicio);

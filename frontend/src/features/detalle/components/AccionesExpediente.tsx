@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api';
+import { formatHoras } from '@/lib/tiempo';
+import { useAvance } from '../../avance/api';
 import { messageOf } from '../../importaciones/archivo';
 import { etiquetaFaltante } from '../../expediente/schemas';
 import { SelectorInstitucion } from '../../expediente/components/SelectorInstitucion';
@@ -18,6 +20,7 @@ type Panel = AccionEstado | 'TRANSFERIR';
 
 const TITULO: Record<Panel, string> = {
   SUSPENDER: 'Suspender expediente',
+  FINALIZAR: 'Finalizar expediente',
   REACTIVAR: 'Reactivar expediente',
   CANCELAR: 'Cancelar expediente',
   TRANSFERIR: 'Transferir expediente',
@@ -26,7 +29,7 @@ const TITULO: Record<Panel, string> = {
 // RF-12: what the office can do depends on the state of the case file. FINALIZADO and CANCELADO have no actions.
 const ACCIONES: Record<ExpedienteDetalle['estado'], Panel[]> = {
   PENDIENTE: ['CANCELAR'],
-  EN_PROCESO: ['SUSPENDER', 'CANCELAR', 'TRANSFERIR'],
+  EN_PROCESO: ['SUSPENDER', 'FINALIZAR', 'CANCELAR', 'TRANSFERIR'],
   SUSPENDIDO: ['REACTIVAR', 'CANCELAR', 'TRANSFERIR'],
   FINALIZADO: [],
   CANCELADO: [],
@@ -34,6 +37,7 @@ const ACCIONES: Record<ExpedienteDetalle['estado'], Panel[]> = {
 
 const TEXTO_BOTON: Record<Panel, string> = {
   SUSPENDER: 'Suspender',
+  FINALIZAR: 'Finalizar',
   REACTIVAR: 'Reactivar',
   CANCELAR: 'Cancelar',
   TRANSFERIR: 'Transferir',
@@ -73,6 +77,15 @@ function ConfirmarExpediente({ expedienteId }: { expedienteId: string }) {
   );
 }
 
+const CONFIRMACION: Partial<Record<AccionEstado, { titulo: string; descripcion: string }>> = {
+  CANCELAR: { titulo: '¿Cancelar el expediente?', descripcion: 'El alumno causa baja de este expediente. Esta acción no se puede deshacer.' },
+  FINALIZAR: {
+    titulo: '¿Finalizar el expediente?',
+    descripcion:
+      'Se cierra el expediente porque el alumno cumplió la meta de horas. Después, la otra oficina de vinculación podrá asignarle el siguiente programa. Esta acción no se puede deshacer.',
+  },
+};
+
 function PanelEstado({ expedienteId, accion, onCerrar }: { expedienteId: string; accion: AccionEstado; onCerrar: () => void }) {
   const cambiar = useCambiarEstado(expedienteId);
   const destructiva = accion === 'CANCELAR';
@@ -81,11 +94,7 @@ function PanelEstado({ expedienteId, accion, onCerrar }: { expedienteId: string;
       titulo={TITULO[accion]}
       enviar={TITULO[accion]}
       destructiva={destructiva}
-      confirmacion={
-        destructiva
-          ? { titulo: '¿Cancelar el expediente?', descripcion: 'El alumno causa baja de este expediente. Esta acción no se puede deshacer.' }
-          : undefined
-      }
+      confirmacion={CONFIRMACION[accion]}
       onEnviar={(motivo) => cambiar.mutateAsync({ accion, motivo })}
       onCerrar={onCerrar}
     />
@@ -129,18 +138,37 @@ export function AccionesExpediente({ expediente }: { expediente: ExpedienteDetal
   const [panel, setPanel] = useState<Panel | null>(null);
   const acciones = ACCIONES[expediente.estado];
   const puedeConfirmar = expediente.estado === 'PENDIENTE';
+  const avance = useAvance(expediente.id);
   if (acciones.length === 0) return null;
+
+  // RF-12: the API decides; the screen only reads the validated hours it already returns. Disabled until they are known.
+  const faltan = avance.data?.minutosFaltantes;
+  const motivoFinalizar = faltan !== undefined && faltan > 0 ? `Faltan ${formatHoras(faltan)} validadas para la meta.` : null;
+  const finalizarDeshabilitado = faltan === undefined || faltan > 0;
 
   return (
     <div role="group" aria-label="Acciones del expediente" className="mt-2 flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         {puedeConfirmar && <ConfirmarExpediente expedienteId={expediente.id} />}
         {acciones.map((accion) => (
-          <Button key={accion} type="button" variant="outline" aria-expanded={panel === accion} onClick={() => setPanel(panel === accion ? null : accion)}>
+          <Button
+            key={accion}
+            type="button"
+            variant="outline"
+            aria-expanded={panel === accion}
+            disabled={accion === 'FINALIZAR' && finalizarDeshabilitado}
+            aria-describedby={accion === 'FINALIZAR' && motivoFinalizar ? 'motivo-finalizar' : undefined}
+            onClick={() => setPanel(panel === accion ? null : accion)}
+          >
             {TEXTO_BOTON[accion]}
           </Button>
         ))}
       </div>
+      {acciones.includes('FINALIZAR') && motivoFinalizar && (
+        <p id="motivo-finalizar" className="text-sm text-muted-foreground">
+          {motivoFinalizar}
+        </p>
+      )}
       {panel === 'TRANSFERIR' && <PanelTransferir expediente={expediente} onCerrar={() => setPanel(null)} />}
       {panel !== null && panel !== 'TRANSFERIR' && (
         <PanelEstado expedienteId={expediente.id} accion={panel} onCerrar={() => setPanel(null)} />
