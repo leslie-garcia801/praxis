@@ -20,6 +20,7 @@ import { HomeRedirect, PublicOnly, RequirePendingChange, RequireRole } from './f
 import { LoginPage } from './features/auth/components/LoginPage';
 import { FirmasOficinasPage } from './features/oficinas/components/FirmasOficinasPage';
 import { CrearUsuarioPage } from './features/usuarios/components/CrearUsuarioPage';
+import { UsuariosPage } from './features/usuarios/components/UsuariosPage';
 
 // Routes by role: /alumno, /vinculacion, /validar/:token (see frontend/CLAUDE.md).
 // Screens are added iteration by iteration (docs/specs.md section 14).
@@ -66,6 +67,7 @@ export const routes: RouteObject[] = [
           {
             element: <RequireRole roles={['ADMIN']} />,
             children: [
+              { path: '/vinculacion/usuarios', element: <UsuariosPage /> },
               { path: '/vinculacion/usuarios/nuevo', element: <CrearUsuarioPage /> },
               { path: '/vinculacion/oficinas/firmas', element: <FirmasOficinasPage /> },
             ],

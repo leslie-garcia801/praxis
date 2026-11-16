@@ -102,3 +102,5 @@ Decisiones tomadas y pendientes.
 | 0053 | [Reporte de métricas del piloto (specs §12, backend)](tasks/0053-metricas-piloto.md) | Terminada |
 | 0054 | [Guías del piloto y encuesta final (specs §12, §13 #7 y #8)](tasks/0054-guias-piloto.md) | Terminada |
 | 0055 | [Actualizar flujo de la app y estado del README](tasks/0055-actualizar-documentacion.md) | Terminada |
+| 0056 | [Gestionar usuarios de vinculación (RF-04, RF-29, RN-03b, backend)](tasks/0056-usuarios-oficina-backend.md) | Terminada |
+| 0057 | [Pantalla de usuarios de oficina (RF-04, RF-29, RN-03b, frontend)](tasks/0057-usuarios-oficina-frontend.md) | Terminada |

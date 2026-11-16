@@ -3,7 +3,8 @@ import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { PasswordTemporal } from '@/components/PasswordTemporal';
-import { Button } from '@/components/ui/button';
+import { Link } from 'react-router';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Field } from '@/features/auth/components/Field';
 import { ApiError } from '@/lib/api';
 import { AMBAS_OFICINAS, NOMBRE_OFICINA } from '@/lib/oficinas';
@@ -38,6 +39,9 @@ function ResultView({ creado, onReset }: { creado: UsuarioCreado; onReset: () =>
       <Button type="button" onClick={onReset}>
         Crear otro usuario
       </Button>
+      <Link to="/vinculacion/usuarios" className={buttonVariants({ variant: 'outline' })}>
+        Ver usuarios
+      </Link>
     </section>
   );
 }
@@ -87,6 +91,9 @@ export function CrearUsuarioPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-4 py-8">
+      <Link to="/vinculacion/usuarios" className="text-sm underline">
+        ← Volver a usuarios
+      </Link>
       <h1 className="text-2xl font-bold">Crear usuario de oficina</h1>
       {creado ? (
         <ResultView creado={creado} onReset={resetAll} />

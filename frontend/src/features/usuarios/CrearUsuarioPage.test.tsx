@@ -148,14 +148,23 @@ describe('/vinculacion/usuarios/nuevo', () => {
   });
 });
 
+describe('navigation back to the list (RF-04)', () => {
+  it('RF-04: the form and the result link back to the users list', async () => {
+    mockCreate();
+    const { user } = await openForm();
+    expect(screen.getByRole('link', { name: /Volver a usuarios/ })).toHaveAttribute('href', '/vinculacion/usuarios');
+    await fill(user, 'Oficina de Prácticas Profesionales');
+    await submit(user);
+    await screen.findByText(PASSWORD);
+    expect(screen.getByRole('link', { name: 'Ver usuarios' })).toHaveAttribute('href', '/vinculacion/usuarios');
+  });
+});
+
 describe('access to the user creation screen (RN-03b)', () => {
   it('ADMIN sees the Usuarios link in the menu', async () => {
     mockRol('ADMIN');
     renderApp('/vinculacion');
-    expect(await screen.findByRole('link', { name: 'Usuarios' })).toHaveAttribute(
-      'href',
-      '/vinculacion/usuarios/nuevo',
-    );
+    expect(await screen.findByRole('link', { name: 'Usuarios' })).toHaveAttribute('href', '/vinculacion/usuarios');
   });
 
   it('VINCULACION does not see the link and is redirected away from the screen', async () => {
