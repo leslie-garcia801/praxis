@@ -13,6 +13,7 @@ beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => {
   server.resetHandlers();
   resetPushMocks();
+  localStorage.clear();
   cleanup();
 });
 afterAll(() => server.close());

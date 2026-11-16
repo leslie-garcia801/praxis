@@ -8,8 +8,10 @@ import { PendientesAlumno } from '@/features/bitacora/components/PendientesAlumn
 import { useMe, type Me } from '@/features/auth/api';
 import { useExpediente } from '@/features/expediente/api';
 import { nombreSupervisor } from '@/features/expediente/nombreSupervisor';
+import { AvisoSinConexion, EstadoRegistrosPendientes, RegistrosRechazados } from '@/features/escaneo/components/RegistrosPendientes';
 import { RecordatoriosCard } from '@/features/recordatorios/components/RecordatoriosCard';
 import { DescargarReporte } from '@/features/reporte/components/DescargarReporte';
+import { esErrorDeRed, useEnLinea } from '@/lib/conexion';
 import { esHoy, formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
 import { useAvance, type Avance } from '../api';
 
@@ -100,8 +102,19 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
       {suspendido && (
         <Aviso>{`Tu expediente está suspendido; no puedes registrar asistencia. ${acudeALaOficina(expediente.tipo)}`}</Aviso>
       )}
-      {avance.isPending && <p>Cargando tu avance…</p>}
-      {avance.isError && (
+      {avance.isPending && avance.fetchStatus === 'paused' && (
+        <p>Sin conexión. Tu avance se mostrará cuando vuelva la conexión.</p>
+      )}
+      {avance.isPending && avance.fetchStatus !== 'paused' && <p>Cargando tu avance…</p>}
+      {avance.isError && esErrorDeRed(avance.error) && !avance.data && (
+        <div role="alert" className="flex flex-col gap-2">
+          <p className="text-destructive">Sin conexión. No se pudo cargar tu avance.</p>
+          <Button variant="outline" onClick={() => void avance.refetch()}>
+            Reintentar
+          </Button>
+        </div>
+      )}
+      {avance.isError && !esErrorDeRed(avance.error) && (
         <div role="alert" className="flex flex-col gap-2">
           <p className="text-destructive">No se pudo cargar tu avance.</p>
           <Button variant="outline" onClick={() => void avance.refetch()}>
@@ -146,6 +159,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
         Historial
       </Link>
       <DatosExpediente expedienteId={expediente.id} />
+      <RegistrosRechazados />
       <PendientesAlumno />
       <RecordatoriosCard />
       <DescargarReporte expedienteId={expediente.id} />
@@ -196,14 +210,33 @@ function useAvisoDeNavegacion(): string | null {
   return aviso;
 }
 
+// RF-16: the session could not be read (app opened offline with a known student). The server decides
+// whether the expediente allows registering, so the button stays; the data that needs the network does not show.
+function ContenidoSinConexion() {
+  return (
+    <>
+      <RegistrarButton habilitado />
+      <Link to="/alumno/historial" className={linkClass}>
+        Historial
+      </Link>
+      <RegistrosRechazados />
+    </>
+  );
+}
+
 export function InicioAlumnoPage() {
   const me = useMe();
+  const enLinea = useEnLinea();
   const aviso = useAvisoDeNavegacion();
+  const sinSesion = me.data === undefined;
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
       <h1 className="text-2xl font-bold">Mi avance</h1>
       {aviso && <AvisoTemporal>{aviso}</AvisoTemporal>}
+      {(!enLinea || sinSesion) && <AvisoSinConexion />}
+      <EstadoRegistrosPendientes />
       {me.data && <Contenido expediente={me.data.expedienteActivo} />}
+      {sinSesion && <ContenidoSinConexion />}
     </main>
   );
 }
