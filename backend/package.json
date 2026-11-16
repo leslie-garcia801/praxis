@@ -20,6 +20,8 @@
     "db:seed": "tsx --env-file-if-exists=.env src/scripts/seed.ts",
     "db:seed:demo": "tsx --env-file-if-exists=.env src/scripts/seedDemo.ts",
     "job:resumen-semanal": "tsx --env-file-if-exists=.env src/scripts/resumenSemanal.ts",
+    "job:recordatorio-salida": "tsx --env-file-if-exists=.env src/scripts/recordatorioSalida.ts",
+    "job:recordatorio-bitacora": "tsx --env-file-if-exists=.env src/scripts/recordatorioBitacora.ts",
     "dev:enlace": "tsx --env-file-if-exists=.env src/scripts/enviarEnlacePrueba.ts"
   },
   "dependencies": {

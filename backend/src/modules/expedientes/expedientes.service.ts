@@ -11,6 +11,7 @@ import {
 import { estimarFechaTermino } from '../../domain/horas.js';
 import { alcanceOficina, puedeAdministrarTipo, type TipoPrograma } from '../../domain/oficinas.js';
 import { META_HORAS } from '../../domain/programas.js';
+import { necesitaRecordatorioSalida } from '../../domain/recordatorios.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
@@ -404,7 +405,8 @@ export async function obtenerAvance(user: AuthUser, id: string, ahora: () => Dat
       minutosPorDia,
       hoy: ahora(),
     }),
-    turnoAbierto: abierta,
+    // RF-28: the server decides whether to show the "forgot to clock out" notice.
+    turnoAbierto: abierta && { ...abierta, recordarSalida: necesitaRecordatorioSalida(abierta.entrada, ahora()) },
   };
 }
 
