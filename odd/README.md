@@ -101,3 +101,4 @@ Decisiones tomadas y pendientes.
 | 0052 | [Contraste de los bordes de los campos (RNF-09)](tasks/0052-contraste-bordes.md) | Terminada |
 | 0053 | [Reporte de métricas del piloto (specs §12, backend)](tasks/0053-metricas-piloto.md) | Terminada |
 | 0054 | [Guías del piloto y encuesta final (specs §12, §13 #7 y #8)](tasks/0054-guias-piloto.md) | Terminada |
+| 0055 | [Actualizar flujo de la app y estado del README](tasks/0055-actualizar-documentacion.md) | Terminada |
