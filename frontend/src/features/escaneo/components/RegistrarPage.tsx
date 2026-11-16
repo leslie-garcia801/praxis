@@ -5,14 +5,17 @@ import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/features/auth/components/Field';
 import { ApiError } from '@/lib/api';
+import { useUsuarioId } from '@/features/auth/api';
+import { useEnLinea } from '@/lib/conexion';
+import { encolarRegistro } from '@/offline/cola';
+import { useCola } from '@/offline/colaCompartida';
+import { useEstadoCola } from '@/offline/estadoCola';
 import { TOPE_DIARIO_TEXTO } from '@/lib/reglas';
 import { formatHora, formatHoras } from '@/lib/tiempo';
 import { useRegistrarEscaneo, type Credencial, type EscaneoRequest, type EscaneoResponse } from '../api';
 import { useQrScanner, type MotivoErrorCamara } from '../hooks/useQrScanner';
 import { parseQr } from '../parseQr';
 import { codigoCortoSchema, type CodigoCortoOutput, type CodigoCortoValues } from '../schemas';
-
-const MENSAJE_SIN_RED = 'No hay conexión. Intenta de nuevo.';
 
 const MENSAJES_CAMARA: Record<MotivoErrorCamara, string> = {
   permiso: 'No diste permiso para usar la cámara. Escribe el código de la institución.',
@@ -58,6 +61,21 @@ function Confirmacion({ resultado }: { resultado: EscaneoResponse }) {
       {horaSalida && asistencia.minutosAcreditables === 0 && (
         <Aviso>El turno duró menos de 15 minutos y no se acredita</Aviso>
       )}
+      <Button asChild className="h-12 w-full">
+        <Link to="/alumno">Volver al inicio</Link>
+      </Button>
+    </section>
+  );
+}
+
+// RF-16: the scan was kept on the device. Whether it is an entry or an exit is unknown until the server sees it.
+function ConfirmacionPendiente() {
+  return (
+    <section className="flex flex-col gap-3">
+      <p role="status" className="text-xl font-semibold">
+        Registro guardado. Pendiente de sincronizar.
+      </p>
+      <p>Se enviará solo cuando tengas conexión.</p>
       <Button asChild className="h-12 w-full">
         <Link to="/alumno">Volver al inicio</Link>
       </Button>
@@ -132,27 +150,59 @@ function CodigoForm({ enviando, onSubmit }: { enviando: boolean; onSubmit: (codi
   );
 }
 
-// RF-14, RF-15. The camera opens on arrival (the student tapped "Registrar" on the home screen);
-// the short code is always offered. Every new attempt gets a new id; retrying after a network
-// error reuses it so the server does not duplicate the record (task 0014).
+type Guardado = 'guardando' | 'error' | 'listo' | 'sinUsuario';
+
+// RF-14, RF-15, RF-16. The camera opens on arrival (the student tapped "Registrar" on the home screen);
+// the short code is always offered. Every new attempt gets a new id. Without connection, or when the
+// request fails by network, the scan goes to the offline queue: the queued record keeps the id (the
+// request may have reached the server) and the time of the attempt, so sending it later is idempotent.
 export function RegistrarPage() {
   const registrar = useRegistrarEscaneo();
+  const cola = useCola();
+  const { refrescar } = useEstadoCola();
+  const enLinea = useEnLinea();
+  const usuarioId = useUsuarioId();
+  const [guardado, setGuardado] = useState<Guardado | null>(null);
   const [modo, setModo] = useState<'camara' | 'codigo'>('camara');
   const [aviso, setAviso] = useState<string | null>(null);
   const [errorQr, setErrorQr] = useState<string | null>(null);
-  const [intento, setIntento] = useState<EscaneoRequest | null>(null);
   // Changing the key remounts the camera or the form so a new attempt starts clean.
   const [vista, setVista] = useState(0);
 
-  function enviar(credencial: Credencial) {
+  async function guardarSinConexion(credencial: Credencial, id: string, ahora: Date) {
+    // A record is only sent under its owner's session: without a known user it cannot be queued.
+    if (!usuarioId) {
+      setGuardado('sinUsuario');
+      return;
+    }
+    setGuardado('guardando');
+    try {
+      await encolarRegistro(cola, credencial, usuarioId, ahora, id);
+      setGuardado('listo');
+      await refrescar();
+    } catch {
+      setGuardado('error');
+    }
+  }
+
+  async function enviar(credencial: Credencial) {
+    const ahora = new Date();
     const request: EscaneoRequest = { id: crypto.randomUUID(), ...credencial };
-    setIntento(request);
-    registrar.mutate(request);
+    if (!navigator.onLine) {
+      await guardarSinConexion(credencial, request.id, ahora);
+      return;
+    }
+    try {
+      await registrar.mutateAsync(request);
+    } catch (error) {
+      // An ApiError is the server's answer (shown as is); anything else means fetch failed.
+      if (!(error instanceof ApiError)) await guardarSinConexion(credencial, request.id, ahora);
+    }
   }
 
   function nuevoIntento() {
     registrar.reset();
-    setIntento(null);
+    setGuardado(null);
     setErrorQr(null);
     setVista((v) => v + 1);
   }
@@ -163,7 +213,7 @@ export function RegistrarPage() {
       setErrorQr(resultado.message);
       return;
     }
-    enviar({ token: resultado.token });
+    void enviar({ token: resultado.token });
   }
 
   function alFallarCamara(motivo: MotivoErrorCamara) {
@@ -179,22 +229,37 @@ export function RegistrarPage() {
 
   function contenido(): ReactNode {
     if (registrar.isSuccess) return <Confirmacion resultado={registrar.data} />;
+    if (guardado === 'listo') return <ConfirmacionPendiente />;
+    if (guardado === 'error') {
+      return (
+        <ErrorAviso
+          message="No se pudo guardar el registro en este dispositivo. Intenta de nuevo."
+          action="Intentar de nuevo"
+          onAction={nuevoIntento}
+        />
+      );
+    }
+    if (guardado === 'sinUsuario') {
+      return (
+        <ErrorAviso
+          message="Inicia sesión para guardar tu registro."
+          action="Intentar de nuevo"
+          onAction={nuevoIntento}
+        />
+      );
+    }
+    if (guardado === 'guardando') return <Aviso>Guardando el registro…</Aviso>;
     if (registrar.isError) {
       const error = registrar.error;
       if (error instanceof ApiError) {
         return <ErrorAviso message={error.message} action="Intentar de nuevo" onAction={nuevoIntento} />;
       }
-      return (
-        <ErrorAviso
-          message={MENSAJE_SIN_RED}
-          action="Reintentar"
-          onAction={() => intento && registrar.mutate(intento)}
-        />
-      );
+      return <Aviso>Guardando el registro…</Aviso>; // network error: it is being queued
     }
     if (errorQr) return <ErrorAviso message={errorQr} action="Intentar de nuevo" onAction={nuevoIntento} />;
     return (
       <>
+        {!enLinea && <Aviso>Sin conexión. Tu registro se guardará en este dispositivo y se enviará después.</Aviso>}
         {aviso && <Aviso>{aviso}</Aviso>}
         {modo === 'camara' ? (
           <CamaraPanel key={vista} onTexto={alLeerQr} onError={alFallarCamara} enviando={registrar.isPending} />
@@ -202,7 +267,7 @@ export function RegistrarPage() {
           <CodigoForm
             key={vista}
             enviando={registrar.isPending}
-            onSubmit={(codigoCorto) => enviar({ codigoCorto })}
+            onSubmit={(codigoCorto) => void enviar({ codigoCorto })}
           />
         )}
         <button
@@ -221,7 +286,7 @@ export function RegistrarPage() {
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
       <h1 className="text-2xl font-bold">Registrar asistencia</h1>
       {contenido()}
-      {!registrar.isSuccess && (
+      {!registrar.isSuccess && guardado !== 'listo' && (
         <Link to="/alumno" className={`${linkClass} self-start`}>
           Cancelar
         </Link>

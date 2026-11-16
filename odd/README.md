@@ -88,3 +88,6 @@ Decisiones tomadas y pendientes.
 | 0039 | [Solicitud de corrección en la app del alumno (RF-17, frontend)](tasks/0039-correccion-alumno.md) | Terminada |
 | 0040 | [Correcciones pendientes en la app de vinculación (RF-17, frontend)](tasks/0040-correcciones-oficina.md) | Terminada |
 | 0041 | [Prueba e2e del registro con código corto (RF-14, RF-15)](tasks/0041-e2e-escaneo.md) | Terminada |
+| 0042 | [Cola de registros sin conexión (RF-16, frontend)](tasks/0042-cola-sin-conexion.md) | Terminada |
+| 0043 | [Registro sin conexión en la app del alumno (RF-16, RN-14, frontend)](tasks/0043-registro-sin-conexion-app.md) | Terminada |
+| 0044 | [Prueba e2e del registro sin conexión (RF-16, RN-14)](tasks/0044-e2e-sin-conexion.md) | Terminada |

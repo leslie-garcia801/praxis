@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ApiError, apiFetch } from '@/lib/api';
 import { authClient } from '@/lib/auth';
 import { MATRICULA_REGEX } from './schemas';
+import { borrarUltimaSesion, guardarUltimaSesion, leerUltimaSesion } from './sesionLocal';
 
 export type Rol = 'ALUMNO' | 'VINCULACION' | 'ADMIN';
 
@@ -41,17 +42,35 @@ export type Me = {
 export const meKey = ['me'] as const;
 
 // 401 (no session) and 403 CUENTA_INACTIVA (deactivated after signing in) both mean "signed out".
+// RF-16: a student with a settled account leaves a minimal "last known session" on the device so
+// the app can open without connection; any other answer clears it.
 export async function fetchMe(): Promise<Me | null> {
   try {
-    return await apiFetch<Me>('/api/me');
+    const me = await apiFetch<Me>('/api/me');
+    if (me.usuario.rol === 'ALUMNO' && !me.usuario.debeCambiar) guardarUltimaSesion(me.usuario);
+    else borrarUltimaSesion();
+    return me;
   } catch (error) {
-    if (error instanceof ApiError && (error.status === 401 || error.code === 'CUENTA_INACTIVA')) return null;
+    if (error instanceof ApiError && (error.status === 401 || error.code === 'CUENTA_INACTIVA')) {
+      borrarUltimaSesion();
+      return null;
+    }
     throw error;
   }
 }
 
 export function useMe() {
-  return useQuery({ queryKey: meKey, queryFn: fetchMe, staleTime: 30_000 });
+  // networkMode 'always': offline the request fails (and the guard can use the last known
+  // session) instead of staying paused forever.
+  return useQuery({ queryKey: meKey, queryFn: fetchMe, staleTime: 30_000, networkMode: 'always' });
+}
+
+// The signed-in student's id, or the last known one while /api/me cannot be read (RF-16). Offline
+// records are filed under it; undefined means nobody is known and nothing may be queued.
+export function useUsuarioId(): string | undefined {
+  const { data } = useMe();
+  const id = data === undefined ? leerUltimaSesion()?.usuarioId : data?.usuario.id;
+  return id || undefined;
 }
 
 export function homeFor(rol: Rol): string {
@@ -94,6 +113,7 @@ export async function signIn(identifier: string, password: string): Promise<Outc
 export async function signOut(): Promise<boolean> {
   try {
     const { error } = await authClient.signOut();
+    if (!error) borrarUltimaSesion();
     return !error;
   } catch {
     return false;

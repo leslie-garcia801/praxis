@@ -39,13 +39,37 @@ function uniqueMatricula(): string {
   return `2531905${tail}`;
 }
 
+// The backend allows 10 sign-ins per minute per client (RNF-06) and a full e2e run needs more. A 429
+// is not a failure of the flow under test: wait the time the server asks for (Better Auth sends
+// X-Retry-After in seconds) and try again, a few times at most.
+async function postSignIn(api: APIRequestContext, path: string, data: Record<string, unknown>): Promise<APIResponse> {
+  for (let intento = 1; ; intento += 1) {
+    const res = await api.post(path, { data });
+    if (res.status() !== 429 || intento === 4) return res;
+    const segundos = Number(res.headers()['x-retry-after']) || 15;
+    await new Promise((resolve) => setTimeout(resolve, (segundos + 1) * 1000));
+  }
+}
+
 async function signInAsStaff(): Promise<APIRequestContext> {
   const api = await request.newContext({ baseURL: BASE_URL, extraHTTPHeaders: { Origin: BASE_URL } });
-  const res = await api.post('/api/auth/sign-in/email', {
-    data: { email: process.env.E2E_STAFF_EMAIL, password: process.env.E2E_STAFF_PASSWORD },
+  const res = await postSignIn(api, '/api/auth/sign-in/email', {
+    email: process.env.E2E_STAFF_EMAIL,
+    password: process.env.E2E_STAFF_PASSWORD,
   });
   if (!res.ok()) throw new Error(`Staff sign-in failed (${res.status()}): ${await res.text()}`);
   return api;
+}
+
+// One staff session is shared by every seed of a worker instead of signing in again for each test
+// (see the sign-in limit above). It lives until the worker ends.
+let staffSession: Promise<APIRequestContext> | undefined;
+function sesionStaff(): Promise<APIRequestContext> {
+  staffSession ??= signInAsStaff().catch((error: unknown) => {
+    staffSession = undefined;
+    throw error;
+  });
+  return staffSession;
 }
 
 // Fails with the response body so a broken seed step is easy to diagnose.
@@ -69,17 +93,21 @@ async function importarAlumno(api: APIRequestContext): Promise<SeededAlumno> {
 }
 
 export async function seedAlumno(): Promise<SeededAlumno> {
-  const api = await signInAsStaff();
-  try {
-    return await importarAlumno(api);
-  } finally {
-    await api.dispose();
-  }
+  return importarAlumno(await sesionStaff());
 }
 
 export const PASSWORD_ALUMNO = 'Secreta12345';
 
-export type SeededAlumnoListo = SeededAlumno & { password: string; institucion: string; codigoCorto: string };
+export type CookieSesion = Awaited<ReturnType<APIRequestContext['storageState']>>['cookies'][number];
+
+// `cookies` is the student's session, opened once through the API, so the browser can reuse it
+// instead of signing in again (see e2e/helpers/alumno.ts).
+export type SeededAlumnoListo = SeededAlumno & {
+  password: string;
+  institucion: string;
+  codigoCorto: string;
+  cookies: CookieSesion[];
+};
 
 // A student whose case file is EN_PROCESO and who can scan right away (RF-15). Everything goes through
 // the public API: a new institution (unique name, so its short code belongs to this call only), an
@@ -89,7 +117,7 @@ export type SeededAlumnoListo = SeededAlumno & { password: string; institucion: 
 // start" whatever the UTC / Monterrey date is when the test runs (RN-15).
 export async function seedAlumnoListoParaEscanear(): Promise<SeededAlumnoListo> {
   const sufijo = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-  const staff = await signInAsStaff();
+  const staff = await sesionStaff();
   const student = await request.newContext({ baseURL: BASE_URL, extraHTTPHeaders: { Origin: BASE_URL } });
   try {
     const nombreInstitucion = `Institución E2E ${sufijo}`;
@@ -114,7 +142,7 @@ export async function seedAlumnoListoParaEscanear(): Promise<SeededAlumnoListo> 
       'Account activation',
     );
     await expectOk(
-      await student.post('/api/auth/sign-in/username', { data: { username: alumno.matricula, password: PASSWORD_ALUMNO } }),
+      await postSignIn(student, '/api/auth/sign-in/username', { username: alumno.matricula, password: PASSWORD_ALUMNO }),
       'Student sign-in',
     );
     const resPerfil = await student.get('/api/me');
@@ -130,9 +158,9 @@ export async function seedAlumnoListoParaEscanear(): Promise<SeededAlumnoListo> 
     );
     await expectOk(await staff.post(`/api/expedientes/${expedienteActivo.id}/confirmar`), 'Case file confirmation');
 
-    return { ...alumno, password: PASSWORD_ALUMNO, institucion: nombreInstitucion, codigoCorto: institucion.codigoCorto };
+    const { cookies } = await student.storageState();
+    return { ...alumno, password: PASSWORD_ALUMNO, institucion: nombreInstitucion, codigoCorto: institucion.codigoCorto, cookies };
   } finally {
     await student.dispose();
-    await staff.dispose();
   }
 }
