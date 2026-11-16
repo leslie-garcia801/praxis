@@ -155,7 +155,7 @@ function PasoVistaPrevia({
                   {fila.coincideCon ? (
                     <>
                       {fila.coincideCon.nombre}{' '}
-                      <span className="text-slate-700">(por {fila.coincideCon.por === 'RFC' ? 'RFC' : 'nombre'})</span>
+                      <span className="text-muted-foreground">(por {fila.coincideCon.por === 'RFC' ? 'RFC' : 'nombre'})</span>
                     </>
                   ) : (
                     '—'

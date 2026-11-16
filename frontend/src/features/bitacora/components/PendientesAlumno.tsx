@@ -45,7 +45,7 @@ function CorreccionItem({ correccion }: { correccion: CorreccionConTurno }) {
       <Link to={`/alumno/historial?semana=${encodeURIComponent(lunesDeSemana(dia))}`} className={enlaceClass}>
         {texto}
       </Link>
-      {correccion.comentario && <p className="text-slate-800">Comentario de tu oficina: «{correccion.comentario}»</p>}
+      {correccion.comentario && <p className="text-foreground">Comentario de tu oficina: «{correccion.comentario}»</p>}
     </li>
   );
 }
@@ -71,7 +71,7 @@ export function PendientesAlumno() {
         Pendientes
       </h2>
       {cargando && !error && <p>Cargando tus pendientes…</p>}
-      {sinRed && <p className="text-slate-800">Sin conexión. Tus pendientes se mostrarán cuando vuelva la conexión.</p>}
+      {sinRed && <p className="text-foreground">Sin conexión. Tus pendientes se mostrarán cuando vuelva la conexión.</p>}
       {error && (
         <ErrorConReintento
           message="No se pudieron cargar tus pendientes."
@@ -81,7 +81,7 @@ export function PendientesAlumno() {
           }}
         />
       )}
-      {listo && semanas.length + turnos.length === 0 && <p className="text-slate-800">No tienes pendientes</p>}
+      {listo && semanas.length + turnos.length === 0 && <p className="text-foreground">No tienes pendientes</p>}
       {listo && semanas.length + turnos.length > 0 && (
         <ul aria-label="Pendientes" className="flex flex-col gap-2">
           {semanas.map((p) => (
@@ -89,7 +89,7 @@ export function PendientesAlumno() {
               <Link to={`/alumno/historial?semana=${encodeURIComponent(p.semanaInicio)}`} className={enlaceClass}>
                 {textoPendiente(p)}
               </Link>
-              {p.comentario && <p className="text-slate-800">Comentario de tu supervisor: «{p.comentario}»</p>}
+              {p.comentario && <p className="text-foreground">Comentario de tu supervisor: «{p.comentario}»</p>}
             </li>
           ))}
           {turnos.map((c) => (

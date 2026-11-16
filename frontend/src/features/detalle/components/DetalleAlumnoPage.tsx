@@ -31,7 +31,7 @@ const linkClass = 'text-primary underline underline-offset-4';
 function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
   return (
     <>
-      <dt className="text-slate-700">{etiqueta}</dt>
+      <dt className="text-muted-foreground">{etiqueta}</dt>
       <dd className="font-medium">{children || 'Sin dato'}</dd>
     </>
   );
@@ -47,10 +47,10 @@ function Encabezado({ expediente }: { expediente: ExpedienteDetalle }) {
         <p className="text-xl font-semibold">{nombre}</p>
         <span className="rounded-md border px-2 py-0.5 text-sm font-medium">{TEXTO_ESTADO[expediente.estado]}</span>
       </div>
-      <p className="text-slate-800">
+      <p className="text-foreground">
         {alumno.matricula ?? 'Sin matrícula'} · {TEXTO_TIPO[expediente.tipo]}
       </p>
-      <p className="text-slate-800">
+      <p className="text-foreground">
         {alumno.carrera} · Semestre {alumno.semestre} · Grupo {alumno.grupo} · {TEXTO_TURNO[alumno.turno]}
       </p>
       <AccionesExpediente expediente={expediente} />
@@ -123,7 +123,7 @@ function AvanceAlumno({ expedienteId }: { expedienteId: string }) {
             {formatHoras(avance.data.minutosValidados)} validadas de {formatHoras(avance.data.metaMinutos)} ({avance.data.porcentaje} %)
           </p>
           <Progress value={avance.data.porcentaje} aria-label="Avance validado" />
-          <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-slate-800">
+          <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-foreground">
             <dt>Registradas sin validar</dt>
             <dd className="text-right font-medium">{formatHoras(avance.data.minutosRegistrados)}</dd>
             <dt>Faltan</dt>

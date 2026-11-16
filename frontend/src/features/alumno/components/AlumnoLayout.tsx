@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router';
+import { SelectorTema } from '@/components/SelectorTema';
 import { useMe } from '@/features/auth/api';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
 import { leerUltimaSesion } from '@/features/auth/sesionLocal';
@@ -21,9 +22,12 @@ export function AlumnoLayout() {
                 {nombre}
               </p>
             )}
-            {usuario?.matricula && <p className="text-sm text-slate-700">{usuario.matricula}</p>}
+            {usuario?.matricula && <p className="text-sm text-muted-foreground">{usuario.matricula}</p>}
           </div>
-          <SignOutButton />
+          <div className="flex shrink-0 items-center gap-2">
+            <SelectorTema />
+            <SignOutButton />
+          </div>
         </div>
       </header>
       <SincronizacionProvider>

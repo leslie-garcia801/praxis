@@ -112,7 +112,7 @@ export function ValidarSemanasPage() {
             {pendientes.length === 1 ? 'Tienes 1 semana pendiente.' : `Tienes ${pendientes.length} semanas pendientes.`}
           </p>
         )}
-        <p className="text-slate-800">Este enlace vence el {formatFecha(expiraEn)}</p>
+        <p className="text-foreground">Este enlace vence el {formatFecha(expiraEn)}</p>
       </header>
 
       {errorEnvio && (
@@ -148,7 +148,7 @@ export function ValidarSemanasPage() {
         <section key={grupo.nombre} aria-label={grupo.nombre} className="flex flex-col gap-3">
           <div>
             <h2 className="text-lg font-semibold">{grupo.nombre}</h2>
-            <p className="text-slate-800">{grupo.carrera}</p>
+            <p className="text-foreground">{grupo.carrera}</p>
           </div>
           {grupo.semanas.map((semana) => (
             <TarjetaSemana

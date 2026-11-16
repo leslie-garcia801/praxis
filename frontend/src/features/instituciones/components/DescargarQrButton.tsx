@@ -46,7 +46,7 @@ export function DescargarQrButton({ id, nombre }: { id: string; nombre: string }
         Descargar QR
       </Button>
       {archivo && (
-        <p role="status" className="text-xs text-slate-700">
+        <p role="status" className="text-xs text-muted-foreground">
           Se descargó {archivo}. El código corto nuevo ya aparece en pantalla.
         </p>
       )}

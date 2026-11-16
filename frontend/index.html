@@ -6,6 +6,27 @@
     <meta name="theme-color" content="#1e3a8a" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon.svg" />
+    <script>
+      // Applies the saved theme before the first paint (no flash). Keep in sync with src/lib/tema.ts:
+      // same key ("praxis.tema"), values (claro | oscuro | sistema) and theme-color values.
+      (function () {
+        var oscuro = false;
+        try {
+          var guardada = localStorage.getItem('praxis.tema');
+          if (guardada === 'oscuro') oscuro = true;
+          else if (guardada !== 'claro') oscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } catch (e) {
+          try {
+            oscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          } catch (e2) {}
+        }
+        var raiz = document.documentElement;
+        if (oscuro) raiz.classList.add('dark');
+        raiz.style.colorScheme = oscuro ? 'dark' : 'light';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', oscuro ? '#0a0a0a' : '#1e3a8a');
+      })();
+    </script>
     <title>Servicio Social y Prácticas — CBTIS 258</title>
   </head>
   <body>

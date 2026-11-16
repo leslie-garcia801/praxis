@@ -7,7 +7,7 @@ import { nombreSupervisor } from '../nombreSupervisor';
 function Fila({ etiqueta, valor }: { etiqueta: string; valor: string | null | undefined }) {
   return (
     <>
-      <dt className="text-slate-700">{etiqueta}</dt>
+      <dt className="text-muted-foreground">{etiqueta}</dt>
       <dd className="font-medium">{valor || 'Sin dato'}</dd>
     </>
   );
@@ -24,7 +24,7 @@ export function ResumenExpediente({ expediente }: { expediente: Expediente }) {
 
   return (
     <>
-      <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+      <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
         {aviso}
       </p>
       <dl className="grid grid-cols-1 gap-x-4 gap-y-1">

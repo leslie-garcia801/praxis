@@ -14,7 +14,7 @@ export function Alert({ children }: { children: React.ReactNode }) {
 export function Dato({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border border-border p-3">
-      <dt className="text-sm text-slate-700">{label}</dt>
+      <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="text-2xl font-bold">{value}</dd>
     </div>
   );
@@ -57,7 +57,7 @@ export function PasoSubir({
       <h2 id="subir-titulo" className="text-lg font-semibold">
         Subir archivo
       </h2>
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-muted-foreground">
         Usa la plantilla, llénala con tus {plural} y súbela en formato .xlsx o .csv (máximo 2 MB).
       </p>
       <a
@@ -101,7 +101,7 @@ export function AccionesVistaPrevia({
   return (
     <>
       {bloqueada && (
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-muted-foreground">
           No se importará nada hasta que corrijas el archivo: todas las filas deben estar sin errores.
         </p>
       )}

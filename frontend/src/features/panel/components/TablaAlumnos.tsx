@@ -39,11 +39,11 @@ function Fila({ fila }: { fila: FilaPanel }) {
         <Link to={`/vinculacion/expedientes/${fila.expediente.id}`} className="font-medium text-primary underline underline-offset-4">
           {alumno.nombre}
         </Link>
-        {alumno.matricula && <div className="text-xs text-slate-700">{alumno.matricula}</div>}
+        {alumno.matricula && <div className="text-xs text-muted-foreground">{alumno.matricula}</div>}
       </td>
       <td className="py-2 pr-3">
         <div>{alumno.carrera}</div>
-        <div className="text-xs text-slate-700">
+        <div className="text-xs text-muted-foreground">
           Semestre {alumno.semestre} · Grupo {alumno.grupo} · {TEXTO_TURNO[alumno.turno]}
         </div>
       </td>
@@ -54,7 +54,7 @@ function Fila({ fila }: { fila: FilaPanel }) {
             {formatHoras(fila.minutosValidados)} / {formatHoras(fila.metaMinutos)}
           </span>
           <Progress value={fila.porcentaje} aria-label={`Avance de ${alumno.nombre}`} className="h-2" />
-          <span className="text-xs text-slate-700">{fila.porcentaje} %</span>
+          <span className="text-xs text-muted-foreground">{fila.porcentaje} %</span>
         </div>
       </td>
       <td className="py-2 pr-3">{formatHoras(fila.minutosRegistrados)}</td>
@@ -62,7 +62,7 @@ function Fila({ fila }: { fila: FilaPanel }) {
         {fila.ultimoRegistro ? (
           <div className="flex flex-col">
             <span>{formatFecha(fila.ultimoRegistro)}</span>
-            <span className="text-xs text-slate-700">{formatHora(fila.ultimoRegistro)}</span>
+            <span className="text-xs text-muted-foreground">{formatHora(fila.ultimoRegistro)}</span>
           </div>
         ) : (
           'Sin registros'

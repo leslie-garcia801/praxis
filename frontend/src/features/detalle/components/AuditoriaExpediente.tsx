@@ -89,7 +89,7 @@ function Fila({ entrada }: { entrada: EntradaAuditoria }) {
     <tr className="border-b border-border align-top">
       <td className="py-2 pr-3">
         <div>{formatFecha(entrada.fecha)}</div>
-        <div className="text-xs text-slate-700">{formatHora(entrada.fecha)}</div>
+        <div className="text-xs text-muted-foreground">{formatHora(entrada.fecha)}</div>
       </td>
       <td className="py-2 pr-3">{entrada.usuario}</td>
       <td className="py-2 pr-3">{TEXTO_ACCION[entrada.accion] ?? entrada.accion}</td>
@@ -124,7 +124,7 @@ export function AuditoriaExpediente({ expedienteId }: { expedienteId: string }) 
       )}
       {auditoria.data &&
         (auditoria.data.entradas.length === 0 ? (
-          <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+          <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
             Aún no hay movimientos registrados
           </p>
         ) : (
@@ -148,7 +148,7 @@ export function AuditoriaExpediente({ expedienteId }: { expedienteId: string }) 
               </table>
             </div>
             {auditoria.data.truncado && (
-              <p className="text-sm text-slate-700">Se muestran los {auditoria.data.limite} movimientos más recientes.</p>
+              <p className="text-sm text-muted-foreground">Se muestran los {auditoria.data.limite} movimientos más recientes.</p>
             )}
           </>
         ))}

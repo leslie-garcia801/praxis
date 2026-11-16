@@ -3,7 +3,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 import './index.css';
+import { iniciarTema } from './lib/tema';
 import { router } from './router';
+
+// Applies the saved theme and follows the system while the preference is "sistema" (RNF-09).
+iniciarTema();
 
 const queryClient = new QueryClient({
   defaultOptions: {

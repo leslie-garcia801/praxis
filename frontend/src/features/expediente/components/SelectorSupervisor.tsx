@@ -56,7 +56,7 @@ function Lista({ institucionId, valueId, onChange, tipo }: Props & { institucion
                 />
                 <span className="flex flex-col">
                   <span className="font-medium">{nombreSupervisor(s)}</span>
-                  {s.puesto && <span className="text-sm text-slate-700">{s.puesto}</span>}
+                  {s.puesto && <span className="text-sm text-muted-foreground">{s.puesto}</span>}
                 </span>
               </label>
             </li>
@@ -91,7 +91,7 @@ function Lista({ institucionId, valueId, onChange, tipo }: Props & { institucion
         />
       )}
       {aviso && !abierto && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           La {NOMBRE_OFICINA[tipo]} revisará los datos de tu supervisor
         </p>
       )}
@@ -106,7 +106,7 @@ export function SelectorSupervisor({ institucionId, valueId, onChange, tipo }: P
       {institucionId ? (
         <Lista key={institucionId} institucionId={institucionId} valueId={valueId} onChange={onChange} tipo={tipo} />
       ) : (
-        <p className="text-slate-700">Elige primero una institución para ver sus supervisores.</p>
+        <p className="text-muted-foreground">Elige primero una institución para ver sus supervisores.</p>
       )}
     </fieldset>
   );

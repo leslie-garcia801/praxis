@@ -25,6 +25,12 @@ describe('VinculacionLayout (RN-03b)', () => {
     );
   });
 
+  it('RNF-09: the header has the theme selector', async () => {
+    signedIn('VINCULACION');
+    renderApp('/vinculacion');
+    expect(await screen.findByRole('combobox', { name: 'Tema' })).toBeInTheDocument();
+  });
+
   it('marks Instituciones as active inside its subpages', async () => {
     signedIn('VINCULACION');
     renderApp('/vinculacion/instituciones/nueva');

@@ -9,9 +9,9 @@ function TurnoItem({ turno, vista }: { turno: Turno; vista: VistaHistorial }) {
     <li className="flex flex-col gap-0.5 rounded-lg border p-3">
       <span className="font-medium">{textoRango(turno)}</span>
       {turno.minutosAcreditables !== null && (
-        <span className="text-slate-800">Acreditado: {formatHoras(turno.minutosAcreditables)}</span>
+        <span className="text-foreground">Acreditado: {formatHoras(turno.minutosAcreditables)}</span>
       )}
-      {turno.sinConexion && <span className="text-sm text-slate-700">Registrado sin conexión</span>}
+      {turno.sinConexion && <span className="text-sm text-muted-foreground">Registrado sin conexión</span>}
       <CorreccionTurno turno={turno} vista={vista} />
     </li>
   );
@@ -27,7 +27,7 @@ export function DiaHistorial({ dia, vista = 'alumno' }: { dia: Dia; vista?: Vist
         <h3 id={`dia-${dia.fecha}`} className="font-semibold capitalize">
           {titulo}
         </h3>
-        <span className="text-slate-700">Sin registros</span>
+        <span className="text-muted-foreground">Sin registros</span>
       </section>
     );
   }
@@ -46,7 +46,7 @@ export function DiaHistorial({ dia, vista = 'alumno' }: { dia: Dia; vista?: Vist
       </ul>
       <p className="font-medium">Total del día: {formatHoras(dia.minutosAcreditablesDia)}</p>
       {noAcreditado > 0 && (
-        <p className="text-slate-800">{formatHoras(noAcreditado)} no se acreditan (tope de {TOPE_DIARIO_TEXTO} por día)</p>
+        <p className="text-foreground">{formatHoras(noAcreditado)} no se acreditan (tope de {TOPE_DIARIO_TEXTO} por día)</p>
       )}
     </section>
   );

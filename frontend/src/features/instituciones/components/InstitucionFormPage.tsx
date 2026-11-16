@@ -63,7 +63,7 @@ export function InstitucionFormPage() {
   if (carreras.data === undefined || (editando && institucion.data === undefined)) {
     return (
       <Shell titulo={titulo}>
-        <p role="status" className="text-slate-700">
+        <p role="status" className="text-muted-foreground">
           Cargando…
         </p>
       </Shell>

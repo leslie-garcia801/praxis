@@ -70,7 +70,7 @@ export function PanelPage() {
       <ExportarPanel filtros={filtros} alerta={alerta} />
 
       {panel.isPending && (
-        <p role="status" className="text-slate-700">
+        <p role="status" className="text-muted-foreground">
           Cargando alumnos…
         </p>
       )}

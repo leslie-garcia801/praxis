@@ -44,7 +44,7 @@ export function DescargarReporte({ expedienteId }: { expedienteId: string }) {
           {descarga.isPending ? 'Descargando…' : 'Descargar reporte'}
         </Button>
       </div>
-      <p className="text-sm text-slate-700">Sin fechas, el reporte incluye todo el expediente. Solo cuenta las semanas validadas.</p>
+      <p className="text-sm text-muted-foreground">Sin fechas, el reporte incluye todo el expediente. Solo cuenta las semanas validadas.</p>
       {(error ?? (rangoInvalido ? MENSAJE_RANGO : null)) && (
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error ?? MENSAJE_RANGO}
