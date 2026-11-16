@@ -1,4 +1,5 @@
-import webpush from 'web-push';
+// web-push 4 is ESM-only with named exports and no default export.
+import * as webpush from 'web-push';
 import { env } from '../config/env.js';
 import { prisma } from './prisma.js';
 

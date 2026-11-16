@@ -95,7 +95,8 @@ describe('push en producción (RF-28)', () => {
         : { VAPID_PUBLIC_KEY: undefined, VAPID_PRIVATE_KEY: undefined, VAPID_SUBJECT: undefined };
       return { env: { ...env, NODE_ENV: 'production', ...claves } };
     });
-    vi.doMock('web-push', () => ({ default: { sendNotification, setVapidDetails } }));
+    // web-push 4 is ESM-only with named exports and no default export; the mock keeps that shape.
+    vi.doMock('web-push', () => ({ sendNotification, setVapidDetails }));
     const { enviarPush } = await import('./push.js');
     return { enviarPush };
   }
