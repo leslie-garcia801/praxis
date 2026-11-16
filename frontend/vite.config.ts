@@ -53,7 +53,8 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: ['test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
-    css: false,
+    // CSS is not processed in tests, except index.css so lib/contraste.test.ts can read its tokens (?raw).
+    css: { include: [/src\/index\.css/] },
     // Default worker count (one per core) causes random 5s timeouts under load.
     maxWorkers: 4,
   },

@@ -98,3 +98,4 @@ Decisiones tomadas y pendientes.
 | 0049 | [Jefa de cada oficina en la firma del PDF (RF-27, RF-29, RN-03b, backend)](tasks/0049-responsables-oficina.md) | Terminada |
 | 0050 | [Pantalla "Firmas de las oficinas" (RF-27, RF-29, frontend)](tasks/0050-firmas-oficinas.md) | Terminada |
 | 0051 | [Modo oscuro (RNF-01, RNF-09, frontend)](tasks/0051-modo-oscuro.md) | Terminada |
+| 0052 | [Contraste de los bordes de los campos (RNF-09)](tasks/0052-contraste-bordes.md) | Terminada |
