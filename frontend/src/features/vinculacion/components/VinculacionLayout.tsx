@@ -13,7 +13,10 @@ const ENLACES: Enlace[] = [
   { to: '/vinculacion/importar/alumnos', label: 'Importar alumnos' },
   { to: '/vinculacion/importar/instituciones', label: 'Importar instituciones' },
 ];
-const ENLACE_USUARIOS: Enlace = { to: '/vinculacion/usuarios/nuevo', label: 'Usuarios' };
+const ENLACES_ADMIN: Enlace[] = [
+  { to: '/vinculacion/usuarios/nuevo', label: 'Usuarios' },
+  { to: '/vinculacion/oficinas/firmas', label: 'Firmas de las oficinas' },
+];
 
 const claseEnlace = ({ isActive }: { isActive: boolean }) =>
   [
@@ -22,11 +25,11 @@ const claseEnlace = ({ isActive }: { isActive: boolean }) =>
   ].join(' ');
 
 // Shell of every office screen (RN-03b): app name, menu, the office of the user and sign out.
-// The Usuarios link is for the admin only; the route is also guarded.
+// The Usuarios and Firmas links are for the admin only; the route is also guarded.
 export function VinculacionLayout() {
   const { data } = useMe();
   const [abierto, setAbierto] = useState(false);
-  const enlaces = data?.usuario.rol === 'ADMIN' ? [...ENLACES, ENLACE_USUARIOS] : ENLACES;
+  const enlaces = data?.usuario.rol === 'ADMIN' ? [...ENLACES, ...ENLACES_ADMIN] : ENLACES;
 
   return (
     <div className="min-h-dvh">
