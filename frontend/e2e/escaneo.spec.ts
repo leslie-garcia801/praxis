@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { entrarComo, irAlCodigoCorto } from './helpers/alumno';
 import { backendReachable, e2eConfigProblem, seedAlumnoListoParaEscanear } from './helpers/seedAlumno';
 
 // RF-14 / RF-15 end to end on the mobile projects (iPhone 13, Pixel 7). There is no camera in the
@@ -11,30 +12,9 @@ test.beforeAll(async () => {
   test.skip(!(await backendReachable()), 'The backend is not reachable at /api/health (start docker, backend and Vite).');
 });
 
-async function entrar(page: Page, matricula: string, password: string) {
-  await page.goto('/entrar');
-  await page.getByLabel('Matrícula o correo').fill(matricula);
-  await page.getByLabel('Contraseña', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page.getByRole('heading', { name: 'Mi avance' })).toBeVisible();
-}
-
-// The camera starts on arrival and, with no camera, the page switches to the short code by itself
-// after an error; if it has not yet, the student taps "Escribir el código".
-async function irAlCodigoCorto(page: Page) {
-  await page.getByRole('link', { name: 'Registrar' }).click();
-  await expect(page.getByRole('heading', { name: 'Registrar asistencia' })).toBeVisible();
-  const campo = page.getByLabel('Código de la institución');
-  const escribir = page.getByRole('button', { name: 'Escribir el código' });
-  await expect(campo.or(escribir)).toBeVisible();
-  if (await escribir.isVisible()) await escribir.click();
-  await expect(campo).toBeVisible();
-  return campo;
-}
-
 test('RF-15: el alumno registra su entrada con el código corto y la ve en su historial', async ({ page }) => {
   const alumno = await seedAlumnoListoParaEscanear();
-  await entrar(page, alumno.matricula, alumno.password);
+  await entrarComo(page, alumno);
 
   const campo = await irAlCodigoCorto(page);
   await campo.fill(alumno.codigoCorto);
@@ -52,7 +32,7 @@ test('RF-15: el alumno registra su entrada con el código corto y la ve en su hi
 
 test('RF-15: un código corto inexistente muestra el mensaje de error', async ({ page }) => {
   const alumno = await seedAlumnoListoParaEscanear();
-  await entrar(page, alumno.matricula, alumno.password);
+  await entrarComo(page, alumno);
 
   const campo = await irAlCodigoCorto(page);
   // The alphabet of the generated codes has no 0 or 1, so this code never exists.
