@@ -287,6 +287,8 @@ model Expediente {
   minutosTransferidos Int              @default(0) @map("minutos_transferidos")
   motivoTransferencia String?          @map("motivo_transferencia")
   estado              EstadoExpediente @default(PENDIENTE)
+  // Instant the office finalized the case file (RF-12); null for older data and while it is not FINALIZADO.
+  finalizadoEn        DateTime?        @map("finalizado_en") @db.Timestamptz
   creadoEn            DateTime         @default(now()) @map("creado_en") @db.Timestamptz
   asistencias         Asistencia[]
   semanas             SemanaBitacora[]

@@ -57,7 +57,7 @@ export const motivo = z
   .max(500, 'Máximo 500 caracteres.');
 
 export const cambiarEstadoSchema = z.strictObject({
-  accion: z.enum(['SUSPENDER', 'REACTIVAR', 'CANCELAR'], 'Acción no válida.'),
+  accion: z.enum(['SUSPENDER', 'REACTIVAR', 'CANCELAR', 'FINALIZAR'], 'Acción no válida.'),
   motivo,
 });
 export type CambiarEstadoInput = z.output<typeof cambiarEstadoSchema>;

@@ -7,11 +7,13 @@ export function buildMe({
   rol = 'ALUMNO',
   debeCambiar = false,
   expedienteActivo = null,
+  programasFinalizados = [],
   oficina,
 }: {
   rol?: Rol;
   debeCambiar?: boolean;
   expedienteActivo?: Record<string, unknown> | null;
+  programasFinalizados?: string[];
   oficina?: 'SERVICIO_SOCIAL' | 'PRACTICAS' | null;
 } = {}) {
   return {
@@ -37,6 +39,7 @@ export function buildMe({
           }
         : null,
     expedienteActivo,
+    programasFinalizados,
   };
 }
 

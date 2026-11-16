@@ -80,7 +80,19 @@ describe('GET /api/me', () => {
         fechaTermino: null,
         institucion: { id: institucion.id, nombre: 'Hospital Universitario' },
       },
+      programasFinalizados: ['PRACTICAS'],
     });
+  });
+
+  it('RF-18: programasFinalizados lists the programs the student finished, without repeats, even with no active case file', async () => {
+    const { user, cookie } = await alumnoConExpediente('25319051761010');
+    await crearExpediente({ alumnoId: user.alumno!.id, estado: 'FINALIZADO', tipo: 'SERVICIO_SOCIAL' });
+    await crearExpediente({ alumnoId: user.alumno!.id, estado: 'CANCELADO', tipo: 'PRACTICAS' });
+
+    const res = await request(app).get('/api/me').set('Cookie', cookie);
+
+    expect(res.body.expedienteActivo).toBeNull();
+    expect(res.body.programasFinalizados).toEqual(['SERVICIO_SOCIAL']);
   });
 
   it('RN-03: a pending or suspended case file also counts as active', async () => {
@@ -121,6 +133,7 @@ describe('GET /api/me', () => {
     expect(res.body.usuario).toMatchObject({ rol: 'VINCULACION', oficina: 'PRACTICAS', matricula: null });
     expect(res.body.alumno).toBeNull();
     expect(res.body.expedienteActivo).toBeNull();
+    expect(res.body.programasFinalizados).toEqual([]);
   });
 
   it('RF-04: works with a pending password change so the app can ask for a new one', async () => {

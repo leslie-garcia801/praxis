@@ -47,12 +47,14 @@ export function faltantesParaConfirmar(datos: DatosConfirmacion): string[] {
 }
 
 export type EstadoExpediente = 'PENDIENTE' | 'EN_PROCESO' | 'SUSPENDIDO' | 'FINALIZADO' | 'CANCELADO';
-export type AccionEstado = 'SUSPENDER' | 'REACTIVAR' | 'CANCELAR';
+export type AccionEstado = 'SUSPENDER' | 'REACTIVAR' | 'CANCELAR' | 'FINALIZAR';
 
 const TRANSICIONES: Record<AccionEstado, { desde: readonly EstadoExpediente[]; hasta: EstadoExpediente }> = {
   SUSPENDER: { desde: ['EN_PROCESO'], hasta: 'SUSPENDIDO' },
   REACTIVAR: { desde: ['SUSPENDIDO'], hasta: 'EN_PROCESO' },
   CANCELAR: { desde: ['PENDIENTE', 'EN_PROCESO', 'SUSPENDIDO'], hasta: 'CANCELADO' },
+  // A suspended case file is reactivated first. Reaching the goal is checked by the service (it needs the validated hours).
+  FINALIZAR: { desde: ['EN_PROCESO'], hasta: 'FINALIZADO' },
 };
 
 // RF-12: the state an action leaves the case file in, or null when the action is not allowed from `estado`.
@@ -105,4 +107,11 @@ export function decidirAsignacion(datos: {
     return { motivo: 'El siguiente programa corresponde a la otra oficina de vinculación.' };
   }
   return { tipo: siguiente };
+}
+
+// RF-12: "12 h 30 min", "2 h" or "45 min" for a whole number of minutes.
+export function formatearDuracion(minutos: number): string {
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  return [h > 0 ? `${h} h` : null, m > 0 || h === 0 ? `${m} min` : null].filter(Boolean).join(' ');
 }

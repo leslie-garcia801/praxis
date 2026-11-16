@@ -151,6 +151,20 @@ describe('GET /api/expedientes/candidatos (RF-01, RN-03a, RN-03b)', () => {
     expect(fila(res.body, c.alumnoId)!.terminadoEn).toBe('2026-05-08');
   });
 
+  it('RF-01: terminadoEn is the local date of finalizadoEn when the case file has it, over the attendances', async () => {
+    const c = await alumno({
+      expedientes: [
+        // 2026-07-01 03:30 UTC is still June 30 in America/Monterrey (RN-15).
+        { tipo: 'SERVICIO_SOCIAL', estado: 'FINALIZADO', datos: { finalizadoEn: new Date('2026-07-01T03:30:00Z'), fechaTermino: new Date('2026-06-15') } },
+      ],
+    });
+    await crearAsistencia({ expedienteId: c.expedientes[0]!.id, entrada: new Date('2026-05-04T14:00:00Z'), minutos: 60 });
+
+    const res = await pedir(cookiePracticas);
+
+    expect(fila(res.body, c.alumnoId)!.terminadoEn).toBe('2026-06-30');
+  });
+
   it('RF-01: terminadoEn falls back to fechaTermino, and is null when the data has no date', async () => {
     const conFecha = await alumno({
       expedientes: [{ tipo: 'SERVICIO_SOCIAL', estado: 'FINALIZADO', datos: { fechaTermino: new Date('2026-06-15') } }],

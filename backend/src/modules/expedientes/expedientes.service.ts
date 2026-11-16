@@ -4,6 +4,7 @@ import {
   primerTipoPrograma,
   SEMESTRE_SEGUNDO_PROGRAMA,
   faltantesParaConfirmar,
+  formatearDuracion,
   horarioValido,
   periodoValido,
   puedeTransferir,
@@ -68,6 +69,7 @@ function aRespuesta(e: ExpedienteCompleto, user: AuthUser) {
     programa: e.programa,
     subprograma: e.subprograma,
     creadoEn: e.creadoEn,
+    finalizadoEn: e.finalizadoEn,
     alumno: {
       id: e.alumno.id,
       nombre: e.alumno.nombre,
@@ -323,23 +325,39 @@ const AUDITORIA_ESTADO: Record<AccionEstado, string> = {
   SUSPENDER: 'SUSPENDER_EXPEDIENTE',
   REACTIVAR: 'REACTIVAR_EXPEDIENTE',
   CANCELAR: 'CANCELAR_EXPEDIENTE',
+  FINALIZAR: 'FINALIZAR_EXPEDIENTE',
 };
 
 const MENSAJE_TRANSICION: Record<AccionEstado, string> = {
   SUSPENDER: 'Solo se puede suspender un expediente en proceso.',
   REACTIVAR: 'Solo se puede reactivar un expediente suspendido.',
   CANCELAR: 'Solo se puede dar de baja un expediente pendiente, en proceso o suspendido.',
+  FINALIZAR: 'Solo se puede finalizar un expediente en proceso.',
 };
 
-// RF-11, RF-12: suspend, reactivate or cancel. The UPDATE is guarded by the state read, so two simultaneous
+// RF-11, RF-12: suspend, reactivate, cancel or finalize. The UPDATE is guarded by the state read, so two simultaneous
 // actions cannot both win; the audit entry (with the reason) is written in the same transaction (RF-29).
+// FINALIZAR also needs the goal validated (same computation as the avance) and stamps `finalizadoEn`.
 export async function cambiarEstado(user: AuthUser, id: string, { accion, motivo }: CambiarEstadoInput) {
   const actualizado = await prisma.$transaction(async (tx) => {
     const actual = await cargar(tx, user, id);
     const destino = transicionDeEstado(accion, actual.estado);
     if (!destino) throw transicionNoPermitida(MENSAJE_TRANSICION[accion]);
 
-    const { count } = await tx.expediente.updateMany({ where: { id, estado: actual.estado }, data: { estado: destino } });
+    let datosAuditoria: Record<string, number> = {};
+    if (accion === 'FINALIZAR') {
+      const metaMinutos = actual.metaHoras * 60;
+      const validados = await minutosValidados(tx, id, actual.minutosTransferidos);
+      if (validados < metaMinutos) {
+        throw new AppError(409, 'META_NO_ALCANZADA', `Faltan ${formatearDuracion(metaMinutos - validados)} validadas para la meta.`);
+      }
+      datosAuditoria = { minutosValidados: validados, metaMinutos };
+    }
+
+    const { count } = await tx.expediente.updateMany({
+      where: { id, estado: actual.estado },
+      data: { estado: destino, ...(accion === 'FINALIZAR' && { finalizadoEn: new Date() }) },
+    });
     if (count === 0) throw transicionNoPermitida(MENSAJE_TRANSICION[accion]);
 
     await tx.auditLog.create({
@@ -349,7 +367,7 @@ export async function cambiarEstado(user: AuthUser, id: string, { accion, motivo
         entidad: 'Expediente',
         entidadId: id,
         antes: { estado: actual.estado },
-        despues: { estado: destino, motivo },
+        despues: { estado: destino, motivo, ...datosAuditoria },
       },
     });
     return tx.expediente.findUniqueOrThrow({ where: { id }, include: incluir });
@@ -530,9 +548,8 @@ export async function asignarPrograma(user: AuthUser, alumnoIds: string[]) {
 // RF-01, RN-03a, RN-03b: students the user's office can assign the next program to. The office cannot see the
 // other office's case files, so this is how it finds who finished the first program. Same rule as `asignarPrograma`
 // (`decidirAsignacion`); the query only narrows the students to load, the rule decides.
-// `terminadoEn` (calendar day): the last attendance of the finished case file, else its `fechaTermino`, else null.
-// Nothing records when a case file became FINALIZADO (no timestamp column, no audit entry), so this is the best
-// evidence the data has.
+// `terminadoEn` (calendar day): `finalizadoEn` of the finished case file; for data finalized before that column
+// existed, the approximation of its last attendance, else its `fechaTermino`, else null.
 export async function listarCandidatos(user: AuthUser) {
   const alcance = alcanceOficina(user);
   const alumnos = await prisma.alumno.findMany({
@@ -551,7 +568,7 @@ export async function listarCandidatos(user: AuthUser) {
       id: true,
       carrera: { select: { nombre: true } },
       usuario: { select: { username: true } },
-      expedientes: { select: { id: true, tipo: true, estado: true, creadoEn: true, fechaTermino: true } },
+      expedientes: { select: { id: true, tipo: true, estado: true, creadoEn: true, fechaTermino: true, finalizadoEn: true } },
     },
     orderBy: [{ apellidoPaterno: 'asc' }, { apellidoMaterno: 'asc' }, { nombre: 'asc' }, { id: 'asc' }],
   });
@@ -588,7 +605,7 @@ export async function listarCandidatos(user: AuthUser) {
       grupo: alumno.grupo,
       turno: alumno.turno,
       programaTerminado: primerTipo,
-      terminadoEn: ultima ? fechaLocal(ultima) : aFecha(finalizado.fechaTermino),
+      terminadoEn: finalizado.finalizadoEn ? fechaLocal(finalizado.finalizadoEn) : ultima ? fechaLocal(ultima) : aFecha(finalizado.fechaTermino),
       tipoAsignable,
     };
   });

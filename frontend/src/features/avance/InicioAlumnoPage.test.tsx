@@ -15,9 +15,9 @@ const detalleExpediente = buildExpediente({
   faltantes: [],
 });
 
-function mockAlumno(expediente: Record<string, unknown> | null = buildExpedienteActivo()) {
+function mockAlumno(expediente: Record<string, unknown> | null = buildExpedienteActivo(), programasFinalizados: string[] = []) {
   server.use(
-    http.get('*/api/me', () => HttpResponse.json(buildMe({ expedienteActivo: expediente }))),
+    http.get('*/api/me', () => HttpResponse.json(buildMe({ expedienteActivo: expediente, programasFinalizados }))),
     http.get('*/api/expedientes/:id', () => HttpResponse.json({ expediente: detalleExpediente })),
   );
 }
@@ -170,6 +170,28 @@ describe('/alumno home (RF-18)', () => {
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Registrar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Registrar' })).not.toBeInTheDocument();
+  });
+
+  it('RF-18: a student who finished a program says so, without progress or Registrar', async () => {
+    mockAlumno(null, ['SERVICIO_SOCIAL']);
+    renderApp('/alumno');
+    expect(await screen.findByText('Terminaste tu servicio social.')).toBeInTheDocument();
+    expect(screen.queryByText(/No tienes un expediente activo/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Registrar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Registrar' })).not.toBeInTheDocument();
+  });
+
+  it('RF-18: a student who finished practicas says so', async () => {
+    mockAlumno(null, ['PRACTICAS']);
+    renderApp('/alumno');
+    expect(await screen.findByText('Terminaste tus prácticas profesionales.')).toBeInTheDocument();
+  });
+
+  it('RF-18: a student who finished both programs says so', async () => {
+    mockAlumno(null, ['SERVICIO_SOCIAL', 'PRACTICAS']);
+    renderApp('/alumno');
+    expect(await screen.findByText('Terminaste tu servicio social y tus prácticas profesionales.')).toBeInTheDocument();
   });
 
   it('PENDIENTE asks to complete the expediente, without progress or Registrar', async () => {

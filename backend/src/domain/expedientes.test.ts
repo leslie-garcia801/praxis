@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   decidirAsignacion,
   faltantesParaConfirmar,
+  formatearDuracion,
   horarioValido,
   periodoValido,
   puedeTransferir,
@@ -89,6 +90,7 @@ describe('RF-12: transiciones de estado', () => {
     ['CANCELAR', 'PENDIENTE', 'CANCELADO'],
     ['CANCELAR', 'EN_PROCESO', 'CANCELADO'],
     ['CANCELAR', 'SUSPENDIDO', 'CANCELADO'],
+    ['FINALIZAR', 'EN_PROCESO', 'FINALIZADO'],
   ] as const)('RF-12: %s desde %s -> %s', (accion, desde, hasta) => {
     expect(transicionDeEstado(accion, desde)).toBe(hasta);
   });
@@ -103,6 +105,10 @@ describe('RF-12: transiciones de estado', () => {
     ['REACTIVAR', 'FINALIZADO'],
     ['CANCELAR', 'FINALIZADO'],
     ['CANCELAR', 'CANCELADO'],
+    ['FINALIZAR', 'PENDIENTE'],
+    ['FINALIZAR', 'SUSPENDIDO'],
+    ['FINALIZAR', 'FINALIZADO'],
+    ['FINALIZAR', 'CANCELADO'],
   ] as const)('RF-12: %s desde %s no se permite', (accion, desde) => {
     expect(transicionDeEstado(accion, desde)).toBeNull();
   });
@@ -180,5 +186,16 @@ describe('RN-03a: siguiente programa', () => {
   it('RN-03a: un primer programa cancelado y repetido del mismo tipo hasta finalizar cuenta como primero', () => {
     const r = decidirAsignacion({ ...base, expedientes: [exp('SERVICIO_SOCIAL', 'CANCELADO'), exp('SERVICIO_SOCIAL', 'FINALIZADO', 2)] });
     expect(r).toEqual({ tipo: 'PRACTICAS' });
+  });
+});
+
+describe('RF-12: formatearDuracion', () => {
+  it.each([
+    [0, '0 min'],
+    [45, '45 min'],
+    [120, '2 h'],
+    [750, '12 h 30 min'],
+  ])('%i min -> %s', (minutos, texto) => {
+    expect(formatearDuracion(minutos)).toBe(texto);
   });
 });

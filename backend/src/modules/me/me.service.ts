@@ -29,6 +29,14 @@ export async function obtenerPerfil(userId: string) {
 
   const { alumno } = user;
   const expediente = alumno?.expedientes[0];
+  // RF-18: programs the student already finished, so the home can say so when there is no active case file.
+  const finalizados = alumno
+    ? await prisma.expediente.findMany({
+        where: { alumnoId: alumno.id, estado: 'FINALIZADO' },
+        select: { tipo: true },
+        orderBy: { creadoEn: 'asc' },
+      })
+    : [];
 
   return {
     usuario: {
@@ -62,5 +70,6 @@ export async function obtenerPerfil(userId: string) {
           institucion: expediente.institucion,
         }
       : null,
+    programasFinalizados: [...new Set(finalizados.map((e) => e.tipo))],
   };
 }
