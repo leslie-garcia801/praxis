@@ -1,5 +1,8 @@
 import {
   decidirAsignacion,
+  ESTADOS_ACTIVOS,
+  primerTipoPrograma,
+  SEMESTRE_SEGUNDO_PROGRAMA,
   faltantesParaConfirmar,
   horarioValido,
   periodoValido,
@@ -522,4 +525,71 @@ export async function asignarPrograma(user: AuthUser, alumnoIds: string[]) {
     }
   }
   return { asignados, omitidos };
+}
+
+// RF-01, RN-03a, RN-03b: students the user's office can assign the next program to. The office cannot see the
+// other office's case files, so this is how it finds who finished the first program. Same rule as `asignarPrograma`
+// (`decidirAsignacion`); the query only narrows the students to load, the rule decides.
+// `terminadoEn` (calendar day): the last attendance of the finished case file, else its `fechaTermino`, else null.
+// Nothing records when a case file became FINALIZADO (no timestamp column, no audit entry), so this is the best
+// evidence the data has.
+export async function listarCandidatos(user: AuthUser) {
+  const alcance = alcanceOficina(user);
+  const alumnos = await prisma.alumno.findMany({
+    where: {
+      usuario: { plantelId: user.plantelId },
+      semestre: { gte: SEMESTRE_SEGUNDO_PROGRAMA },
+      expedientes: { some: { estado: 'FINALIZADO' }, none: { estado: { in: [...ESTADOS_ACTIVOS] } } },
+    },
+    select: {
+      nombre: true,
+      apellidoPaterno: true,
+      apellidoMaterno: true,
+      semestre: true,
+      grupo: true,
+      turno: true,
+      id: true,
+      carrera: { select: { nombre: true } },
+      usuario: { select: { username: true } },
+      expedientes: { select: { id: true, tipo: true, estado: true, creadoEn: true, fechaTermino: true } },
+    },
+    orderBy: [{ apellidoPaterno: 'asc' }, { apellidoMaterno: 'asc' }, { nombre: 'asc' }, { id: 'asc' }],
+  });
+
+  const elegibles = alumnos.flatMap((a) => {
+    const decision = decidirAsignacion({ semestreAlumno: a.semestre, expedientes: a.expedientes, alcance });
+    return 'tipo' in decision ? [{ alumno: a, tipoAsignable: decision.tipo }] : [];
+  });
+
+  // The finished case file of the first program (the latest one if there are several).
+  const terminados = elegibles.map(({ alumno }) => {
+    const primerTipo = primerTipoPrograma(alumno.expedientes)!;
+    const finalizado = alumno.expedientes
+      .filter((e) => e.tipo === primerTipo && e.estado === 'FINALIZADO')
+      .sort((x, y) => y.creadoEn.getTime() - x.creadoEn.getTime())[0]!;
+    return { primerTipo, finalizado };
+  });
+  const ultimas = await prisma.asistencia.groupBy({
+    by: ['expedienteId'],
+    where: { expedienteId: { in: terminados.map((t) => t.finalizado.id) } },
+    _max: { salida: true, entrada: true },
+  });
+  const ultimaPorExpediente = new Map(ultimas.map((u) => [u.expedienteId, u._max.salida ?? u._max.entrada]));
+
+  return elegibles.map(({ alumno, tipoAsignable }, i) => {
+    const { primerTipo, finalizado } = terminados[i]!;
+    const ultima = ultimaPorExpediente.get(finalizado.id);
+    return {
+      alumnoId: alumno.id,
+      nombre: [alumno.nombre, alumno.apellidoPaterno, alumno.apellidoMaterno].filter(Boolean).join(' '),
+      matricula: alumno.usuario.username,
+      carrera: alumno.carrera.nombre,
+      semestre: alumno.semestre,
+      grupo: alumno.grupo,
+      turno: alumno.turno,
+      programaTerminado: primerTipo,
+      terminadoEn: ultima ? fechaLocal(ultima) : aFecha(finalizado.fechaTermino),
+      tipoAsignable,
+    };
+  });
 }

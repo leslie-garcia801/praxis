@@ -67,9 +67,13 @@ export const tipoContrario = (tipo: TipoPrograma): TipoPrograma => (tipo === 'SE
 
 export const SEMESTRE_SEGUNDO_PROGRAMA = 6;
 
-const ESTADOS_ACTIVOS: readonly EstadoExpediente[] = ['PENDIENTE', 'EN_PROCESO', 'SUSPENDIDO'];
+export const ESTADOS_ACTIVOS: readonly EstadoExpediente[] = ['PENDIENTE', 'EN_PROCESO', 'SUSPENDIDO'];
 
 export type ExpedienteResumen = { tipo: TipoPrograma; estado: EstadoExpediente; creadoEn: Date };
+
+// The first program is the type of the oldest case file (a cancelled attempt that is repeated keeps the type).
+export const primerTipoPrograma = (expedientes: readonly ExpedienteResumen[]): TipoPrograma | null =>
+  [...expedientes].sort((a, b) => a.creadoEn.getTime() - b.creadoEn.getTime())[0]?.tipo ?? null;
 
 // RF-01, RN-03, RN-03a, RN-03b: whether the next program can be assigned to a student, and which one.
 // The first program is the type of the oldest case file (a cancelled attempt that is repeated keeps the type);
@@ -82,7 +86,7 @@ export function decidirAsignacion(datos: {
   const { semestreAlumno, expedientes, alcance } = datos;
   if (expedientes.length === 0) return { motivo: 'El alumno no tiene un primer expediente.' };
 
-  const primerTipo = [...expedientes].sort((a, b) => a.creadoEn.getTime() - b.creadoEn.getTime())[0]!.tipo;
+  const primerTipo = primerTipoPrograma(expedientes)!;
   if (!expedientes.some((e) => e.tipo === primerTipo && e.estado === 'FINALIZADO')) {
     return { motivo: 'El primer expediente del alumno aún no está finalizado.' };
   }

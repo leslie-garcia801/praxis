@@ -570,6 +570,68 @@ describe('expedientes (RF-10, RF-11)', () => {
       });
     });
 
+    it('RF-29: the office changing the supervisor of an EN_PROCESO case file is audited with only supervisorId', async () => {
+      const inst = await institucion();
+      const anterior = await supervisorDe(inst.id);
+      const nuevo = await supervisorDe(inst.id);
+      const c = await caso({ tipo: 'PRACTICAS', estado: 'EN_PROCESO', datos: { institucionId: inst.id, supervisorId: anterior.id, departamento: 'Igual' } });
+
+      const res = await pedir('patch', `/${c.id}`, { supervisorId: nuevo.id, departamento: 'Igual' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.expediente.supervisor).toMatchObject({ id: nuevo.id });
+      const logs = await prisma.auditLog.findMany({ where: { entidadId: c.id } });
+      expect(logs).toHaveLength(1);
+      expect(logs[0]).toMatchObject({
+        usuarioId: vinculacionPracticasId,
+        accion: 'EDITAR_EXPEDIENTE',
+        entidad: 'Expediente',
+        antes: { supervisorId: anterior.id },
+        despues: { supervisorId: nuevo.id },
+      });
+    });
+
+    it('RF-10: the office cannot assign an inactive supervisor (400 SUPERVISOR_INACTIVO) and nothing is audited', async () => {
+      const inst = await institucion();
+      const anterior = await supervisorDe(inst.id);
+      const inactivo = await supervisorDe(inst.id, { activo: false });
+      const c = await caso({ tipo: 'PRACTICAS', estado: 'EN_PROCESO', datos: { institucionId: inst.id, supervisorId: anterior.id } });
+
+      const res = await pedir('patch', `/${c.id}`, { supervisorId: inactivo.id });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('SUPERVISOR_INACTIVO');
+      expect((await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } })).supervisorId).toBe(anterior.id);
+      expect(await prisma.auditLog.count({ where: { entidadId: c.id } })).toBe(0);
+    });
+
+    it('RF-10: the office cannot assign a supervisor of another institution to an EN_PROCESO case file', async () => {
+      const inst = await institucion();
+      const otra = await institucion();
+      const anterior = await supervisorDe(inst.id);
+      const deOtra = await supervisorDe(otra.id);
+      const c = await caso({ tipo: 'PRACTICAS', estado: 'EN_PROCESO', datos: { institucionId: inst.id, supervisorId: anterior.id } });
+
+      const res = await pedir('patch', `/${c.id}`, { supervisorId: deOtra.id });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('SUPERVISOR_DE_OTRA_INSTITUCION');
+      expect((await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } })).supervisorId).toBe(anterior.id);
+    });
+
+    it.each(['FINALIZADO', 'CANCELADO'] as const)('RF-11: the office cannot change the supervisor of a %s case file (409)', async (estado) => {
+      const inst = await institucion();
+      const anterior = await supervisorDe(inst.id);
+      const nuevo = await supervisorDe(inst.id);
+      const c = await caso({ tipo: 'PRACTICAS', estado, datos: { institucionId: inst.id, supervisorId: anterior.id } });
+
+      const res = await pedir('patch', `/${c.id}`, { supervisorId: nuevo.id });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe('EXPEDIENTE_NO_EDITABLE');
+      expect((await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } })).supervisorId).toBe(anterior.id);
+    });
+
     it('RF-29: no audit entry when nothing changed', async () => {
       const c = await caso({ datos: { departamento: 'Igual' } });
 
