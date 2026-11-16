@@ -100,6 +100,25 @@ describe('GET /api/expedientes/:id/reporte.pdf (RF-27, RN-03b, RN-15)', () => {
     expect(datos.metaMinutos).toBe(480 * 60);
   });
 
+  it('RF-27: the data carries the head of the office that owns the case file, or null when not captured', async () => {
+    expect((await datosReporte(adminUser, expedienteId, {})).responsableOficina).toBeNull();
+
+    await prisma.responsableOficina.createMany({
+      data: [
+        { plantelId, oficina: 'SERVICIO_SOCIAL', nombre: 'Ing. Stephany Zúñiga', cargo: 'Jefa de Servicio Social' },
+        { plantelId, oficina: 'PRACTICAS', nombre: 'Lic. Delfina Hernández', cargo: 'Jefa de Prácticas' },
+        { plantelId: otroPlantelId, oficina: 'SERVICIO_SOCIAL', nombre: 'Otra Plantel', cargo: 'Jefa' },
+      ],
+    });
+
+    // The case file is SERVICIO_SOCIAL: neither the prácticas head nor another plantel's head.
+    expect((await datosReporte(adminUser, expedienteId, {})).responsableOficina).toEqual({
+      nombre: 'Ing. Stephany Zúñiga',
+      cargo: 'Jefa de Servicio Social',
+    });
+    expect((await pedir(expedienteId, cookieServicio)).status).toBe(200);
+  });
+
   it('400 when the dates are malformed or desde is after hasta', async () => {
     expect((await pedir(expedienteId, cookieAlumno, '?desde=ayer')).status).toBe(400);
     const res = await request(app)

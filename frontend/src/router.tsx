@@ -18,6 +18,7 @@ import { ActivarPage } from './features/auth/components/ActivarPage';
 import { CambiarContrasenaPage } from './features/auth/components/CambiarContrasenaPage';
 import { HomeRedirect, PublicOnly, RequirePendingChange, RequireRole } from './features/auth/components/guards';
 import { LoginPage } from './features/auth/components/LoginPage';
+import { FirmasOficinasPage } from './features/oficinas/components/FirmasOficinasPage';
 import { CrearUsuarioPage } from './features/usuarios/components/CrearUsuarioPage';
 
 // Routes by role: /alumno, /vinculacion, /validar/:token (see frontend/CLAUDE.md).
@@ -64,7 +65,10 @@ export const routes: RouteObject[] = [
           { path: '/vinculacion/instituciones/:id/editar', element: <InstitucionFormPage /> },
           {
             element: <RequireRole roles={['ADMIN']} />,
-            children: [{ path: '/vinculacion/usuarios/nuevo', element: <CrearUsuarioPage /> }],
+            children: [
+              { path: '/vinculacion/usuarios/nuevo', element: <CrearUsuarioPage /> },
+              { path: '/vinculacion/oficinas/firmas', element: <FirmasOficinasPage /> },
+            ],
           },
         ],
       },
