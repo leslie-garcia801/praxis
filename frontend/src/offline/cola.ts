@@ -3,13 +3,18 @@ import type { Credencial } from '@/features/escaneo/api';
 import type { ColaPendientes, RegistroPendiente } from './tipos';
 
 // RF-16: stores a scan taken without connection. The UUID makes the later send idempotent.
+// `id` is passed when an online attempt failed by network: that request may have reached the
+// server, so the queued record must carry the same id.
 export async function encolarRegistro(
   cola: ColaPendientes,
   credencial: Credencial,
+  usuarioId: string,
   ahora: Date = new Date(),
+  id: string = crypto.randomUUID(),
 ): Promise<RegistroPendiente> {
   const registro: RegistroPendiente = {
-    id: crypto.randomUUID(),
+    id,
+    usuarioId,
     ...credencial,
     sinConexion: true,
     hora: isoConOffset(ahora),

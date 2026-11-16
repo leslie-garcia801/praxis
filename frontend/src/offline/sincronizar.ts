@@ -34,9 +34,19 @@ function aSolicitud(registro: RegistroPendiente): EscaneoRequest {
 
 const enCurso = new WeakMap<ColaPendientes, Promise<ResumenSincronizacion>>();
 
-async function ejecutar(cola: ColaPendientes, enviar: EnviarEscaneo): Promise<ResumenSincronizacion> {
+async function ejecutar(
+  cola: ColaPendientes,
+  enviar: EnviarEscaneo,
+  usuarioId: string,
+): Promise<ResumenSincronizacion> {
   const resumen: ResumenSincronizacion = { enviados: 0, rechazados: 0, restantes: 0 };
-  const pendientes = (await cola.listar()).filter((r) => r.estado.tipo === 'PENDIENTE');
+  const registros = await cola.listar();
+  // A record with no owner can never be attributed to anyone: it is dropped, never sent.
+  for (const registro of registros) {
+    if (typeof registro.usuarioId !== 'string' || registro.usuarioId === '') await cola.eliminar(registro.id);
+  }
+  // Records of other students stay untouched until they sign in again.
+  const pendientes = registros.filter((r) => r.usuarioId === usuarioId && r.estado.tipo === 'PENDIENTE');
   let restantes = pendientes.length;
 
   // One at a time, oldest first: an exit depends on its entry having arrived.
@@ -62,12 +72,16 @@ async function ejecutar(cola: ColaPendientes, enviar: EnviarEscaneo): Promise<Re
   return resumen;
 }
 
-// RF-16, RN-14: sends the pending records. Concurrent calls on the same queue share one run,
-// so a record is never sent twice.
-export function sincronizarPendientes(cola: ColaPendientes, enviar: EnviarEscaneo): Promise<ResumenSincronizacion> {
+// RF-16, RN-14: sends the pending records of `usuarioId` (the signed-in student) and no one else's.
+// Concurrent calls on the same queue share one run, so a record is never sent twice.
+export function sincronizarPendientes(
+  cola: ColaPendientes,
+  enviar: EnviarEscaneo,
+  usuarioId: string,
+): Promise<ResumenSincronizacion> {
   const actual = enCurso.get(cola);
   if (actual) return actual;
-  const corrida = ejecutar(cola, enviar).finally(() => enCurso.delete(cola));
+  const corrida = ejecutar(cola, enviar, usuarioId).finally(() => enCurso.delete(cola));
   enCurso.set(cola, corrida);
   return corrida;
 }

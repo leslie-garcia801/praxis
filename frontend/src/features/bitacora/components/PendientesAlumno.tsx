@@ -55,7 +55,11 @@ export function PendientesAlumno() {
   const pendientes = usePendientes();
   const correcciones = useMisCorrecciones();
 
-  const cargando = pendientes.isPending || correcciones.isPending;
+  // RF-16: offline the requests stay paused; say so instead of a spinner that never ends.
+  const sinRed =
+    (pendientes.isPending && pendientes.fetchStatus === 'paused') ||
+    (correcciones.isPending && correcciones.fetchStatus === 'paused');
+  const cargando = (pendientes.isPending || correcciones.isPending) && !sinRed;
   const error = pendientes.isError || correcciones.isError;
   const semanas = pendientes.data ?? [];
   const turnos = correccionesPendientes(correcciones.data ?? []);
@@ -67,6 +71,7 @@ export function PendientesAlumno() {
         Pendientes
       </h2>
       {cargando && !error && <p>Cargando tus pendientes…</p>}
+      {sinRed && <p className="text-slate-800">Sin conexión. Tus pendientes se mostrarán cuando vuelva la conexión.</p>}
       {error && (
         <ErrorConReintento
           message="No se pudieron cargar tus pendientes."

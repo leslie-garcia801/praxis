@@ -13,9 +13,9 @@ function reloj(minutos: number): Date {
 
 async function colaConTres() {
   const cola = crearColaEnMemoria();
-  const a = await encolarRegistro(cola, { token: 'tok-a' }, reloj(0));
-  const b = await encolarRegistro(cola, { codigoCorto: 'ABC123' }, reloj(1));
-  const c = await encolarRegistro(cola, { token: 'tok-c' }, reloj(2));
+  const a = await encolarRegistro(cola, { token: 'tok-a' }, 'user-1', reloj(0));
+  const b = await encolarRegistro(cola, { codigoCorto: 'ABC123' }, 'user-1', reloj(1));
+  const c = await encolarRegistro(cola, { token: 'tok-c' }, 'user-1', reloj(2));
   return { cola, a, b, c };
 }
 
@@ -24,13 +24,70 @@ describe('encolarRegistro', () => {
     const cola = crearColaEnMemoria();
     const ahora = reloj(30);
 
-    const registro = await encolarRegistro(cola, { token: 'tok' }, ahora);
+    const registro = await encolarRegistro(cola, { token: 'tok' }, 'user-1', ahora);
 
     expect(registro.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
     expect(registro).toMatchObject({ token: 'tok', sinConexion: true, estado: { tipo: 'PENDIENTE' } });
     expect(registro.hora).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)$/);
     expect(new Date(registro.hora).getTime()).toBe(ahora.getTime());
     expect(await cola.listar()).toEqual([registro]);
+  });
+});
+
+describe('encolarRegistro con id propio', () => {
+  it('RF-16: conserva el id del intento en línea que falló por red, para que el envío sea idempotente', async () => {
+    const cola = crearColaEnMemoria();
+    const id = '11111111-2222-4333-8444-555555555555';
+    const ahora = reloj(45);
+
+    const registro = await encolarRegistro(cola, { codigoCorto: 'ABC234' }, 'user-1', ahora, id);
+
+    expect(registro.id).toBe(id);
+    expect(registro.hora).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(new Date(registro.hora).getTime()).toBe(ahora.getTime());
+    expect((await cola.listar())[0]?.id).toBe(id);
+  });
+});
+
+describe('registros de cada usuario (RF-16, integridad)', () => {
+  it('RF-16: el registro guarda el usuarioId de quien lo encoló', async () => {
+    const cola = crearColaEnMemoria();
+    const registro = await encolarRegistro(cola, { token: 'tok' }, 'user-7', reloj(0));
+    expect(registro.usuarioId).toBe('user-7');
+    expect((await cola.listar())[0]?.usuarioId).toBe('user-7');
+  });
+
+  it('RF-16: solo envía los registros del usuario actual y deja intactos los de otros', async () => {
+    const cola = crearColaEnMemoria();
+    const mio = await encolarRegistro(cola, { token: 'mio' }, 'user-1', reloj(0));
+    const ajeno = await encolarRegistro(cola, { token: 'ajeno' }, 'user-2', reloj(1));
+    const enviar = vi.fn(async (_request: EscaneoRequest) => RESPUESTA);
+
+    const resumen = await sincronizarPendientes(cola, enviar, 'user-1');
+
+    expect(enviar.mock.calls.map(([r]) => r.id)).toEqual([mio.id]);
+    expect(resumen).toMatchObject({ enviados: 1, restantes: 0 });
+    expect(await cola.listar()).toEqual([ajeno]);
+
+    await sincronizarPendientes(cola, enviar, 'user-2');
+    expect(enviar.mock.calls.map(([r]) => r.id)).toEqual([mio.id, ajeno.id]);
+    expect(await cola.listar()).toEqual([]);
+  });
+
+  it('RF-16: un registro sin usuarioId no se envía nunca y se descarta en la siguiente sincronización', async () => {
+    const cola = crearColaEnMemoria();
+    const propio = await encolarRegistro(cola, { token: 'mio' }, 'user-1', reloj(1));
+    const viejo = await encolarRegistro(cola, { token: 'viejo' }, 'user-1', reloj(0));
+    await cola.eliminar(viejo.id);
+    const sinUsuario: Partial<typeof viejo> = { ...viejo };
+    delete sinUsuario.usuarioId;
+    await cola.agregar(sinUsuario as typeof viejo);
+    const enviar = vi.fn(async (_request: EscaneoRequest) => RESPUESTA);
+
+    await sincronizarPendientes(cola, enviar, 'user-1');
+
+    expect(enviar.mock.calls.map(([r]) => r.id)).toEqual([propio.id]);
+    expect(await cola.listar()).toEqual([]);
   });
 });
 
@@ -48,7 +105,7 @@ describe('sincronizarPendientes', () => {
       return RESPUESTA;
     });
 
-    const resumen = await sincronizarPendientes(cola, enviar);
+    const resumen = await sincronizarPendientes(cola, enviar, 'user-1');
 
     expect(orden).toEqual([a.id, b.id, c.id]);
     expect(resumen).toEqual({ enviados: 3, rechazados: 0, restantes: 0 });
@@ -57,10 +114,10 @@ describe('sincronizarPendientes', () => {
 
   it('RF-16: envía solo los campos del contrato con sinConexion y la hora capturada', async () => {
     const cola = crearColaEnMemoria();
-    const r = await encolarRegistro(cola, { codigoCorto: 'XYZ' }, reloj(5));
+    const r = await encolarRegistro(cola, { codigoCorto: 'XYZ' }, 'user-1', reloj(5));
     const enviar = vi.fn(async () => RESPUESTA);
 
-    await sincronizarPendientes(cola, enviar);
+    await sincronizarPendientes(cola, enviar, 'user-1');
 
     expect(enviar).toHaveBeenCalledWith({ id: r.id, codigoCorto: 'XYZ', hora: r.hora, sinConexion: true });
   });
@@ -69,7 +126,7 @@ describe('sincronizarPendientes', () => {
     // The endpoint is idempotent by id: a replay returns the existing record with 200.
     const { cola } = await colaConTres();
 
-    const resumen = await sincronizarPendientes(cola, async () => RESPUESTA);
+    const resumen = await sincronizarPendientes(cola, async () => RESPUESTA, 'user-1');
 
     expect(resumen.enviados).toBe(3);
     expect(await cola.listar()).toHaveLength(0);
@@ -83,7 +140,7 @@ describe('sincronizarPendientes', () => {
       return RESPUESTA;
     });
 
-    const resumen = await sincronizarPendientes(cola, enviar);
+    const resumen = await sincronizarPendientes(cola, enviar, 'user-1');
 
     expect(enviar).toHaveBeenCalledTimes(3);
     expect(resumen).toEqual({ enviados: 2, rechazados: 1, restantes: 0 });
@@ -95,11 +152,11 @@ describe('sincronizarPendientes', () => {
 
   it.each([400, 403, 404])('RF-16: un %i es un rechazo definitivo', async (status) => {
     const cola = crearColaEnMemoria();
-    await encolarRegistro(cola, { token: 'x' }, reloj(0));
+    await encolarRegistro(cola, { token: 'x' }, 'user-1', reloj(0));
 
     const resumen = await sincronizarPendientes(cola, async () => {
       throw new ApiError(status, 'CODIGO', 'Mensaje');
-    });
+    }, 'user-1');
 
     expect(resumen.rechazados).toBe(1);
     expect((await cola.listar())[0]?.estado.tipo).toBe('RECHAZADO');
@@ -110,7 +167,7 @@ describe('sincronizarPendientes', () => {
     await cola.marcarRechazado(a.id, { code: 'X', message: 'Y' });
     const enviar = vi.fn(async () => RESPUESTA);
 
-    const resumen = await sincronizarPendientes(cola, enviar);
+    const resumen = await sincronizarPendientes(cola, enviar, 'user-1');
 
     expect(enviar).toHaveBeenCalledTimes(2);
     expect(enviar).not.toHaveBeenCalledWith(expect.objectContaining({ id: a.id }));
@@ -130,7 +187,7 @@ describe('sincronizarPendientes', () => {
       return RESPUESTA;
     });
 
-    const resumen = await sincronizarPendientes(cola, enviar);
+    const resumen = await sincronizarPendientes(cola, enviar, 'user-1');
 
     expect(enviar).toHaveBeenCalledTimes(2);
     expect(enviar).not.toHaveBeenCalledWith(expect.objectContaining({ id: c.id }));
@@ -148,7 +205,7 @@ describe('sincronizarPendientes', () => {
       return RESPUESTA;
     });
 
-    const [uno, dos] = await Promise.all([sincronizarPendientes(cola, enviar), sincronizarPendientes(cola, enviar)]);
+    const [uno, dos] = await Promise.all([sincronizarPendientes(cola, enviar, 'user-1'), sincronizarPendientes(cola, enviar, 'user-1')]);
 
     expect(enviar).toHaveBeenCalledTimes(3);
     expect(uno.enviados).toBe(3);
@@ -158,10 +215,10 @@ describe('sincronizarPendientes', () => {
   it('RF-16: permite sincronizar de nuevo cuando la corrida anterior terminó', async () => {
     const cola = crearColaEnMemoria();
     const enviar = vi.fn(async () => RESPUESTA);
-    await sincronizarPendientes(cola, enviar);
-    await encolarRegistro(cola, { token: 'x' }, reloj(0));
+    await sincronizarPendientes(cola, enviar, 'user-1');
+    await encolarRegistro(cola, { token: 'x' }, 'user-1', reloj(0));
 
-    const resumen = await sincronizarPendientes(cola, enviar);
+    const resumen = await sincronizarPendientes(cola, enviar, 'user-1');
 
     expect(resumen.enviados).toBe(1);
   });

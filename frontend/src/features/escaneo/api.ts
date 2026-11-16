@@ -39,6 +39,8 @@ export function useRegistrarEscaneo() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: registrarEscaneo,
+    // Never paused: offline the page queues the scan itself (RF-16).
+    networkMode: 'always',
     onSuccess: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: meKey }),

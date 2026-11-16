@@ -11,7 +11,7 @@ beforeEach(() => {
 });
 
 function registro(id: string, creadoEn: string, credencial: { token: string } | { codigoCorto: string } = { token: `tok-${id}` }): RegistroPendiente {
-  return { id, ...credencial, hora: creadoEn, creadoEn, sinConexion: true, estado: { tipo: 'PENDIENTE' } };
+  return { id, usuarioId: 'user-1', ...credencial, hora: creadoEn, creadoEn, sinConexion: true, estado: { tipo: 'PENDIENTE' } };
 }
 
 const ID_A = '11111111-1111-4111-8111-111111111111';

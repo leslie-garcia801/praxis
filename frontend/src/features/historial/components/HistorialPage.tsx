@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api';
+import { esErrorDeRed, useEnLinea } from '@/lib/conexion';
 import { formatHoras, formatRangoSemana, hoyMonterrey, sumarDias } from '@/lib/tiempo';
 import { BitacoraSemana } from '../../bitacora/components/BitacoraSemana';
 import { useHistorial, type EstadoValidacion, type SemanaHistorial } from '../api';
@@ -70,18 +71,29 @@ export function HistorialPage() {
   const historial = useHistorial(searchParams.get('semana') ?? undefined);
   const irASemana = (fecha: string) => setSearchParams({ semana: fecha });
 
+  const enLinea = useEnLinea();
+
   const sinExpediente = historial.error instanceof ApiError && historial.error.code === 'EXPEDIENTE_NO_ENCONTRADO';
+  // RF-16: no network (paused request, offline, or fetch failed): say so instead of spinning or a generic error.
+  const sinRed =
+    !historial.data && (historial.fetchStatus === 'paused' || !enLinea || (historial.isError && esErrorDeRed(historial.error)));
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
       <h1 className="text-2xl font-bold">Historial</h1>
-      {historial.isPending && <p>Cargando tu historial…</p>}
+      {historial.isPending && !sinRed && <p>Cargando tu historial…</p>}
+      {sinRed && (
+        <ErrorConReintento
+          message="Sin conexión. Conéctate para ver tu historial."
+          onRetry={() => void historial.refetch()}
+        />
+      )}
       {sinExpediente && (
         <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
           No tienes un expediente. {ACUDE_A_TU_OFICINA}
         </p>
       )}
-      {historial.isError && !sinExpediente && (
+      {historial.isError && !sinExpediente && !sinRed && (
         <ErrorConReintento message="No se pudo cargar tu historial." onRetry={() => void historial.refetch()} />
       )}
       {historial.data && <SemanaContenido semana={historial.data} onIr={irASemana} />}

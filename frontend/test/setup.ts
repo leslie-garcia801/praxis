@@ -11,6 +11,7 @@ globalThis.fetch = (input, init) =>
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => {
   server.resetHandlers();
+  localStorage.clear();
   cleanup();
 });
 afterAll(() => server.close());

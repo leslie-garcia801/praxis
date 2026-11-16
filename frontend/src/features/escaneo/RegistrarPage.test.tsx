@@ -254,25 +254,15 @@ describe('/alumno/registrar, modo cámara (RF-14)', () => {
   });
 });
 
-describe('/alumno/registrar, error de red (idempotencia de la 0014)', () => {
-  it('reintenta con el mismo id tras un error de red', async () => {
-    let fallar = true;
-    const bodies = mockEscaneo(() => {
-      if (fallar) return HttpResponse.error();
-      return HttpResponse.json(respuesta(), { status: 201 });
-    });
+describe('/alumno/registrar, error de red (idempotencia de la 0014, RF-16)', () => {
+  it('RF-16: tras un error de red guarda el registro en la cola con el mismo id del intento', async () => {
+    const bodies = mockEscaneo(() => HttpResponse.error());
     const ctx = await abrirModoCodigo();
     await escribirYEnviar(ctx, 'ABC234');
 
-    const alerta = await screen.findByRole('alert');
-    expect(within(alerta).getByText('No hay conexión. Intenta de nuevo.')).toBeInTheDocument();
-
-    fallar = false;
-    await ctx.user.click(within(alerta).getByRole('button', { name: 'Reintentar' }));
-    expect(await screen.findByText('Entrada registrada a las 10:11')).toBeInTheDocument();
-
-    expect(bodies).toHaveLength(2);
-    expect(bodies[1]?.id).toBe(bodies[0]?.id);
+    expect(await screen.findByText('Registro guardado. Pendiente de sincronizar.')).toBeInTheDocument();
+    expect(bodies).toHaveLength(1);
+    expect((await ctx.cola.listar()).map((r) => r.id)).toEqual([bodies[0]?.id]);
   });
 
   it('un envío nuevo genera un id distinto', async () => {

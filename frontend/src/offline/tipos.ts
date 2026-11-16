@@ -5,7 +5,9 @@ import type { EscaneoRequest } from '@/features/escaneo/api';
 // accepts it only if it is at most 72 h old.
 export type EstadoRegistro = { tipo: 'PENDIENTE' } | { tipo: 'RECHAZADO'; code: string; message: string };
 
+// `usuarioId` is the student who queued it: a record is only ever sent under that student's session.
 export type RegistroPendiente = EscaneoRequest & {
+  usuarioId: string;
   sinConexion: true;
   hora: string;
   creadoEn: string;
