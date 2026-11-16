@@ -31,5 +31,5 @@ El siguiente programa lo asigna la oficina que lo administra (por ejemplo, Prác
 
 ## Notas
 
-- Pendiente: agregar `GET /api/expedientes/candidatos` a la tabla de rutas de `docs/specs.md` (§9); esta tarea no modifica las specs.
+- `docs/specs.md` (v0.3) ya documenta `GET /api/expedientes/candidatos` en §9.
 - Las pruebas de candidatos viven en `expedientes.candidatos.test.ts`; las del supervisor, en `expedientes.test.ts`.

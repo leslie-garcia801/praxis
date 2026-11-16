@@ -46,5 +46,5 @@ Hasta ahora ningún flujo pasaba un expediente a FINALIZADO, así que el siguien
 
 ## Notas
 
-- Pendiente en `docs/specs.md` (esta tarea no lo modifica): §9, la acción `FINALIZAR` de `PATCH /api/expedientes/:id/estado` y el campo `programasFinalizados` de `GET /api/me`; §8, la columna `finalizado_en` de `expedientes`; §11.2, el criterio vigente de finalización (solo meta de horas).
+- `docs/specs.md` (v0.3) ya documenta la acción `FINALIZAR` y `programasFinalizados` (§9), la columna `finalizado_en` (§8.2) y cómo se finaliza hoy (§11.2).
 - El motivo es obligatorio también al finalizar, por consistencia con las demás acciones de estado.

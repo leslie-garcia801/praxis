@@ -7,7 +7,7 @@
 | Plantel | CBTIS 258, General Escobedo, N. L. |
 | Fuentes | Entrevista a vinculación (1 respuesta), entrevista a alumnos (11 respuestas), reglas de servicio social confirmadas y 4 formatos de Edumedia (solicitud y carta de presentación de prácticas; FSS1 y FSS3 de servicio social) |
 | Cambios en v0.2 | Reglas de servicio social, asignación del tipo por vinculación, dos oficinas responsables, campos tomados de Edumedia, validación en lote |
-| Cambios en v0.3 | §8 y §9 actualizados a lo construido (iteraciones 1–6): rutas reales de la API, modelos de corrección, validación por enlace, recordatorios y suscripciones push; §8.3 con los nombres actuales y el índice de correcciones pendientes; responsable de cada oficina para la firma del reporte PDF (`ResponsableOficina`, `/api/oficinas/responsables`); gestión de usuarios de la oficina (`/api/usuarios`: listar, editar, desactivar, restablecer contraseña) |
+| Cambios en v0.3 | §8 y §9 actualizados a lo construido (iteraciones 1–6): rutas reales de la API, modelos de corrección, validación por enlace, recordatorios y suscripciones push; §8.3 con los nombres actuales y el índice de correcciones pendientes; responsable de cada oficina para la firma del reporte PDF (`ResponsableOficina`, `/api/oficinas/responsables`); gestión de usuarios de la oficina (`/api/usuarios`: listar, editar, desactivar, restablecer contraseña); finalizar expediente (`FINALIZAR`, `finalizadoEn`), candidatos al siguiente programa (`/api/expedientes/candidatos`) y cómo se finaliza hoy (§11.2) |
 | Stack | PostgreSQL · Express · React · Node · TypeScript · Prisma (PWA) |
 | Despliegue | Frontend en Vercel · API y base de datos en Railway |
 
@@ -583,6 +583,8 @@ model Expediente {
   minutosTransferidos Int              @default(0) @map("minutos_transferidos")
   motivoTransferencia String?          @map("motivo_transferencia")
   estado              EstadoExpediente @default(PENDIENTE)
+  // Instant the office finalized the case file (FINALIZADO); null otherwise.
+  finalizadoEn        DateTime?        @map("finalizado_en") @db.Timestamptz
   creadoEn            DateTime         @default(now()) @map("creado_en") @db.Timestamptz
   asistencias         Asistencia[]
   semanas             SemanaBitacora[]
@@ -769,7 +771,7 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | POST | `/api/auth/sign-in/username` | Público | Iniciar sesión de alumno con matrícula y contraseña (Better Auth) |
 | POST | `/api/auth/sign-in/email` | Público | Iniciar sesión de personal con correo y contraseña (Better Auth) |
 | POST | `/api/auth/sign-out` | Sesión | Cerrar sesión (Better Auth) |
-| GET | `/api/me` | Sesión | Perfil y expediente activo (también con cambio de contraseña pendiente) |
+| GET | `/api/me` | Sesión | Perfil, expediente activo y programas ya finalizados (también con cambio de contraseña pendiente) |
 | POST | `/api/me/cambiar-contrasena` | Sesión | Cambiar contraseña (también con cambio pendiente) |
 | GET | `/api/usuarios` | Admin | Personal del plantel (Vinculación y administradores, nunca alumnos) con oficina, estado y si debe cambiar la contraseña |
 | POST | `/api/usuarios` | Admin | Crear usuario de Vinculación; devuelve la contraseña temporal una sola vez |
@@ -799,11 +801,12 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | Método | Ruta | Rol | Descripción |
 | --- | --- | --- | --- |
 | GET | `/api/expedientes` | Vinculación / Admin | Listado de expedientes |
+| GET | `/api/expedientes/candidatos` | Vinculación / Admin | Alumnos a los que la oficina puede asignar el siguiente programa (primer programa `FINALIZADO`, 6.º semestre, sin expediente activo; RN-03a, RN-03b) |
 | POST | `/api/expedientes/asignar` | Vinculación / Admin | Asignar tipo de programa (individual o en lote; 5.º y 6.º semestre) |
 | GET | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Detalle del expediente |
 | PATCH | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Completar institución, supervisor, periodo y horario |
 | POST | `/api/expedientes/:id/confirmar` | Vinculación / Admin | Confirmar institución y supervisor → `EN_PROCESO` |
-| PATCH | `/api/expedientes/:id/estado` | Vinculación / Admin | Suspender, reactivar, cancelar |
+| PATCH | `/api/expedientes/:id/estado` | Vinculación / Admin | Suspender, reactivar, cancelar o finalizar (con motivo). Finalizar solo desde `EN_PROCESO` y con la meta de horas validada; si no, 409 `META_NO_ALCANZADA` con las horas que faltan |
 | POST | `/api/expedientes/:id/transferir` | Vinculación / Admin | Cambio de institución (RN-12) |
 | GET | `/api/expedientes/:id/avance` | Alumno dueño / Vinculación / Admin | Horas, porcentaje y fecha estimada |
 | GET | `/api/expedientes/:id/auditoria` | Vinculación / Admin | Historial de cambios del expediente |
@@ -914,6 +917,8 @@ stateDiagram-v2
 ```
 
 Una transferencia de institución cierra el expediente actual como `CANCELADO` (motivo: transferencia) y abre uno nuevo con `minutosTransferidos`.
+
+**Cómo se finaliza hoy:** la oficina del programa (o el administrador) finaliza el expediente con la acción "Finalizar" cuando las horas validadas alcanzan la meta; queda la fecha en `finalizadoEn` y un registro en la auditoría. La duración mínima no se valida mientras sigan abiertas las preguntas §13 #1 y #2. Después, la otra oficina puede asignar el siguiente programa desde la lista de candidatos.
 
 ### 11.3 Registro sin conexión
 
