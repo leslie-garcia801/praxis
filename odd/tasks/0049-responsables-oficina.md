@@ -31,5 +31,5 @@ El reporte de horas y actividades (RF-27) lo firma la jefa de la oficina dueña 
 
 ## Notas
 
-- `docs/specs.md` no se modificó. Pendiente en las specs: agregar el endpoint a la sección 9 y la tabla `ResponsableOficina` a la sección 8.
+- `docs/specs.md` (v0.3) ya documenta la tabla `ResponsableOficina` (§8.1 y §8.2) y las rutas `/api/oficinas/responsables` (§9).
 - `borrarPlantel` de `test/factories.ts` ahora borra también estas filas y su bitácora de auditoría.

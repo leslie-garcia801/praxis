@@ -7,7 +7,7 @@
 | Plantel | CBTIS 258, General Escobedo, N. L. |
 | Fuentes | Entrevista a vinculación (1 respuesta), entrevista a alumnos (11 respuestas), reglas de servicio social confirmadas y 4 formatos de Edumedia (solicitud y carta de presentación de prácticas; FSS1 y FSS3 de servicio social) |
 | Cambios en v0.2 | Reglas de servicio social, asignación del tipo por vinculación, dos oficinas responsables, campos tomados de Edumedia, validación en lote |
-| Cambios en v0.3 | §8 y §9 actualizados a lo construido (iteraciones 1–6): rutas reales de la API, modelos de corrección, validación por enlace, recordatorios y suscripciones push; §8.3 con los nombres actuales y el índice de correcciones pendientes |
+| Cambios en v0.3 | §8 y §9 actualizados a lo construido (iteraciones 1–6): rutas reales de la API, modelos de corrección, validación por enlace, recordatorios y suscripciones push; §8.3 con los nombres actuales y el índice de correcciones pendientes; responsable de cada oficina para la firma del reporte PDF (`ResponsableOficina`, `/api/oficinas/responsables`) |
 | Stack | PostgreSQL · Express · React · Node · TypeScript · Prisma (PWA) |
 | Despliegue | Frontend en Vercel · API y base de datos en Railway |
 
@@ -349,6 +349,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 | EnlaceValidacionSemana | Semanas incluidas en cada enlace |
 | SolicitudCorreccion | Cambio propuesto a un turno, con `comentario` de rechazo y `resueltoEn` |
 | SuscripcionPush | Suscripción push de un navegador o dispositivo de un usuario (RF-28) |
+| ResponsableOficina | Nombre y cargo de la jefa de cada oficina del plantel, que firma el reporte PDF de su oficina (RF-27); lo captura el administrador |
 | AuditLog | Registro de cambios |
 
 ### 8.2 Esquema Prisma (según lo construido)
@@ -418,8 +419,24 @@ model Plantel {
   nombre        String
   usuarios      User[]
   instituciones Institucion[]
+  responsablesOficina ResponsableOficina[]
 
   @@map("planteles")
+}
+
+// RF-27: the head of each office signs the PDF report of her office. One row per plantel and office; the admin
+// edits it from the app. Without a row the signature block keeps an empty line.
+model ResponsableOficina {
+  id            String       @id @default(uuid())
+  plantelId     String       @map("plantel_id")
+  plantel       Plantel      @relation(fields: [plantelId], references: [id])
+  oficina       TipoPrograma
+  nombre        String
+  cargo         String
+  actualizadoEn DateTime     @updatedAt @map("actualizado_en") @db.Timestamptz
+
+  @@unique([plantelId, oficina])
+  @@map("responsables_oficina")
 }
 
 model User {
@@ -817,6 +834,8 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | GET | `/api/panel/alumnos` | Vinculación / Admin | Tabla con filtros y alertas |
 | GET | `/api/panel/alumnos.xlsx` | Vinculación / Admin | Exportación |
 | GET | `/api/panel/edumedia.xlsx` | Vinculación / Admin | Exportación con los datos para completar Edumedia (RF-26) |
+| GET | `/api/oficinas/responsables` | Vinculación / Admin | Nombre y cargo de la jefa de cada oficina del plantel (siempre las dos oficinas) |
+| PUT | `/api/oficinas/responsables/:oficina` | Admin | Guardar nombre y cargo de la jefa de una oficina (firma del reporte PDF, RF-27; queda en la auditoría, RF-29) |
 
 ### Notificaciones push
 
