@@ -8,3 +8,10 @@ export const crearUsuarioSchema = z.object({
   oficina: z.enum(['PRACTICAS', 'SERVICIO_SOCIAL', 'AMBAS'], { error: 'Elige una oficina.' }),
 });
 export type CrearUsuarioValues = z.infer<typeof crearUsuarioSchema>;
+
+// Edit form (task 0057). "AMBAS" is sent as `oficina: null`; admins have no office field.
+export const editarUsuarioSchema = z.object({
+  nombre: z.string().trim().min(1, 'Escribe el nombre.').max(150, 'El nombre no puede tener más de 150 caracteres.'),
+  oficina: z.enum(['PRACTICAS', 'SERVICIO_SOCIAL', 'AMBAS']),
+});
+export type EditarUsuarioValues = z.infer<typeof editarUsuarioSchema>;

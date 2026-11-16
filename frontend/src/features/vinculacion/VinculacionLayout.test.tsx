@@ -42,7 +42,7 @@ describe('VinculacionLayout (RN-03b)', () => {
   it('RN-03b: only the admin sees the Usuarios link', async () => {
     signedIn('ADMIN');
     renderApp('/vinculacion');
-    expect(await screen.findByRole('link', { name: 'Usuarios' })).toHaveAttribute('href', '/vinculacion/usuarios/nuevo');
+    expect(await screen.findByRole('link', { name: 'Usuarios' })).toHaveAttribute('href', '/vinculacion/usuarios');
   });
 
   it('RN-03b: vinculación does not see the Usuarios link', async () => {

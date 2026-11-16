@@ -15,7 +15,7 @@ const ENLACES: Enlace[] = [
   { to: '/vinculacion/importar/instituciones', label: 'Importar instituciones' },
 ];
 const ENLACES_ADMIN: Enlace[] = [
-  { to: '/vinculacion/usuarios/nuevo', label: 'Usuarios' },
+  { to: '/vinculacion/usuarios', label: 'Usuarios' },
   { to: '/vinculacion/oficinas/firmas', label: 'Firmas de las oficinas' },
 ];
 
