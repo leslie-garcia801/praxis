@@ -63,6 +63,18 @@ Guías detalladas:
 | API REST | [`backend/README-BACKEND.md`](backend/README-BACKEND.md) |
 | PWA | [`frontend/README-FRONTEND.md`](frontend/README-FRONTEND.md) |
 
+## Guías
+
+Documentos para quienes usan la app y para quienes llevan el piloto:
+
+| Para quién | Guía |
+| --- | --- |
+| Responsables del piloto | [`docs/piloto.md`](docs/piloto.md): preparación, calendario, métricas, problemas frecuentes y cierre |
+| Alumnos | [`docs/guias/alumno.md`](docs/guias/alumno.md) |
+| Supervisores | [`docs/guias/supervisor.md`](docs/guias/supervisor.md) |
+| Oficinas de vinculación | [`docs/guias/vinculacion.md`](docs/guias/vinculacion.md) |
+| Encuesta final | [`docs/encuesta-piloto.md`](docs/encuesta-piloto.md) |
+
 ## Estructura del repositorio
 
 ```
