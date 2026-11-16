@@ -3,6 +3,7 @@ import {
   diaMonterrey,
   esHoy,
   formatDiaCorto,
+  formatFechaLarga,
   formatFecha,
   formatHora,
   formatHoras,
@@ -49,6 +50,10 @@ describe('tiempo (RN-15, America/Monterrey)', () => {
     expect(sumarDias('2026-11-02', -7)).toBe('2026-10-26');
     expect(sumarDias('2026-12-28', 7)).toBe('2027-01-04');
     expect(sumarDias('2027-01-04', -7)).toBe('2026-12-28');
+  });
+
+  it('formatFechaLarga shows day, month and year of a calendar date', () => {
+    expect(formatFechaLarga('2026-11-16')).toBe('16 de noviembre de 2026');
   });
 
   it('formatDiaCorto shows weekday and day number', () => {

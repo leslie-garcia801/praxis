@@ -164,6 +164,19 @@ export function useEditarSupervisor(supervisorId: string) {
   });
 }
 
+// RF-10, RF-29: PATCH /api/expedientes/:id with only `supervisorId`; the change is audited by the server.
+export function useCambiarSupervisor(expedienteId: string) {
+  const invalidar = useInvalidarDetalle();
+  return useMutation({
+    mutationFn: (supervisorId: string) =>
+      apiFetch<{ expediente: ExpedienteDetalle }>(`/api/expedientes/${expedienteId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ supervisorId }),
+      }),
+    onSuccess: invalidar,
+  });
+}
+
 export function useAuditoria(id: string) {
   return useQuery({
     queryKey: detalleKeys.auditoria(id),
