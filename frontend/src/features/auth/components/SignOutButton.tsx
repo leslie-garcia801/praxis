@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
+import { darDeBajaEsteDispositivo, pushKeys } from '@/features/recordatorios/push';
 import { meKey, signOut } from '../api';
 
 export function SignOutButton() {
@@ -13,8 +14,12 @@ export function SignOutButton() {
   async function handleClick() {
     setPending(true);
     setFailed(false);
+    // While the session is still valid: the server call needs it. Best effort; it never blocks signing out.
+    await darDeBajaEsteDispositivo();
     const ok = await signOut();
     if (!ok) {
+      // Signed-out failed but this device is no longer subscribed: let the reminders card notice.
+      void queryClient.invalidateQueries({ queryKey: pushKeys.all });
       setPending(false);
       setFailed(true);
       return;

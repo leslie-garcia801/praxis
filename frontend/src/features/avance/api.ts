@@ -17,7 +17,8 @@ export type Avance = {
   minutosFaltantes: number;
   porcentaje: number;
   fechaEstimada: FechaEstimada;
-  turnoAbierto: { id: string; entrada: string } | null;
+  // recordarSalida: the server decides when the exit looks forgotten (RF-28); the frontend only shows it.
+  turnoAbierto: { id: string; entrada: string; recordarSalida: boolean } | null;
 };
 
 export const avanceKeys = {

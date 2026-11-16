@@ -127,16 +127,33 @@ describe('/alumno home (RF-18)', () => {
 
   it('shows an open shift from today with its Monterrey time', async () => {
     mockAlumno();
-    mockAvance({ turnoAbierto: { id: 'a1', entrada: '2026-11-11T16:11:00Z' } });
+    mockAvance({ turnoAbierto: { id: 'a1', entrada: '2026-11-11T16:11:00Z', recordarSalida: false } });
     renderApp('/alumno');
     expect(await screen.findByText('Turno abierto desde las 10:11')).toBeInTheDocument();
   });
 
   it('shows the date too when the open shift is from another day', async () => {
     mockAlumno();
-    mockAvance({ turnoAbierto: { id: 'a1', entrada: '2026-11-10T16:11:00Z' } });
+    mockAvance({ turnoAbierto: { id: 'a1', entrada: '2026-11-10T16:11:00Z', recordarSalida: false } });
     renderApp('/alumno');
     expect(await screen.findByText('Turno abierto desde las 10:11 del martes 10 de noviembre')).toBeInTheDocument();
+  });
+
+  it('RF-28: shows the "¿Olvidaste registrar tu salida?" notice with a link to Registrar when the server flags it', async () => {
+    mockAlumno();
+    mockAvance({ turnoAbierto: { id: 'a1', entrada: '2026-11-11T16:11:00Z', recordarSalida: true } });
+    renderApp('/alumno');
+    const notice = await screen.findByRole('alert');
+    expect(within(notice).getByText('¿Olvidaste registrar tu salida?')).toBeInTheDocument();
+    expect(within(notice).getByRole('link', { name: 'Registrar salida' })).toHaveAttribute('href', '/alumno/registrar');
+  });
+
+  it('RF-28: does not show the forgotten-exit notice when the server does not flag it', async () => {
+    mockAlumno();
+    mockAvance({ turnoAbierto: { id: 'a1', entrada: '2026-11-11T16:11:00Z', recordarSalida: false } });
+    renderApp('/alumno');
+    expect(await screen.findByText('Turno abierto desde las 10:11')).toBeInTheDocument();
+    expect(screen.queryByText('¿Olvidaste registrar tu salida?')).not.toBeInTheDocument();
   });
 
   it('shows "Sin turno abierto" without an open shift', async () => {

@@ -64,7 +64,7 @@ export function buildAvance(overrides: Record<string, unknown> = {}) {
     minutosFaltantes: 28050,
     porcentaje: 2,
     fechaEstimada: { tipo: 'ESTIMADA', fecha: '2026-11-16', promedioMinutosDia: 240 },
-    turnoAbierto: null,
+    turnoAbierto: null, // or { id, entrada, recordarSalida }
     ...overrides,
   };
 }

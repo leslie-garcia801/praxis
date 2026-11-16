@@ -32,6 +32,8 @@ export default defineConfig(({ mode }) => ({
         // Precache the app shell only; /api responses are not cached (see frontend/CLAUDE.md).
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
+        // Push and notification click handlers (RF-28): plain JS in public/, loaded by the generated sw.js.
+        importScripts: ['push-sw.js'],
       },
     }),
   ],

@@ -8,6 +8,7 @@ import { PendientesAlumno } from '@/features/bitacora/components/PendientesAlumn
 import { useMe, type Me } from '@/features/auth/api';
 import { useExpediente } from '@/features/expediente/api';
 import { nombreSupervisor } from '@/features/expediente/nombreSupervisor';
+import { RecordatoriosCard } from '@/features/recordatorios/components/RecordatoriosCard';
 import { DescargarReporte } from '@/features/reporte/components/DescargarReporte';
 import { esHoy, formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
 import { useAvance, type Avance } from '../api';
@@ -37,6 +38,18 @@ function RegistrarButton({ habilitado }: { habilitado: boolean }) {
     <Button asChild className={className}>
       <Link to="/alumno/registrar">Registrar</Link>
     </Button>
+  );
+}
+
+// RF-28: the server flags a shift open for 6 h or more on the same day; there is still time to register the exit.
+function AvisoOlvidoSalida() {
+  return (
+    <section role="alert" className="flex flex-col gap-2 rounded-lg border-2 border-amber-600 bg-amber-50 p-3 text-amber-950">
+      <p className="text-lg font-semibold">¿Olvidaste registrar tu salida?</p>
+      <Button asChild className="h-12 w-full">
+        <Link to="/alumno/registrar">Registrar salida</Link>
+      </Button>
+    </section>
   );
 }
 
@@ -98,6 +111,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
       )}
       {avance.data && (
         <>
+          {avance.data.turnoAbierto?.recordarSalida && <AvisoOlvidoSalida />}
           <section className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between">
               <span className="text-slate-700">Validado</span>
@@ -133,6 +147,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
       </Link>
       <DatosExpediente expedienteId={expediente.id} />
       <PendientesAlumno />
+      <RecordatoriosCard />
       <DescargarReporte expedienteId={expediente.id} />
     </>
   );
