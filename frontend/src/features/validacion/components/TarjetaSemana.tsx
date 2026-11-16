@@ -35,19 +35,19 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
         <h3 id={idTitulo} className="font-semibold">
           Semana del {formatRangoSemana(semana.semanaInicio, semana.semanaFin)}
         </h3>
-        <p className="text-slate-800">{semana.institucion}</p>
+        <p className="text-foreground">{semana.institucion}</p>
         <p className="font-medium">Total acreditado: {formatHoras(semana.minutosAcreditables)}</p>
       </div>
 
       {semana.turnos.length === 0 ? (
-        <p className="text-slate-700">Sin turnos registrados</p>
+        <p className="text-muted-foreground">Sin turnos registrados</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {semana.turnos.map((turno) => (
             <li key={turno.entrada} className="flex flex-col gap-0.5 rounded-lg border p-3">
               <span className="font-medium">{textoTurno(turno)}</span>
               {turno.fueraDeHorario && (
-                <span className="w-fit rounded-md bg-amber-100 px-2 py-0.5 text-sm font-medium text-amber-950">
+                <span className="w-fit rounded-md bg-amber-100 px-2 py-0.5 text-sm font-medium text-amber-950 dark:bg-amber-900 dark:text-amber-50">
                   Fuera del horario pactado
                 </span>
               )}
@@ -58,19 +58,19 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
 
       <div className="flex flex-col gap-1">
         <h4 className="font-medium">Bitácora</h4>
-        <p className="whitespace-pre-line rounded-lg border bg-muted p-3 text-slate-900">
+        <p className="whitespace-pre-line rounded-lg border bg-muted p-3 text-foreground">
           {semana.actividades?.trim() ? semana.actividades : 'Sin bitácora'}
         </p>
       </div>
 
       {aviso && (
-        <p role="status" className="font-medium text-slate-900">
+        <p role="status" className="font-medium text-foreground">
           {aviso}
         </p>
       )}
 
-      {semana.estado === 'VALIDADA' && <p className="font-semibold text-green-800">Validada</p>}
-      {semana.estado === 'RECHAZADA' && <p className="font-semibold text-red-800">Rechazada</p>}
+      {semana.estado === 'VALIDADA' && <p className="font-semibold text-green-800 dark:text-green-400">Validada</p>}
+      {semana.estado === 'RECHAZADA' && <p className="font-semibold text-red-800 dark:text-red-400">Rechazada</p>}
 
       {semana.estado === 'ENVIADA' &&
         (rechazando ? (

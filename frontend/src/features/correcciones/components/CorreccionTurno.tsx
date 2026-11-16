@@ -23,17 +23,17 @@ function EstadoCorreccion({ correccion, vista }: { correccion: Correccion; vista
   switch (correccion.estado) {
     case 'PENDIENTE':
       return oficina ? (
-        <div className="mt-1 flex flex-col gap-2 border-t pt-2 text-slate-800">
+        <div className="mt-1 flex flex-col gap-2 border-t pt-2 text-foreground">
           <p className="font-medium">{`Corrección solicitada: ${horas(correccion)}`}</p>
           <p>Motivo del alumno: «{correccion.motivo}»</p>
           <ResolverCorreccion correccionId={correccion.id} />
         </div>
       ) : (
-        <p className="text-slate-800">{`Corrección en revisión: ${horas(correccion)}`}</p>
+        <p className="text-foreground">{`Corrección en revisión: ${horas(correccion)}`}</p>
       );
     case 'RECHAZADA':
       return (
-        <div className="flex flex-col gap-0.5 text-slate-800">
+        <div className="flex flex-col gap-0.5 text-foreground">
           <p className="font-medium">Corrección rechazada</p>
           {correccion.comentario && (
             <p>
@@ -43,7 +43,7 @@ function EstadoCorreccion({ correccion, vista }: { correccion: Correccion; vista
         </div>
       );
     case 'APROBADA':
-      return <p className="text-slate-800">{oficina ? 'Turno corregido (corrección aprobada)' : 'Turno corregido por tu oficina'}</p>;
+      return <p className="text-foreground">{oficina ? 'Turno corregido (corrección aprobada)' : 'Turno corregido por tu oficina'}</p>;
   }
 }
 

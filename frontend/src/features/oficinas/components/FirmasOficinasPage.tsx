@@ -44,7 +44,7 @@ function FormularioFirma({ responsable }: { responsable: Responsable }) {
         <h2 id={tituloId} className="text-lg font-semibold">
           {nombreOficina}
         </h2>
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-muted-foreground">
           {actualizadoEn ? `Actualizado el ${formatFecha(actualizadoEn)}` : 'Sin capturar'}
         </p>
       </div>
@@ -69,7 +69,7 @@ function FormularioFirma({ responsable }: { responsable: Responsable }) {
         </div>
       )}
       {mutation.isSuccess && !isDirty && (
-        <p role="status" className="text-sm font-medium text-green-800">
+        <p role="status" className="text-sm font-medium text-green-800 dark:text-green-400">
           Guardado
         </p>
       )}
@@ -87,7 +87,7 @@ export function FirmasOficinasPage() {
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
       <h1 className="text-2xl font-bold">Firmas de las oficinas</h1>
-      <p className="text-slate-800">
+      <p className="text-foreground">
         El nombre y el cargo aparecen en la firma del reporte PDF de horas de cada oficina.
       </p>
       {responsables.isPending && <p role="status">Cargando firmas…</p>}

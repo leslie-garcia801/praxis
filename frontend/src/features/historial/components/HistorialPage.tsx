@@ -29,7 +29,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
     <>
       <header className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold">Semana del {formatRangoSemana(semana.inicio, semana.fin)}</h2>
-        <p className="text-slate-800">{textoValidacion(semana.estadoValidacion)}</p>
+        <p className="text-foreground">{textoValidacion(semana.estadoValidacion)}</p>
       </header>
       <div className="flex gap-2">
         <Button type="button" variant="outline" className="flex-1" onClick={() => onIr(sumarDias(semana.inicio, -7))}>
@@ -46,7 +46,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
         </Button>
       </div>
       {sinTurnos ? (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           No hay registros esta semana
         </p>
       ) : (
@@ -89,7 +89,7 @@ export function HistorialPage() {
         />
       )}
       {sinExpediente && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           No tienes un expediente. {ACUDE_A_TU_OFICINA}
         </p>
       )}

@@ -99,7 +99,7 @@ export function InstitucionesPage() {
             <input type="checkbox" className="size-4" checked={borrador.conCupo} onChange={(e) => set('conCupo', e.target.checked)} />
             Solo con cupo
           </label>
-          <p className="text-xs text-slate-700">«Con cupo» no incluye las instituciones sin dato de cupo.</p>
+          <p className="text-xs text-muted-foreground">«Con cupo» no incluye las instituciones sin dato de cupo.</p>
         </div>
         <div className="flex gap-2 sm:col-span-2 lg:col-span-3">
           <Button type="submit" size="lg" className="h-11 px-6">
@@ -121,7 +121,7 @@ export function InstitucionesPage() {
       </form>
 
       {lista.isPending && (
-        <p role="status" className="text-slate-700">
+        <p role="status" className="text-muted-foreground">
           Cargando instituciones…
         </p>
       )}

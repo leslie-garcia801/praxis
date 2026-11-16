@@ -10,7 +10,7 @@ function Tarjeta({ children }: { children: ReactNode }) {
   return (
     <section aria-label="Recordatorios" className="flex flex-col gap-2 rounded-lg border p-3">
       <h2 className="font-semibold">Recordatorios</h2>
-      <p className="text-slate-800">{DESCRIPCION}</p>
+      <p className="text-foreground">{DESCRIPCION}</p>
       {children}
     </section>
   );
@@ -40,7 +40,7 @@ export function RecordatoriosCard() {
     case 'instalar':
       return (
         <Tarjeta>
-          <div role="status" className="flex flex-col gap-1 rounded-lg border bg-muted p-3 text-slate-800">
+          <div role="status" className="flex flex-col gap-1 rounded-lg border bg-muted p-3 text-foreground">
             <p>Para recibir recordatorios en iPhone, agrega la app a tu pantalla de inicio: toca Compartir y luego Agregar a inicio.</p>
             <p className="text-sm">Necesitas iOS 16.4 o más reciente.</p>
           </div>
@@ -49,7 +49,7 @@ export function RecordatoriosCard() {
     case 'bloqueado':
       return (
         <Tarjeta>
-          <p className="rounded-lg border bg-muted p-3 text-slate-800">
+          <p className="rounded-lg border bg-muted p-3 text-foreground">
             Bloqueaste las notificaciones de esta app. Para recibir recordatorios, actívalas en los ajustes del navegador o del
             teléfono.
           </p>

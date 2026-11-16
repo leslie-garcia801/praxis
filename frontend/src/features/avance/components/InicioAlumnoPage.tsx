@@ -21,7 +21,7 @@ const linkClass = 'text-primary underline underline-offset-4';
 
 function Aviso({ children }: { children: string }) {
   return (
-    <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+    <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
       {children}
     </p>
   );
@@ -46,7 +46,7 @@ function RegistrarButton({ habilitado }: { habilitado: boolean }) {
 // RF-28: the server flags a shift open for 6 h or more on the same day; there is still time to register the exit.
 function AvisoOlvidoSalida() {
   return (
-    <section role="alert" className="flex flex-col gap-2 rounded-lg border-2 border-amber-600 bg-amber-50 p-3 text-amber-950">
+    <section role="alert" className="flex flex-col gap-2 rounded-lg border-2 border-amber-600 bg-amber-50 p-3 text-amber-950 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-50">
       <p className="text-lg font-semibold">¿Olvidaste registrar tu salida?</p>
       <Button asChild className="h-12 w-full">
         <Link to="/alumno/registrar">Registrar salida</Link>
@@ -79,7 +79,7 @@ function DatosExpediente({ expedienteId }: { expedienteId: string }) {
   return (
     <section aria-label="Mi expediente" className="flex flex-col gap-2 rounded-lg border p-3">
       {detalle.data && (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-slate-800">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-foreground">
           <dt>Institución</dt>
           <dd className="text-right font-medium">{institucion?.nombre ?? 'Sin asignar'}</dd>
           <dt>Supervisor</dt>
@@ -127,7 +127,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
           {avance.data.turnoAbierto?.recordarSalida && <AvisoOlvidoSalida />}
           <section className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between">
-              <span className="text-slate-700">Validado</span>
+              <span className="text-muted-foreground">Validado</span>
               <span className="text-2xl font-bold">{avance.data.porcentaje} %</span>
             </div>
             <Progress value={avance.data.porcentaje} aria-label="Avance validado" />
@@ -137,7 +137,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
             <p className="text-lg font-semibold">
               {formatHoras(avance.data.minutosValidados)} de {formatHoras(avance.data.metaMinutos)}
             </p>
-            <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-slate-800">
+            <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-foreground">
               <dt>Validadas por tu supervisor</dt>
               <dd className="text-right font-medium">{formatHoras(avance.data.minutosValidados)}</dd>
               <dt>Registradas sin validar</dt>

@@ -52,7 +52,7 @@ export function SelectorInstitucion({ tipo, valueId, guardada, onChange }: Props
       )}
       {instituciones.isPending && <p>Cargando instituciones…</p>}
       {instituciones.data && filas.length === 0 && (
-        <p className="text-slate-700">No hay instituciones que coincidan.</p>
+        <p className="text-muted-foreground">No hay instituciones que coincidan.</p>
       )}
       {filas.length > 0 && (
         <ul className="flex flex-col gap-2">
@@ -68,7 +68,7 @@ export function SelectorInstitucion({ tipo, valueId, guardada, onChange }: Props
                 />
                 <span className="flex flex-col">
                   <span className="font-medium">{i.nombre}</span>
-                  {i.municipio && <span className="text-sm text-slate-700">{i.municipio}</span>}
+                  {i.municipio && <span className="text-sm text-muted-foreground">{i.municipio}</span>}
                 </span>
               </label>
             </li>

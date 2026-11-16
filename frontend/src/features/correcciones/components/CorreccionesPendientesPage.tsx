@@ -18,23 +18,23 @@ function TarjetaCorreccion({ correccion }: { correccion: CorreccionOficina }) {
             {correccion.alumno.nombre}
           </Link>
         </h2>
-        {correccion.alumno.matricula && <span className="text-slate-700">{correccion.alumno.matricula}</span>}
+        {correccion.alumno.matricula && <span className="text-muted-foreground">{correccion.alumno.matricula}</span>}
       </header>
       <p className="font-medium">Turno del {formatDiaCorto(diaMonterrey(correccion.turno.entrada))}</p>
-      <dl className="flex flex-col gap-0.5 text-slate-800">
+      <dl className="flex flex-col gap-0.5 text-foreground">
         <div>
           <dt className="sr-only">Turno registrado</dt>
           <dd>Registrado: {textoRango(correccion.turno)}</dd>
         </div>
         <div>
           <dt className="sr-only">Horas propuestas</dt>
-          <dd className="font-medium text-slate-900">
+          <dd className="font-medium text-foreground">
             Propuesto: {formatHora(correccion.entradaNueva)} – {formatHora(correccion.salidaNueva)}
           </dd>
         </div>
       </dl>
-      <p className="text-slate-800">Motivo del alumno: «{correccion.motivo}»</p>
-      <p className="text-sm text-slate-700">Solicitada el {formatFecha(correccion.creadoEn)}</p>
+      <p className="text-foreground">Motivo del alumno: «{correccion.motivo}»</p>
+      <p className="text-sm text-muted-foreground">Solicitada el {formatFecha(correccion.creadoEn)}</p>
       <ResolverCorreccion correccionId={correccion.id} />
     </article>
   );
@@ -50,7 +50,7 @@ export function CorreccionesPendientesPage() {
       {correcciones.isPending && <p role="status">Cargando correcciones…</p>}
       {correcciones.isError && <ErrorConReintento message={messageOf(correcciones.error)} onRetry={() => void correcciones.refetch()} />}
       {correcciones.data?.length === 0 && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           No hay correcciones pendientes
         </p>
       )}

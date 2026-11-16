@@ -27,7 +27,7 @@ const linkClass = 'text-primary underline underline-offset-4';
 
 function Aviso({ children }: { children: ReactNode }) {
   return (
-    <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+    <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
       {children}
     </p>
   );
@@ -107,7 +107,7 @@ function CamaraPanel({
         aria-label="Vista de la cámara"
         className="aspect-square w-full rounded-lg bg-black object-cover"
       />
-      <p role="status" className="text-slate-700">
+      <p role="status" className="text-muted-foreground">
         {enviando ? 'Registrando…' : 'Apunta la cámara al código QR de tu institución.'}
       </p>
     </div>

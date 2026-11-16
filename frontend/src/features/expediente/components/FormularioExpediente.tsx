@@ -133,7 +133,7 @@ export function FormularioExpediente({ expediente }: { expediente: Expediente })
         </p>
       )}
       {faltantes && faltantes.length > 0 && (
-        <div role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <div role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           <p>Aún falta completar:</p>
           <ul className="list-disc pl-5">
             {faltantes.map((f) => (

@@ -11,7 +11,7 @@ export function AvisoTemporal({ children, duracionMs = 8000 }: { children: React
 
   if (!visible) return null;
   return (
-    <p role="status" className="rounded-lg border border-green-700 bg-green-50 p-3 text-green-900">
+    <p role="status" className="rounded-lg border border-green-700 bg-green-50 p-3 text-green-900 dark:border-green-500 dark:bg-green-950 dark:text-green-100">
       {children}
     </p>
   );

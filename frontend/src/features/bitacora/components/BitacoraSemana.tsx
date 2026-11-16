@@ -35,7 +35,7 @@ function Seccion({ children }: { children: React.ReactNode }) {
 function SoloLectura({ actividades, children }: { actividades: string | null; children?: React.ReactNode }) {
   return (
     <>
-      <p className="whitespace-pre-wrap rounded-lg border bg-muted p-3 text-slate-900">
+      <p className="whitespace-pre-wrap rounded-lg border bg-muted p-3 text-foreground">
         {actividades?.trim() ? actividades : 'Sin bitácora'}
       </p>
       {children}
@@ -109,7 +109,7 @@ function Editor({ semana, semanaId }: { semana: SemanaHistorial; semanaId: strin
         </p>
       )}
       {enCurso && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           {AVISO_EN_CURSO}
         </p>
       )}
@@ -124,7 +124,7 @@ function Editor({ semana, semanaId }: { semana: SemanaHistorial; semanaId: strin
             setConfirmacion(false);
           }}
         />
-        <p id="bitacora-contador" className="text-sm text-slate-700">
+        <p id="bitacora-contador" className="text-sm text-muted-foreground">
           {caracteres} de {MINIMO_ACTIVIDADES} caracteres mínimos
         </p>
       </div>
@@ -147,7 +147,7 @@ function Editor({ semana, semanaId }: { semana: SemanaHistorial; semanaId: strin
         </p>
       )}
       {confirmacion && !pendiente && (
-        <p role="status" className="text-slate-800">
+        <p role="status" className="text-foreground">
           Cambios guardados
         </p>
       )}
@@ -160,7 +160,7 @@ function Editor({ semana, semanaId }: { semana: SemanaHistorial; semanaId: strin
             Enviar a mi supervisor
           </Button>
           {!suficiente && (
-            <p className="text-sm text-slate-700">Escribe al menos {MINIMO_ACTIVIDADES} caracteres para poder enviar la bitácora</p>
+            <p className="text-sm text-muted-foreground">Escribe al menos {MINIMO_ACTIVIDADES} caracteres para poder enviar la bitácora</p>
           )}
         </>
       )}
@@ -173,7 +173,7 @@ export function BitacoraSemana({ semana }: { semana: SemanaHistorial }) {
   if (semana.id === null) {
     return (
       <Seccion>
-        <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           La bitácora se habilita con tu primer registro de la semana
         </p>
       </Seccion>
@@ -184,7 +184,7 @@ export function BitacoraSemana({ semana }: { semana: SemanaHistorial }) {
     return (
       <Seccion>
         <SoloLectura actividades={semana.actividades}>
-          {semana.enviadaEn && <p className="text-slate-800">Enviada a tu supervisor el {formatFecha(semana.enviadaEn)}</p>}
+          {semana.enviadaEn && <p className="text-foreground">Enviada a tu supervisor el {formatFecha(semana.enviadaEn)}</p>}
         </SoloLectura>
       </Seccion>
     );
@@ -194,7 +194,7 @@ export function BitacoraSemana({ semana }: { semana: SemanaHistorial }) {
     return (
       <Seccion>
         <SoloLectura actividades={semana.actividades}>
-          <p className="text-slate-800">Validada por tu supervisor</p>
+          <p className="text-foreground">Validada por tu supervisor</p>
         </SoloLectura>
       </Seccion>
     );

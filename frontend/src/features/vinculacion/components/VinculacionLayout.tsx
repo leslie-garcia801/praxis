@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
+import { SelectorTema } from '@/components/SelectorTema';
 import { useMe } from '@/features/auth/api';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
 import { etiquetaPerfil } from '@/lib/oficinas';
@@ -62,6 +63,7 @@ export function VinculacionLayout() {
                 {etiquetaPerfil(data.usuario)}
               </p>
             )}
+            <SelectorTema />
             <SignOutButton />
           </div>
         </div>

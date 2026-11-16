@@ -25,17 +25,17 @@ function BitacoraLectura({ semana }: { semana: SemanaHistorial }) {
         Bitácora
       </h3>
       {semana.id === null ? (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           La semana aún no tiene registros ni bitácora
         </p>
       ) : (
         <>
-          <p className="whitespace-pre-wrap rounded-lg border bg-muted p-3 text-slate-900">
+          <p className="whitespace-pre-wrap rounded-lg border bg-muted p-3 text-foreground">
             {semana.actividades?.trim() ? semana.actividades : 'Sin bitácora'}
           </p>
-          {semana.enviadaEn && <p className="text-slate-800">Enviada el {formatFecha(semana.enviadaEn)}</p>}
+          {semana.enviadaEn && <p className="text-foreground">Enviada el {formatFecha(semana.enviadaEn)}</p>}
           {semana.estadoValidacion === 'RECHAZADA' && semana.comentario && (
-            <p className="text-slate-800">Comentario del supervisor: «{semana.comentario}»</p>
+            <p className="text-foreground">Comentario del supervisor: «{semana.comentario}»</p>
           )}
         </>
       )}
@@ -52,7 +52,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
     <>
       <header className="flex flex-col gap-1">
         <h3 className="text-lg font-semibold">Semana del {formatRangoSemana(semana.inicio, semana.fin)}</h3>
-        <p className="text-slate-800">{semana.estadoValidacion ? TEXTO_VALIDACION[semana.estadoValidacion] : 'Sin registros'}</p>
+        <p className="text-foreground">{semana.estadoValidacion ? TEXTO_VALIDACION[semana.estadoValidacion] : 'Sin registros'}</p>
       </header>
       <div className="flex max-w-md gap-2">
         <Button type="button" variant="outline" className="flex-1" onClick={() => onIr(sumarDias(semana.inicio, -7))}>
@@ -63,7 +63,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
         </Button>
       </div>
       {sinTurnos ? (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-slate-800">
+        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           No hay registros esta semana
         </p>
       ) : (

@@ -47,12 +47,12 @@ function SupervisorItem({
   return (
     <li className={`flex flex-col gap-1 rounded-lg border p-3 ${inactivo ? 'bg-muted' : ''}`}>
       <span className="font-medium">{nombre}</span>
-      {supervisor.puesto && <span className="text-sm text-slate-700">{supervisor.puesto}</span>}
+      {supervisor.puesto && <span className="text-sm text-muted-foreground">{supervisor.puesto}</span>}
       {(supervisor.correo || supervisor.telefono) && (
-        <span className="text-sm text-slate-700">{[supervisor.correo, supervisor.telefono].filter(Boolean).join(' · ')}</span>
+        <span className="text-sm text-muted-foreground">{[supervisor.correo, supervisor.telefono].filter(Boolean).join(' · ')}</span>
       )}
-      {!supervisor.confirmado && <span className="text-sm font-medium text-amber-800">Por confirmar</span>}
-      {inactivo && <span className="text-sm font-medium text-slate-700">Inactivo</span>}
+      {!supervisor.confirmado && <span className="text-sm font-medium text-amber-800 dark:text-amber-400">Por confirmar</span>}
+      {inactivo && <span className="text-sm font-medium text-muted-foreground">Inactivo</span>}
       {error && (
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
@@ -88,7 +88,7 @@ export function SupervisoresInstitucion({ institucionId }: { institucionId: stri
     <section aria-label="Supervisores" className="flex flex-col gap-3 border-t pt-6">
       <h2 className="text-lg font-semibold">Supervisores</h2>
       {supervisores.isPending && (
-        <p role="status" className="text-slate-700">
+        <p role="status" className="text-muted-foreground">
           Cargando supervisores…
         </p>
       )}
@@ -97,7 +97,7 @@ export function SupervisoresInstitucion({ institucionId }: { institucionId: stri
       )}
       {supervisores.data &&
         (supervisores.data.length === 0 ? (
-          <p className="text-slate-700">Aún no hay supervisores en esta institución.</p>
+          <p className="text-muted-foreground">Aún no hay supervisores en esta institución.</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {supervisores.data.map((s) => (

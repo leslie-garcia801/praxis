@@ -9,7 +9,7 @@ function textoPendientes(cantidad: number): string {
 // RF-16: "Sin conexión" notice for the student screens that cannot show data without a network.
 export function AvisoSinConexion() {
   return (
-    <div role="status" className="flex flex-col gap-1 rounded-lg border bg-muted p-3 text-slate-800">
+    <div role="status" className="flex flex-col gap-1 rounded-lg border bg-muted p-3 text-foreground">
       <p className="font-semibold">Sin conexión</p>
       <p>Puedes registrar tu asistencia; se enviará cuando tengas conexión.</p>
     </div>
@@ -49,7 +49,7 @@ export function RegistrosRechazados() {
         {rechazados.map((registro) => (
           <li key={registro.id} className="flex flex-col gap-2 rounded-lg border border-destructive/40 p-3">
             <p className="font-medium">{`Registro del ${formatFecha(registro.hora)} a las ${formatHora(registro.hora)}`}</p>
-            <p className="text-slate-800">{registro.estado.message}</p>
+            <p className="text-foreground">{registro.estado.message}</p>
             <Button type="button" variant="outline" className="h-11 w-full" onClick={() => void descartar(registro.id)}>
               Descartar
             </Button>

@@ -30,7 +30,7 @@ export function ExportarPanel({ filtros, alerta }: Props) {
         </Button>
       </div>
       {alerta && (
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-muted-foreground">
           La exportación usa los filtros de la tabla, pero no el filtro de alerta ({TITULO_ALERTA[alerta]}).
         </p>
       )}
