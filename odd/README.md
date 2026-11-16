@@ -95,3 +95,4 @@ Decisiones tomadas y pendientes.
 | 0046 | [Trabajos de recordatorio (RF-28, backend)](tasks/0046-recordatorios.md) | Terminada |
 | 0047 | [Recordatorios push en la app del alumno (RF-28, frontend)](tasks/0047-recordatorios-app.md) | Terminada |
 | 0048 | [Despliegue y prueba manual de los recordatorios push (RF-28)](tasks/0048-despliegue-recordatorios.md) | En progreso |
+| 0049 | [Jefa de cada oficina en la firma del PDF (RF-27, RF-29, RN-03b, backend)](tasks/0049-responsables-oficina.md) | Terminada |

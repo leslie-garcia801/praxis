@@ -5,6 +5,7 @@ import { AppError } from '../../lib/errors.js';
 import { renderizarPdf } from '../../lib/pdf.js';
 import { prisma } from '../../lib/prisma.js';
 import { fechaLocal } from '../../lib/tiempo.js';
+import { responsableDeOficina } from '../oficinas/oficinas.service.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import type { ReporteQuery } from './expedientes.schemas.js';
 import { cargar } from './expedientes.service.js';
@@ -17,8 +18,9 @@ export async function datosReporte(user: AuthUser, id: string, { desde, hasta }:
     throw new AppError(400, 'RANGO_INVALIDO', 'La fecha inicial no puede ser posterior a la fecha final.');
   }
   const expediente = await cargar(prisma, user, id);
-  const [plantel, semanas, turnos, validados] = await Promise.all([
+  const [plantel, responsableOficina, semanas, turnos, validados] = await Promise.all([
     prisma.plantel.findUniqueOrThrow({ where: { id: user.plantelId }, select: { nombre: true } }),
+    responsableDeOficina(user.plantelId, expediente.tipo),
     prisma.semanaBitacora.findMany({ where: { expedienteId: id, estado: 'VALIDADA' } }),
     prisma.asistencia.findMany({
       where: { expedienteId: id, estado: 'CERRADA', semana: { estado: 'VALIDADA' } },
@@ -43,6 +45,7 @@ export async function datosReporte(user: AuthUser, id: string, { desde, hasta }:
       semestre: alumno.semestre,
       grupo: alumno.grupo,
     },
+    responsableOficina,
     institucion: expediente.institucion?.nombre ?? null,
     departamento: expediente.departamento,
     supervisor: supervisor

@@ -282,6 +282,9 @@ export async function borrarPlantel(plantelId: string) {
   await prisma.supervisor.deleteMany({ where: { institucionId: { in: institucionIds } } });
   await prisma.institucionCarrera.deleteMany({ where: { institucionId: { in: institucionIds } } });
   await prisma.institucion.deleteMany({ where: { plantelId } });
+  const responsables = await prisma.responsableOficina.findMany({ where: { plantelId }, select: { id: true } });
+  await prisma.auditLog.deleteMany({ where: { entidadId: { in: responsables.map((r) => r.id) } } });
+  await prisma.responsableOficina.deleteMany({ where: { plantelId } });
   await prisma.user.deleteMany({ where: { plantelId } });
   await prisma.plantel.deleteMany({ where: { id: plantelId } });
   await prisma.carrera.deleteMany({ where: { nombre: { startsWith: CARRERA_PRUEBA }, alumnos: { none: {} }, instituciones: { none: {} } } });

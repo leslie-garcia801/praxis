@@ -10,6 +10,7 @@ const base: DatosReporte = {
   institucion: 'Hospital Muñoz',
   departamento: 'Archivo',
   supervisor: { titulo: 'Lic.', nombreCompleto: 'Laura Mendoza', puesto: 'Jefa de área' },
+  responsableOficina: null,
   turnos: [],
   semanas: [],
   minutosValidadosAcumulados: 0,
@@ -100,11 +101,35 @@ describe('construirReporte (RF-27)', () => {
     expect(texto({ ...base, minutosValidadosAcumulados: 150 })).toContain('2:30 de 480:00');
   });
 
-  it('signature blocks: supervisor name and an unnamed "Oficina de Vinculación" line', () => {
+  it('signature blocks: supervisor name and the office label', () => {
     const t = texto(base);
     expect(t).toContain('Lic. Laura Mendoza');
     expect(t).toContain('Jefa de área');
-    expect(t).toContain('Oficina de Vinculación');
+    expect(t).toContain('Oficina de Servicio Social y Titulación');
+  });
+
+  describe('office signature block (RF-27)', () => {
+    const jefa = { nombre: 'Ing. Stephany Zúñiga', cargo: 'Jefa de la Oficina de Servicio Social y Titulación' };
+
+    it('names the office and prints the head and position when captured', () => {
+      const t = texto({ ...base, responsableOficina: jefa });
+      expect(t).toContain('Ing. Stephany Zúñiga');
+      expect(t).toContain('Jefa de la Oficina de Servicio Social y Titulación');
+      expect(t).not.toContain('Oficina de Vinculación');
+    });
+
+    it('uses the Prácticas office for a prácticas case file', () => {
+      const t = texto({ ...base, tipo: 'PRACTICAS', responsableOficina: { nombre: 'Lic. Delfina', cargo: 'Jefa de Prácticas' } });
+      expect(t).toContain('Oficina de Prácticas Profesionales');
+      expect(t).toContain('Lic. Delfina');
+      expect(t).not.toContain('Servicio Social y Titulación');
+    });
+
+    it('keeps an empty block (line and office label) when nobody is captured', () => {
+      const t = texto({ ...base, responsableOficina: null });
+      expect(t).toContain('Oficina de Servicio Social y Titulación');
+      expect(t).not.toContain('Ing. Stephany');
+    });
   });
 
   it('formats minutes as h:mm', () => {

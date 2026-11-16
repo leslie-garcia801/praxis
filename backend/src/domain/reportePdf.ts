@@ -3,7 +3,7 @@
 import type { Content, TableCell } from 'pdfmake';
 import type { TDocumentDefinitions } from '../lib/pdf.js';
 import { fechaHoraLocal, fechaLocal, sumarDias, type FechaISO } from '../lib/tiempo.js';
-import type { TipoPrograma } from './oficinas.js';
+import { NOMBRE_OFICINA, type TipoPrograma } from './oficinas.js';
 
 const PROGRAMA: Record<TipoPrograma, string> = { SERVICIO_SOCIAL: 'Servicio social', PRACTICAS: 'Prácticas profesionales' };
 
@@ -31,6 +31,8 @@ export type DatosReporte = {
   institucion: string | null;
   departamento: string | null;
   supervisor: { titulo: string | null; nombreCompleto: string; puesto: string | null } | null;
+  /** Head of the office that owns the case file; null until the admin captures it. */
+  responsableOficina: { nombre: string; cargo: string } | null;
   /** Any shift of the case file; the builder keeps those of validated weeks inside the range. */
   turnos: TurnoReporte[];
   semanas: SemanaReporte[];
@@ -167,7 +169,7 @@ export function construirReporte(datos: DatosReporte): TDocumentDefinitions {
       {
         columns: [
           bloqueFirma('Supervisor', [nombreSupervisor ?? '', supervisor?.puesto ?? ''].filter(Boolean)),
-          bloqueFirma('Oficina de Vinculación', []),
+          bloqueFirma(NOMBRE_OFICINA[datos.tipo], datos.responsableOficina ? [datos.responsableOficina.nombre, datos.responsableOficina.cargo] : []),
         ],
         columnGap: 24,
         unbreakable: true,

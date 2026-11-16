@@ -75,10 +75,11 @@ enum EstadoSolicitud {
 }
 
 model Plantel {
-  id            String        @id @default(uuid())
-  nombre        String
-  usuarios      User[]
-  instituciones Institucion[]
+  id                  String               @id @default(uuid())
+  nombre              String
+  usuarios            User[]
+  instituciones       Institucion[]
+  responsablesOficina ResponsableOficina[]
 
   @@map("planteles")
 }
@@ -400,6 +401,20 @@ model SuscripcionPush {
 
   @@index([usuarioId])
   @@map("suscripciones_push")
+}
+
+// RF-27: head of each office; signs the PDF report of the case files of that office.
+model ResponsableOficina {
+  id            String       @id @default(uuid())
+  plantelId     String       @map("plantel_id")
+  plantel       Plantel      @relation(fields: [plantelId], references: [id])
+  oficina       TipoPrograma
+  nombre        String
+  cargo         String
+  actualizadoEn DateTime     @updatedAt @map("actualizado_en") @db.Timestamptz
+
+  @@unique([plantelId, oficina])
+  @@map("responsables_oficina")
 }
 
 model AuditLog {
