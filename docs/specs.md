@@ -7,7 +7,7 @@
 | Plantel | CBTIS 258, General Escobedo, N. L. |
 | Fuentes | Entrevista a vinculación (1 respuesta), entrevista a alumnos (11 respuestas), reglas de servicio social confirmadas y 4 formatos de Edumedia (solicitud y carta de presentación de prácticas; FSS1 y FSS3 de servicio social) |
 | Cambios en v0.2 | Reglas de servicio social, asignación del tipo por vinculación, dos oficinas responsables, campos tomados de Edumedia, validación en lote |
-| Cambios en v0.3 | §8 y §9 actualizados a lo construido (iteraciones 1–6): rutas reales de la API, modelos de corrección, validación por enlace, recordatorios y suscripciones push; §8.3 con los nombres actuales y el índice de correcciones pendientes; responsable de cada oficina para la firma del reporte PDF (`ResponsableOficina`, `/api/oficinas/responsables`) |
+| Cambios en v0.3 | §8 y §9 actualizados a lo construido (iteraciones 1–6): rutas reales de la API, modelos de corrección, validación por enlace, recordatorios y suscripciones push; §8.3 con los nombres actuales y el índice de correcciones pendientes; responsable de cada oficina para la firma del reporte PDF (`ResponsableOficina`, `/api/oficinas/responsables`); gestión de usuarios de la oficina (`/api/usuarios`: listar, editar, desactivar, restablecer contraseña) |
 | Stack | PostgreSQL · Express · React · Node · TypeScript · Prisma (PWA) |
 | Despliegue | Frontend en Vercel · API y base de datos en Railway |
 
@@ -771,7 +771,10 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | POST | `/api/auth/sign-out` | Sesión | Cerrar sesión (Better Auth) |
 | GET | `/api/me` | Sesión | Perfil y expediente activo (también con cambio de contraseña pendiente) |
 | POST | `/api/me/cambiar-contrasena` | Sesión | Cambiar contraseña (también con cambio pendiente) |
+| GET | `/api/usuarios` | Admin | Personal del plantel (Vinculación y administradores, nunca alumnos) con oficina, estado y si debe cambiar la contraseña |
 | POST | `/api/usuarios` | Admin | Crear usuario de Vinculación; devuelve la contraseña temporal una sola vez |
+| PATCH | `/api/usuarios/:id` | Admin | Editar nombre y oficina (solo Vinculación), activar o desactivar; al desactivar se cierran sus sesiones. No permite desactivarse a sí mismo ni dejar el plantel sin un administrador activo |
+| POST | `/api/usuarios/:id/restablecer-contrasena` | Admin | Restablecer la contraseña de un usuario de la oficina (RF-04); devuelve la temporal una sola vez y cierra sus sesiones |
 | POST | `/api/alumnos/:id/restablecer-contrasena` | Vinculación / Admin | Restablecer la contraseña de un alumno; devuelve la temporal una sola vez |
 | GET | `/api/carreras` | Vinculación / Admin | Catálogo de carreras |
 
