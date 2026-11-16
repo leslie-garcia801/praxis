@@ -250,7 +250,7 @@ sequenceDiagram
 
 ### Registro sin conexión
 
-> **Pendiente (iteración 6).** Hoy, si no hay red, la pantalla de registro ofrece "Reintentar" con el mismo identificador; la cola en IndexedDB todavía no existe. El diagrama muestra el diseño previsto.
+> Construido en las tareas 0042 a 0044 (RF-16, RN-14): la cola en IndexedDB guarda el registro y lo envía al abrir la app o al volver la conexión; un registro con más de 72 h se rechaza. Falta probarlo en celulares reales.
 
 ```mermaid
 sequenceDiagram
@@ -293,10 +293,11 @@ La lista completa está en la sección 5 de [`docs/specs.md`](docs/specs.md).
 | 0 | Andamiaje: proyectos, base de datos, migración inicial | ✅ |
 | 1 | Autenticación, importación de alumnos, usuarios por oficina | ✅ |
 | 2 | Catálogo e importación de instituciones, QR | ✅ |
-| 3 | Expediente, escaneo, cálculo de horas, avance | 🟡 Falta la pantalla de vinculación para confirmar, suspender o transferir expedientes (el backend ya existe) |
+| 3 | Expediente, escaneo, cálculo de horas, avance; acciones de la oficina en el detalle del alumno (confirmar, suspender, reactivar, cancelar, transferir, validar por el supervisor; tarea 0031) | ✅ |
 | 4 | Bitácora, validación por enlace y correo | ✅ |
-| 5 | Panel de vinculación, Excel y PDF | 🟡 Panel listo; faltan la exportación a Excel y el reporte PDF (RF-27) |
-| 6 | Registro sin conexión, recordatorios, pruebas en dispositivos | — |
-| 7 | Piloto con Programación | — |
+| 5 | Panel de vinculación con alertas y filtros, exportación a Excel (tabla y Edumedia), reporte PDF (RF-27), correcciones de turnos (RF-17) | ✅ |
+| 6 | Registro sin conexión (RF-16, RN-14) y recordatorios push (RF-28) | ✅ Pruebas en celulares reales pendientes |
+| 7 | Piloto con Programación | 🟡 Preparado: métricas (0053), guías y encuesta (0054); falta ejecutarlo (ver [`docs/piloto.md`](docs/piloto.md)) |
+| Extra | Mejoras posteriores al MVP: firma de las oficinas en el PDF (0049-0050), modo oscuro (0051), contraste de los bordes (0052) | ✅ |
 
-✅ terminada · 🟡 en curso · — sin empezar. El detalle de cada tarea está en `odd/tasks/`, y los huecos de la interfaz, al final de [`docs/flujo-app.md`](docs/flujo-app.md).
+✅ terminada · 🟡 en curso. El detalle de cada tarea está en `odd/tasks/`, y los huecos de la interfaz, al final de [`docs/flujo-app.md`](docs/flujo-app.md).
