@@ -2,11 +2,12 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 0.2 (borrador para revisión) |
-| Fecha | 29 de octubre de 2026 |
+| Versión | 0.3 (borrador para revisión) |
+| Fecha | 15 de noviembre de 2026 |
 | Plantel | CBTIS 258, General Escobedo, N. L. |
 | Fuentes | Entrevista a vinculación (1 respuesta), entrevista a alumnos (11 respuestas), reglas de servicio social confirmadas y 4 formatos de Edumedia (solicitud y carta de presentación de prácticas; FSS1 y FSS3 de servicio social) |
 | Cambios en v0.2 | Reglas de servicio social, asignación del tipo por vinculación, dos oficinas responsables, campos tomados de Edumedia, validación en lote |
+| Cambios en v0.3 | §8 y §9 actualizados a lo construido (iteraciones 1–6): rutas reales de la API, modelos de corrección, validación por enlace, recordatorios y suscripciones push; §8.3 con los nombres actuales y el índice de correcciones pendientes |
 | Stack | PostgreSQL · Express · React · Node · TypeScript · Prisma (PWA) |
 | Despliegue | Frontend en Vercel · API y base de datos en Railway |
 
@@ -335,224 +336,394 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 | Entidad | Propósito |
 | --- | --- |
 | Plantel | Escuela (una sola en el MVP) |
-| Usuario | Credenciales y rol |
+| User (`users`) | Usuario de Better Auth con las columnas de la entidad `Usuario` de las specs: rol, oficina, `debeCambiar`, `activo`, `username` (matrícula) |
 | Alumno | Datos escolares del alumno |
 | Carrera | Catálogo de carreras |
 | Institucion | Empresa o institución receptora |
 | InstitucionCarrera | Carreras que acepta cada institución |
-| Supervisor | Contacto que valida las horas |
+| Supervisor | Contacto que valida las horas; `activo` permite ocultarlo sin borrarlo |
 | Expediente | Un servicio o una práctica de un alumno |
-| Asistencia | Un turno: entrada y salida |
-| SemanaBitacora | Actividades de una semana y su validación |
-| SolicitudCorreccion | Cambio propuesto a un turno |
+| Asistencia | Un turno: entrada y salida; guarda el UUID del escaneo de salida (`salidaId`) y el aviso de olvido de salida (`recordatorioEnviadoEn`) |
+| SemanaBitacora | Actividades de una semana y su validación (`enviadaEn`, `rechazadaEn`, `recordatorioBitacoraEn`) |
+| EnlaceValidacion | Enlace con token (solo se guarda su hash) que agrupa las semanas que se envían a un supervisor en un correo; vence a los 14 días |
+| EnlaceValidacionSemana | Semanas incluidas en cada enlace |
+| SolicitudCorreccion | Cambio propuesto a un turno, con `comentario` de rechazo y `resueltoEn` |
+| SuscripcionPush | Suscripción push de un navegador o dispositivo de un usuario (RF-28) |
 | AuditLog | Registro de cambios |
 
-### 8.2 Esquema Prisma (propuesta inicial)
+### 8.2 Esquema Prisma (según lo construido)
+
+Copia del esquema de `backend/prisma/schema.prisma`, que es la fuente de verdad del modelo. Se omiten los modelos internos de Better Auth (`Session`, `Account`, `Verification`). La entidad `Usuario` de las specs es el modelo `User` (tabla `users`): la matrícula es `username` y la contraseña vive en `Account.password`, administrada por Better Auth. En PostgreSQL todos los identificadores van en `snake_case` (tablas en plural) mediante `@map` y `@@map`.
 
 ```prisma
-enum Rol              { ALUMNO VINCULACION ADMIN }
-enum Turno            { MATUTINO VESPERTINO }
-enum TipoPrograma     { SERVICIO_SOCIAL PRACTICAS }
-enum EstadoExpediente { PENDIENTE EN_PROCESO SUSPENDIDO FINALIZADO CANCELADO }
-enum EstadoAsistencia { ABIERTA CERRADA INCOMPLETA }
-enum EstadoValidacion { BORRADOR ENVIADA VALIDADA RECHAZADA }
-enum EstadoSolicitud  { PENDIENTE APROBADA RECHAZADA }
+enum Rol {
+  ALUMNO
+  VINCULACION
+  ADMIN
 
-model Plantel {
-  id     String @id @default(uuid())
-  nombre String
+  @@map("rol")
 }
 
-model Usuario {
-  id           String   @id @default(uuid())
-  plantelId    String
-  rol          Rol
-  matricula    String?  @unique
-  email        String?  @unique
-  passwordHash String?
-  oficina      TipoPrograma? // alcance de un usuario de VINCULACION; null = ambas
-  debeCambiar  Boolean  @default(false)
-  activo       Boolean  @default(true)
-  creadoEn     DateTime @default(now())
-  alumno       Alumno?
+enum Turno {
+  MATUTINO
+  VESPERTINO
+
+  @@map("turno")
+}
+
+enum TipoPrograma {
+  SERVICIO_SOCIAL
+  PRACTICAS
+
+  @@map("tipo_programa")
+}
+
+enum EstadoExpediente {
+  PENDIENTE
+  EN_PROCESO
+  SUSPENDIDO
+  FINALIZADO
+  CANCELADO
+
+  @@map("estado_expediente")
+}
+
+enum EstadoAsistencia {
+  ABIERTA
+  CERRADA
+  INCOMPLETA
+
+  @@map("estado_asistencia")
+}
+
+enum EstadoValidacion {
+  BORRADOR
+  ENVIADA
+  VALIDADA
+  RECHAZADA
+
+  @@map("estado_validacion")
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+
+  @@map("estado_solicitud")
+}
+
+model Plantel {
+  id            String        @id @default(uuid())
+  nombre        String
+  usuarios      User[]
+  instituciones Institucion[]
+
+  @@map("planteles")
+}
+
+model User {
+  id                String            @id
+  name              String
+  email             String            @unique
+  emailVerified     Boolean           @default(false) @map("email_verified")
+  image             String?
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  // username plugin: student control number (matrícula, 14 digits)
+  username          String?           @unique
+  displayUsername   String?           @map("display_username")
+  // Spec fields (Usuario)
+  plantelId         String            @map("plantel_id")
+  plantel           Plantel           @relation(fields: [plantelId], references: [id])
+  rol               Rol               @default(ALUMNO)
+  oficina           TipoPrograma? // scope of a VINCULACION user; null = both (RN-03b)
+  debeCambiar       Boolean           @default(false) @map("debe_cambiar")
+  activo            Boolean           @default(true)
+  sessions          Session[]
+  accounts          Account[]
+  alumno            Alumno?
+  suscripcionesPush SuscripcionPush[]
+
+  @@map("users")
 }
 
 model Carrera {
-  id     String @id @default(uuid())
-  nombre String @unique
+  id            String               @id @default(uuid())
+  nombre        String               @unique
+  alumnos       Alumno[]
+  instituciones InstitucionCarrera[]
+
+  @@map("carreras")
 }
 
 model Alumno {
-  id          String       @id @default(uuid())
-  usuarioId   String       @unique
-  usuario     Usuario      @relation(fields: [usuarioId], references: [id])
+  id              String       @id @default(uuid())
+  usuarioId       String       @unique @map("usuario_id")
+  usuario         User         @relation(fields: [usuarioId], references: [id])
   nombre          String
-  apellidoPaterno String
-  apellidoMaterno String?
-  // Sin CURP, edad, sexo ni número de afiliación: viven en Edumedia
-  carreraId   String
-  carrera     Carrera      @relation(fields: [carreraId], references: [id])
-  semestre    Int
-  grupo       String
-  turno       Turno
-  expedientes Expediente[]
+  apellidoPaterno String       @map("apellido_paterno")
+  apellidoMaterno String?      @map("apellido_materno")
+  // No CURP, age, sex or affiliation number: they live in Edumedia (RNF-07)
+  carreraId       String       @map("carrera_id")
+  carrera         Carrera      @relation(fields: [carreraId], references: [id])
+  semestre        Int
+  grupo           String
+  turno           Turno
+  expedientes     Expediente[]
+
+  @@map("alumnos")
 }
 
 model Institucion {
-  id               String               @id @default(uuid())
-  plantelId        String
-  nombre           String
-  rfc              String?
-  giro             String?
-  calle            String
-  numExterior      String?
-  numInterior      String?
-  colonia          String?
-  codigoPostal     String?
-  municipio        String
-  estado           String               @default("Nuevo León")
-  esPlantel        Boolean              @default(false) // el propio CBTIS como institución
-  telefono         String?
-  correo           String?
-  representante    String?              // director, gerente o representante
-  horarioAtencion  String?
-  turnos           Turno[]
-  aceptaServicio   Boolean              @default(true)
-  aceptaPracticas  Boolean              @default(true)
-  cupo             Int?                 // null = sin dato
-  activa           Boolean              @default(true)
-  qrTokenHash      String               @unique
-  codigoCorto      String               @unique
-  carreras         InstitucionCarrera[]
-  supervisores     Supervisor[]
-  actualizadoEn    DateTime             @updatedAt
+  id              String               @id @default(uuid())
+  plantelId       String               @map("plantel_id")
+  plantel         Plantel              @relation(fields: [plantelId], references: [id])
+  nombre          String
+  rfc             String?
+  giro            String?
+  calle           String
+  numExterior     String?              @map("num_exterior")
+  numInterior     String?              @map("num_interior")
+  colonia         String?
+  codigoPostal    String?              @map("codigo_postal")
+  municipio       String
+  estado          String               @default("Nuevo León")
+  esPlantel       Boolean              @default(false) @map("es_plantel")
+  telefono        String?
+  correo          String?
+  representante   String?
+  horarioAtencion String?              @map("horario_atencion")
+  turnos          Turno[]
+  aceptaServicio  Boolean              @default(true) @map("acepta_servicio")
+  aceptaPracticas Boolean              @default(true) @map("acepta_practicas")
+  cupo            Int?
+  activa          Boolean              @default(true)
+  qrTokenHash     String               @unique @map("qr_token_hash")
+  codigoCorto     String               @unique @map("codigo_corto")
+  carreras        InstitucionCarrera[]
+  supervisores    Supervisor[]
+  expedientes     Expediente[]
+  actualizadoEn   DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz
 
   @@unique([plantelId, rfc])
+  @@index([municipio, colonia])
+  @@map("instituciones")
 }
 
 model InstitucionCarrera {
-  institucionId String
-  carreraId     String
+  institucionId String      @map("institucion_id")
+  carreraId     String      @map("carrera_id")
   institucion   Institucion @relation(fields: [institucionId], references: [id])
   carrera       Carrera     @relation(fields: [carreraId], references: [id])
 
   @@id([institucionId, carreraId])
+  @@map("instituciones_carreras")
 }
 
 model Supervisor {
-  id            String      @id @default(uuid())
-  institucionId String
-  institucion   Institucion @relation(fields: [institucionId], references: [id])
-  titulo          String?     // Lic., Ing., Mtra.
+  id              String             @id @default(uuid())
+  institucionId   String             @map("institucion_id")
+  institucion     Institucion        @relation(fields: [institucionId], references: [id])
+  titulo          String?
   nombre          String
-  apellidoPaterno String
-  apellidoMaterno String?
+  apellidoPaterno String             @map("apellido_paterno")
+  apellidoMaterno String?            @map("apellido_materno")
   puesto          String?
   departamento    String?
   correo          String
   telefono        String?
   extension       String?
-  confirmado      Boolean     @default(false)
+  confirmado      Boolean            @default(false)
+  // A deactivated supervisor is hidden from the selectors and cannot be assigned; the office can reactivate it.
+  activo          Boolean            @default(true)
+  expedientes     Expediente[]
+  enlaces         EnlaceValidacion[]
+
+  @@index([institucionId])
+  @@map("supervisores")
 }
 
 model Expediente {
-  id                String           @id @default(uuid())
-  alumnoId          String
-  alumno            Alumno           @relation(fields: [alumnoId], references: [id])
-  tipo              TipoPrograma
-  semestre          Int              // 5 o 6
-  institucionId     String?          // null hasta que el alumno lo completa
-  supervisorId      String?
-  departamento      String?
-  fechaInicio       DateTime?        @db.Date
-  fechaTermino      DateTime?        @db.Date // prácticas: periodo pactado
-  diasPactados      Int[]            // 1 = lunes … 7 = domingo
-  horaEntrada       String?          // "08:00"
-  horaSalida        String?          // "12:00"
-  programa          String?          // servicio social: programa
-  subprograma       String?          // servicio social: subprograma
-  metaHoras         Int              // 480 o 240
-  minutosTransferidos Int            @default(0)
-  motivoTransferencia String?
-  estado            EstadoExpediente @default(PENDIENTE)
-  creadoEn          DateTime         @default(now())
-  asistencias       Asistencia[]
-  semanas           SemanaBitacora[]
+  id                  String           @id @default(uuid())
+  alumnoId            String           @map("alumno_id")
+  alumno              Alumno           @relation(fields: [alumnoId], references: [id])
+  tipo                TipoPrograma
+  semestre            Int
+  institucionId       String?          @map("institucion_id")
+  institucion         Institucion?     @relation(fields: [institucionId], references: [id])
+  supervisorId        String?          @map("supervisor_id")
+  supervisor          Supervisor?      @relation(fields: [supervisorId], references: [id])
+  departamento        String?
+  fechaInicio         DateTime?        @map("fecha_inicio") @db.Date
+  fechaTermino        DateTime?        @map("fecha_termino") @db.Date
+  diasPactados        Int[]            @default([]) @map("dias_pactados") // 1 = Monday … 7 = Sunday
+  horaEntrada         String?          @map("hora_entrada") // "08:00"
+  horaSalida          String?          @map("hora_salida") // "12:00"
+  programa            String?
+  subprograma         String?
+  metaHoras           Int              @map("meta_horas")
+  minutosTransferidos Int              @default(0) @map("minutos_transferidos")
+  motivoTransferencia String?          @map("motivo_transferencia")
+  estado              EstadoExpediente @default(PENDIENTE)
+  creadoEn            DateTime         @default(now()) @map("creado_en") @db.Timestamptz
+  asistencias         Asistencia[]
+  semanas             SemanaBitacora[]
+
+  @@index([alumnoId])
+  @@index([institucionId])
+  @@map("expedientes")
 }
 
 model Asistencia {
-  id                   String           @id      // UUID generado en el cliente (idempotencia)
-  expedienteId         String
-  expediente           Expediente       @relation(fields: [expedienteId], references: [id])
-  entrada              DateTime         @db.Timestamptz
-  salida               DateTime?        @db.Timestamptz
-  minutosAcreditables  Int?
-  estado               EstadoAsistencia @default(ABIERTA)
-  sinConexion          Boolean          @default(false)
-  recibidoEn           DateTime         @default(now())
-  semanaId             String?
+  id                    String                @id // client-generated UUID (idempotency)
+  expedienteId          String                @map("expediente_id")
+  expediente            Expediente            @relation(fields: [expedienteId], references: [id])
+  entrada               DateTime              @db.Timestamptz
+  salida                DateTime?             @db.Timestamptz
+  salidaId              String?               @unique @map("salida_id") // client-generated UUID of the exit scan (idempotency)
+  minutosAcreditables   Int?                  @map("minutos_acreditables")
+  estado                EstadoAsistencia      @default(ABIERTA)
+  sinConexion           Boolean               @default(false) @map("sin_conexion")
+  recibidoEn            DateTime              @default(now()) @map("recibido_en") @db.Timestamptz
+  semanaId              String?               @map("semana_id")
+  semana                SemanaBitacora?       @relation(fields: [semanaId], references: [id])
+  correcciones          SolicitudCorreccion[]
+  // Instant the "forgot to clock out" reminder was sent (RF-28); null until then. At most one per shift.
+  recordatorioEnviadoEn DateTime?             @map("recordatorio_enviado_en") @db.Timestamptz
+
+  @@index([expedienteId, entrada])
+  @@map("asistencias")
 }
 
 model SemanaBitacora {
-  id              String           @id @default(uuid())
-  expedienteId    String
-  expediente      Expediente       @relation(fields: [expedienteId], references: [id])
-  semanaInicio    DateTime         @db.Date   // lunes
-  actividades     String?
-  estado          EstadoValidacion @default(BORRADOR)
-  tokenHash       String?          @unique
-  tokenExpira     DateTime?
-  validadoPor     String?          // "supervisor" o id de usuario de vinculación
-  validadoEn      DateTime?
-  comentario      String?
+  id                     String                   @id @default(uuid())
+  expedienteId           String                   @map("expediente_id")
+  expediente             Expediente               @relation(fields: [expedienteId], references: [id])
+  semanaInicio           DateTime                 @map("semana_inicio") @db.Date // Monday
+  actividades            String?
+  estado                 EstadoValidacion         @default(BORRADOR)
+  validadoPor            String?                  @map("validado_por") // "supervisor" or VINCULACION user id
+  validadoEn             DateTime?                @map("validado_en") @db.Timestamptz
+  comentario             String?
+  // Instant the week went to validation (RF-20) and last time the student edited the logbook (used by 0022).
+  enviadaEn              DateTime?                @map("enviada_en") @db.Timestamptz
+  bitacoraActualizadaEn  DateTime?                @map("bitacora_actualizada_en") @db.Timestamptz
+  // Instant the supervisor rejected the week (RF-22); 0022 compares it with bitacoraActualizadaEn.
+  rechazadaEn            DateTime?                @map("rechazada_en") @db.Timestamptz
+  // Instant the Sunday "write your logbook" reminder was sent for this week (RF-28); null until then.
+  recordatorioBitacoraEn DateTime?                @map("recordatorio_bitacora_en") @db.Timestamptz
+  asistencias            Asistencia[]
+  enlaces                EnlaceValidacionSemana[]
 
   @@unique([expedienteId, semanaInicio])
+  @@map("semanas_bitacora")
+}
+
+// RF-21, RF-21a: one validation link belongs to a supervisor and groups the weeks sent in one email. Only the SHA-256
+// hash of the token is stored (RNF-06). The link expires 14 days after it is created.
+model EnlaceValidacion {
+  id           String                   @id @default(uuid())
+  supervisorId String                   @map("supervisor_id")
+  supervisor   Supervisor               @relation(fields: [supervisorId], references: [id])
+  tokenHash    String                   @unique @map("token_hash")
+  expiraEn     DateTime                 @map("expira_en") @db.Timestamptz
+  creadoEn     DateTime                 @default(now()) @map("creado_en") @db.Timestamptz
+  semanas      EnlaceValidacionSemana[]
+
+  @@index([supervisorId])
+  @@map("enlaces_validacion")
+}
+
+// The weeks included in a link.
+model EnlaceValidacionSemana {
+  enlaceId String           @map("enlace_id")
+  enlace   EnlaceValidacion @relation(fields: [enlaceId], references: [id], onDelete: Cascade)
+  semanaId String           @map("semana_id")
+  semana   SemanaBitacora   @relation(fields: [semanaId], references: [id])
+
+  @@id([enlaceId, semanaId])
+  @@index([semanaId])
+  @@map("enlaces_validacion_semanas")
 }
 
 model SolicitudCorreccion {
-  id            String          @id @default(uuid())
-  asistenciaId  String
-  entradaNueva  DateTime        @db.Timestamptz
-  salidaNueva   DateTime        @db.Timestamptz
-  motivo        String
-  estado        EstadoSolicitud @default(PENDIENTE)
-  resueltoPor   String?
-  creadoEn      DateTime        @default(now())
+  id           String          @id @default(uuid())
+  asistenciaId String          @map("asistencia_id")
+  asistencia   Asistencia      @relation(fields: [asistenciaId], references: [id])
+  entradaNueva DateTime        @map("entrada_nueva") @db.Timestamptz
+  salidaNueva  DateTime        @map("salida_nueva") @db.Timestamptz
+  motivo       String
+  estado       EstadoSolicitud @default(PENDIENTE)
+  resueltoPor  String?         @map("resuelto_por")
+  // Reason given by the office when it rejects the request (shown to the student).
+  comentario   String?
+  resueltoEn   DateTime?       @map("resuelto_en") @db.Timestamptz
+  creadoEn     DateTime        @default(now()) @map("creado_en") @db.Timestamptz
+
+  // Partial unique index in the migration: one PENDIENTE request per attendance (una_correccion_pendiente).
+  @@index([asistenciaId])
+  @@map("solicitudes_correccion")
+}
+
+// RF-28: a browser push subscription of a user (one per device/browser). The endpoint is unique: the same browser
+// signing in as another user reassigns it. A 404/410 from the push service deletes the row.
+model SuscripcionPush {
+  id            String   @id @default(uuid())
+  usuarioId     String   @map("usuario_id")
+  usuario       User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  endpoint      String   @unique
+  p256dh        String
+  auth          String
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz
+
+  @@index([usuarioId])
+  @@map("suscripciones_push")
 }
 
 model AuditLog {
   id        String   @id @default(uuid())
-  usuarioId String?
+  usuarioId String?  @map("usuario_id")
   accion    String
   entidad   String
-  entidadId String
+  entidadId String   @map("entidad_id")
   antes     Json?
   despues   Json?
-  fecha     DateTime @default(now())
+  fecha     DateTime @default(now()) @db.Timestamptz
+
+  @@index([entidad, entidadId])
+  @@map("audit_logs")
 }
 ```
 
 ### 8.3 Restricciones en SQL (agregar en la migración)
 
+Se crean editando el SQL de las migraciones (`init` y `correccion_resolucion`). Los nombres de tablas y columnas son los actuales, en snake_case (migración `snake_case_identifiers`).
+
 ```sql
 -- Sin turnos traslapados en el mismo expediente
 CREATE EXTENSION IF NOT EXISTS btree_gist;
-ALTER TABLE "Asistencia" ADD CONSTRAINT asistencia_sin_traslape
-  EXCLUDE USING gist ("expedienteId" WITH =,
-                      tstzrange("entrada", COALESCE("salida", 'infinity')) WITH &&);
+ALTER TABLE asistencias ADD CONSTRAINT asistencia_sin_traslape
+  EXCLUDE USING gist (expediente_id WITH =,
+                      tstzrange(entrada, COALESCE(salida, 'infinity')) WITH &&);
 
 -- La salida siempre después de la entrada
-ALTER TABLE "Asistencia" ADD CONSTRAINT salida_despues_entrada
-  CHECK ("salida" IS NULL OR "salida" > "entrada");
+ALTER TABLE asistencias ADD CONSTRAINT salida_despues_entrada
+  CHECK (salida IS NULL OR salida > entrada);
 
 -- Un solo turno abierto por expediente
 CREATE UNIQUE INDEX un_turno_abierto
-  ON "Asistencia" ("expedienteId") WHERE "estado" = 'ABIERTA';
+  ON asistencias (expediente_id) WHERE estado = 'ABIERTA';
 
 -- Un solo expediente activo por alumno (RN-03)
 CREATE UNIQUE INDEX un_expediente_activo
-  ON "Expediente" ("alumnoId")
-  WHERE "estado" IN ('PENDIENTE', 'EN_PROCESO', 'SUSPENDIDO');
+  ON expedientes (alumno_id)
+  WHERE estado IN ('PENDIENTE', 'EN_PROCESO', 'SUSPENDIDO');
+
+-- Una sola solicitud de corrección pendiente por turno (RF-17)
+CREATE UNIQUE INDEX una_correccion_pendiente
+  ON solicitudes_correccion (asistencia_id) WHERE estado = 'PENDIENTE';
 ```
 
 ### 8.4 Cálculo de horas
@@ -566,38 +737,100 @@ CREATE UNIQUE INDEX un_expediente_activo
 
 ## 9. API REST (v1)
 
+Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts`. «Sesión» es cualquier usuario autenticado; la propiedad del recurso («dueño») y el alcance por oficina de Vinculación (RN-03b) se validan en el servicio.
+
 | Método | Ruta | Rol | Descripción |
 | --- | --- | --- | --- |
+| GET | `/api/health` | Público | Estado del servicio |
+
+### Cuentas y acceso
+
+| Método | Ruta | Rol | Descripción |
+| --- | --- | --- | --- |
+| POST | `/api/auth/activar/verificar` | Público | Verificar matrícula antes de activar la cuenta |
 | POST | `/api/auth/activar` | Público | Activar cuenta con matrícula |
-| POST | `/api/auth/login` | Público | Iniciar sesión |
-| POST | `/api/auth/logout` | Sesión | Cerrar sesión |
-| GET | `/api/me` | Sesión | Perfil y expediente activo |
-| GET | `/api/instituciones` | Sesión | Catálogo con filtros (`q`, `municipio`, `carrera`, `turno`, `tipo`, `conCupo`) |
-| GET | `/api/instituciones/:id` | Sesión | Detalle |
-| POST/PATCH | `/api/instituciones` · `/:id` | Vinculación | Alta y edición |
-| POST | `/api/instituciones/:id/qr` | Vinculación | Generar o regenerar QR (devuelve PDF imprimible) |
-| POST | `/api/importaciones/{alumnos\|instituciones}/preview` | Vinculación | Validar archivo y devolver errores por fila |
-| POST | `/api/importaciones/{alumnos\|instituciones}/confirmar` | Vinculación | Aplicar importación |
-| POST | `/api/expedientes/asignar` | Vinculación | Asignar tipo de programa (individual o en lote; 5.º y 6.º semestre) |
-| PATCH | `/api/expedientes/:id` | Alumno dueño / Vinculación | Completar institución, supervisor, periodo y horario |
-| POST | `/api/expedientes/:id/confirmar` | Vinculación | Confirmar institución y supervisor → `EN_PROCESO` |
-| PATCH | `/api/expedientes/:id/estado` | Vinculación | Suspender, reactivar, cancelar |
-| POST | `/api/expedientes/:id/transferir` | Vinculación | Cambio de institución (RN-12) |
-| GET | `/api/expedientes/:id/avance` | Alumno dueño / Vinculación | Horas, porcentaje y fecha estimada |
+| POST | `/api/auth/sign-in/username` | Público | Iniciar sesión de alumno con matrícula y contraseña (Better Auth) |
+| POST | `/api/auth/sign-in/email` | Público | Iniciar sesión de personal con correo y contraseña (Better Auth) |
+| POST | `/api/auth/sign-out` | Sesión | Cerrar sesión (Better Auth) |
+| GET | `/api/me` | Sesión | Perfil y expediente activo (también con cambio de contraseña pendiente) |
+| POST | `/api/me/cambiar-contrasena` | Sesión | Cambiar contraseña (también con cambio pendiente) |
+| POST | `/api/usuarios` | Admin | Crear usuario de Vinculación; devuelve la contraseña temporal una sola vez |
+| POST | `/api/alumnos/:id/restablecer-contrasena` | Vinculación / Admin | Restablecer la contraseña de un alumno; devuelve la temporal una sola vez |
+| GET | `/api/carreras` | Vinculación / Admin | Catálogo de carreras |
+
+### Instituciones, supervisores e importaciones
+
+| Método | Ruta | Rol | Descripción |
+| --- | --- | --- | --- |
+| GET | `/api/instituciones` | Alumno / Vinculación / Admin | Catálogo con filtros (`q`, `municipio`, `carrera`, `turno`, `tipo`, `conCupo`) |
+| GET | `/api/instituciones/:id` | Alumno / Vinculación / Admin | Detalle |
+| POST | `/api/instituciones` | Vinculación / Admin | Alta |
+| PATCH | `/api/instituciones/:id` | Vinculación / Admin | Edición |
+| POST | `/api/instituciones/:id/qr` | Vinculación / Admin | Generar o regenerar QR (devuelve PDF imprimible) |
+| GET | `/api/instituciones/:id/supervisores` | Alumno / Vinculación / Admin | Supervisores de la institución |
+| POST | `/api/instituciones/:id/supervisores` | Alumno / Vinculación / Admin | Alta de supervisor en la institución |
+| PATCH | `/api/supervisores/:id` | Vinculación / Admin | Editar, activar o desactivar un supervisor |
+| GET | `/api/importaciones/{alumnos\|instituciones}/plantilla` | Vinculación / Admin | Descargar la plantilla de importación (xlsx) |
+| POST | `/api/importaciones/{alumnos\|instituciones}/preview` | Vinculación / Admin | Validar archivo y devolver errores por fila |
+| POST | `/api/importaciones/{alumnos\|instituciones}/confirmar` | Vinculación / Admin | Aplicar importación |
+
+### Expedientes
+
+| Método | Ruta | Rol | Descripción |
+| --- | --- | --- | --- |
+| GET | `/api/expedientes` | Vinculación / Admin | Listado de expedientes |
+| POST | `/api/expedientes/asignar` | Vinculación / Admin | Asignar tipo de programa (individual o en lote; 5.º y 6.º semestre) |
+| GET | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Detalle del expediente |
+| PATCH | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Completar institución, supervisor, periodo y horario |
+| POST | `/api/expedientes/:id/confirmar` | Vinculación / Admin | Confirmar institución y supervisor → `EN_PROCESO` |
+| PATCH | `/api/expedientes/:id/estado` | Vinculación / Admin | Suspender, reactivar, cancelar |
+| POST | `/api/expedientes/:id/transferir` | Vinculación / Admin | Cambio de institución (RN-12) |
+| GET | `/api/expedientes/:id/avance` | Alumno dueño / Vinculación / Admin | Horas, porcentaje y fecha estimada |
+| GET | `/api/expedientes/:id/auditoria` | Vinculación / Admin | Historial de cambios del expediente |
+| GET | `/api/expedientes/:id/reporte.pdf` | Alumno dueño / Vinculación / Admin | Reporte de horas y actividades |
+
+### Asistencia y correcciones
+
+| Método | Ruta | Rol | Descripción |
+| --- | --- | --- | --- |
 | POST | `/api/asistencias/escaneo` | Alumno | `{ id (uuid), token o codigoCorto, hora, sinConexion }` → registra entrada o salida |
-| GET | `/api/asistencias?semana=` | Alumno / Vinculación | Historial |
-| POST | `/api/asistencias/:id/correcciones` | Alumno | Solicitar corrección |
-| PATCH | `/api/correcciones/:id` | Vinculación | Aprobar o rechazar |
+| GET | `/api/asistencias?semana=` | Alumno / Vinculación / Admin | Historial |
+| POST | `/api/asistencias/:id/correcciones` | Alumno | Solicitar corrección de un turno |
+| GET | `/api/correcciones` | Alumno / Vinculación / Admin | Listar solicitudes de corrección |
+| PATCH | `/api/correcciones/:id` | Vinculación / Admin | Aprobar o rechazar (con comentario) |
+
+### Bitácora y validación semanal
+
+| Método | Ruta | Rol | Descripción |
+| --- | --- | --- | --- |
+| GET | `/api/semanas/pendientes` | Alumno | Semanas que requieren atención del alumno (RF-18) |
 | PUT | `/api/semanas/:id/bitacora` | Alumno | Guardar actividades |
 | POST | `/api/semanas/:id/enviar` | Alumno | Enviar a validación |
+| POST | `/api/semanas/:id/validacion` | Vinculación / Admin | Validar o rechazar una semana `ENVIADA` en nombre del supervisor |
 | GET | `/api/validacion/:token` | Público con token | Ver semana(s) a validar; incluye todas las del supervisor (RF-21a) |
 | POST | `/api/validacion/:token` | Público con token | Validar o rechazar |
-| GET | `/api/panel/alumnos` | Vinculación | Tabla con filtros y alertas |
-| GET | `/api/panel/alumnos.xlsx` | Vinculación | Exportación |
-| GET | `/api/panel/edumedia.xlsx` | Vinculación | Exportación con los datos para completar Edumedia (RF-26) |
-| GET | `/api/expedientes/:id/reporte.pdf` | Alumno dueño / Vinculación | Reporte de horas y actividades |
+
+### Panel y reportes
+
+| Método | Ruta | Rol | Descripción |
+| --- | --- | --- | --- |
+| GET | `/api/panel/alumnos` | Vinculación / Admin | Tabla con filtros y alertas |
+| GET | `/api/panel/alumnos.xlsx` | Vinculación / Admin | Exportación |
+| GET | `/api/panel/edumedia.xlsx` | Vinculación / Admin | Exportación con los datos para completar Edumedia (RF-26) |
+
+### Notificaciones push
+
+| Método | Ruta | Rol | Descripción |
+| --- | --- | --- | --- |
+| GET | `/api/push/clave-publica` | Sesión | Clave pública VAPID |
+| POST | `/api/push/suscripciones` | Alumno | Registrar la suscripción push del dispositivo |
+| DELETE | `/api/push/suscripciones` | Alumno | Eliminar la suscripción push |
 
 El endpoint de escaneo es idempotente: si llega dos veces el mismo `id` (por reintento sin conexión), responde con el registro existente.
+
+Los errores de la API tienen una sola forma: `{ error: { code, message, details? } }`, con `message` en español.
+
+**No implementado en v1:** `POST /api/auth/login` y `POST /api/auth/logout` de la versión anterior de las specs; los reemplazan las rutas de Better Auth (`/api/auth/sign-in/*` y `/api/auth/sign-out`).
 
 ---
 

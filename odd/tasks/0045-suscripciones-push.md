@@ -39,4 +39,3 @@ Primera de las tareas de recordatorios (RF-28): la base para enviar notificacion
 - `PUSH_NO_CONFIGURADO` usa 503: el servidor funciona pero esta función opcional no está configurada. El frontend debe ocultar el aviso de notificaciones en ese caso.
 - Las rutas no usan `requireTrustedOrigin`, igual que el resto de routers con sesión (solo `/api/auth` lo monta).
 - Un mismo navegador que inicia sesión con otro usuario reasigna su suscripción (el `endpoint` es único), así no llegan avisos de una cuenta a otra persona.
-- Pendiente a mano: agregar al `backend/.env.example` las tres variables VAPID comentadas, con el comando de generación.
