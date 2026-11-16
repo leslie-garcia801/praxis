@@ -45,9 +45,48 @@ describe('parseEnv', () => {
   it('RF-21: in production RESEND_API_KEY and MAIL_FROM are required', () => {
     expect(() => parseEnv({ ...base, NODE_ENV: 'production' })).toThrow(/RESEND_API_KEY/);
     expect(() => parseEnv({ ...base, NODE_ENV: 'production', RESEND_API_KEY: 're_x' })).toThrow(/MAIL_FROM/);
-    expect(parseEnv({ ...base, NODE_ENV: 'production', RESEND_API_KEY: 're_x', MAIL_FROM: 'a@b.invalid' }).MAIL_FROM).toBe(
-      'a@b.invalid',
+    expect(
+      parseEnv({
+        ...base,
+        NODE_ENV: 'production',
+        RESEND_API_KEY: 're_x',
+        MAIL_FROM: 'a@b.invalid',
+      }).MAIL_FROM,
+    ).toBe('a@b.invalid');
+  });
+
+  describe('claves VAPID (RF-28)', () => {
+    const vapid = { VAPID_PUBLIC_KEY: 'pub', VAPID_PRIVATE_KEY: 'priv', VAPID_SUBJECT: 'mailto:vinculacion@praxis.invalid' };
+    const produccion = { ...base, NODE_ENV: 'production', RESEND_API_KEY: 're_x', MAIL_FROM: 'a@b.invalid' };
+
+    it('RF-28: son opcionales fuera de producción', () => {
+      const env = parseEnv(base);
+      expect(env.VAPID_PUBLIC_KEY).toBeUndefined();
+      expect(parseEnv({ ...base, ...vapid }).VAPID_SUBJECT).toBe('mailto:vinculacion@praxis.invalid');
+    });
+
+    it.each(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT'] as const)(
+      'RF-28: si falta solo %s, falla nombrándola (todas o ninguna)',
+      (clave) => {
+        const source: Record<string, string> = { ...base, ...vapid };
+        delete source[clave];
+        expect(() => parseEnv(source)).toThrow(new RegExp(clave));
+      },
     );
+
+    it('RF-28: en producción son opcionales (sin ellas el push queda apagado y la API arranca)', () => {
+      expect(parseEnv(produccion).VAPID_PUBLIC_KEY).toBeUndefined();
+      expect(parseEnv({ ...produccion, ...vapid }).VAPID_PRIVATE_KEY).toBe('priv');
+    });
+
+    it('RF-28: en producción también van las tres o ninguna', () => {
+      expect(() => parseEnv({ ...produccion, VAPID_PUBLIC_KEY: 'pub' })).toThrow(/VAPID_PRIVATE_KEY/);
+    });
+
+    it('RF-28: VAPID_SUBJECT debe ser mailto: o una URL https', () => {
+      expect(parseEnv({ ...base, ...vapid, VAPID_SUBJECT: 'https://praxis.invalid' }).VAPID_SUBJECT).toBe('https://praxis.invalid');
+      expect(() => parseEnv({ ...base, ...vapid, VAPID_SUBJECT: 'contacto' })).toThrow(/VAPID_SUBJECT/);
+    });
   });
 
   it('RF-21: development and test do not require the mail variables', () => {

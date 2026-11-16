@@ -92,26 +92,27 @@ model Plantel {
 // ---------------------------------------------------------------------------
 
 model User {
-  id              String        @id
-  name            String
-  email           String        @unique
-  emailVerified   Boolean       @default(false) @map("email_verified")
-  image           String?
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  id                String            @id
+  name              String
+  email             String            @unique
+  emailVerified     Boolean           @default(false) @map("email_verified")
+  image             String?
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
   // username plugin: student control number (matrícula, 14 digits)
-  username        String?       @unique
-  displayUsername String?       @map("display_username")
+  username          String?           @unique
+  displayUsername   String?           @map("display_username")
   // Spec fields (Usuario)
-  plantelId       String        @map("plantel_id")
-  plantel         Plantel       @relation(fields: [plantelId], references: [id])
-  rol             Rol           @default(ALUMNO)
-  oficina         TipoPrograma? // scope of a VINCULACION user; null = both (RN-03b)
-  debeCambiar     Boolean       @default(false) @map("debe_cambiar")
-  activo          Boolean       @default(true)
-  sessions        Session[]
-  accounts        Account[]
-  alumno          Alumno?
+  plantelId         String            @map("plantel_id")
+  plantel           Plantel           @relation(fields: [plantelId], references: [id])
+  rol               Rol               @default(ALUMNO)
+  oficina           TipoPrograma? // scope of a VINCULACION user; null = both (RN-03b)
+  debeCambiar       Boolean           @default(false) @map("debe_cambiar")
+  activo            Boolean           @default(true)
+  sessions          Session[]
+  accounts          Account[]
+  alumno            Alumno?
+  suscripcionesPush SuscripcionPush[]
 
   @@map("users")
 }
@@ -379,6 +380,22 @@ model SolicitudCorreccion {
   // Partial unique index in the migration: one PENDIENTE request per attendance (una_correccion_pendiente).
   @@index([asistenciaId])
   @@map("solicitudes_correccion")
+}
+
+// RF-28: a browser push subscription of a user (one per device/browser). The endpoint is unique: the same browser
+// signing in as another user reassigns it. A 404/410 from the push service deletes the row.
+model SuscripcionPush {
+  id            String   @id @default(uuid())
+  usuarioId     String   @map("usuario_id")
+  usuario       User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  endpoint      String   @unique
+  p256dh        String
+  auth          String
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz
+
+  @@index([usuarioId])
+  @@map("suscripciones_push")
 }
 
 model AuditLog {

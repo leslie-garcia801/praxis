@@ -14,6 +14,7 @@ import { importacionesRouter } from './modules/importaciones/importaciones.route
 import { institucionesRouter } from './modules/instituciones/instituciones.routes.js';
 import { meRouter } from './modules/me/me.routes.js';
 import { panelRouter } from './modules/panel/panel.routes.js';
+import { pushRouter } from './modules/push/push.routes.js';
 import { semanasRouter } from './modules/semanas/semanas.routes.js';
 import { supervisoresDeInstitucionRouter, supervisoresRouter } from './modules/supervisores/supervisores.routes.js';
 import { usuariosRouter } from './modules/usuarios/usuarios.routes.js';
@@ -56,6 +57,7 @@ export function createApp() {
   app.use('/api/correcciones', correccionesRouter);
   app.use('/api/carreras', carrerasRouter);
   app.use('/api/panel', panelRouter);
+  app.use('/api/push', pushRouter);
   // Public: the supervisor validates with the token of the email link, no session (RF-21).
   app.use('/api/validacion', validacionRouter);
 
