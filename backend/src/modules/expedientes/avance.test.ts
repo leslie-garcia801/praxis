@@ -156,8 +156,35 @@ describe('GET /api/expedientes/:id/avance (RF-18, RN-11, RN-16)', () => {
 
     const res = await pedir(c.id, await c.cookie());
 
-    expect(res.body.avance.turnoAbierto).toEqual({ id: abierto.id, entrada: instanteLocal(HOY, '08:00').toISOString() });
+    expect(res.body.avance.turnoAbierto).toEqual({ id: abierto.id, entrada: instanteLocal(HOY, '08:00').toISOString(), recordarSalida: false });
     expect(res.body.avance.minutosRegistrados).toBe(0);
+  });
+
+  it('RF-28: recordarSalida es true cuando el turno abierto lleva 6 h o más (pedido a las 12:00)', async () => {
+    const c = await caso();
+    await crearAsistencia({ expedienteId: c.id, entrada: instanteLocal(HOY, '06:00') });
+
+    const res = await pedir(c.id, await c.cookie());
+
+    expect(res.body.avance.turnoAbierto.recordarSalida).toBe(true);
+  });
+
+  it('RN-08: recordarSalida es false para un turno abierto de ayer (ya no se puede cerrar)', async () => {
+    const c = await caso();
+    await crearAsistencia({ expedienteId: c.id, entrada: instanteLocal(sumarDias(HOY, -1), '05:00') });
+
+    const res = await pedir(c.id, await c.cookie());
+
+    expect(res.body.avance.turnoAbierto.recordarSalida).toBe(false);
+  });
+
+  it('RF-28: recordarSalida es false con 5 h 59 min de turno abierto', async () => {
+    const c = await caso();
+    await crearAsistencia({ expedienteId: c.id, entrada: instanteLocal(HOY, '06:01') });
+
+    const res = await pedir(c.id, await c.cookie());
+
+    expect(res.body.avance.turnoAbierto.recordarSalida).toBe(false);
   });
 
   describe('acceso', () => {

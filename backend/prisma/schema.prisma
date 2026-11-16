@@ -92,26 +92,27 @@ model Plantel {
 // ---------------------------------------------------------------------------
 
 model User {
-  id              String        @id
-  name            String
-  email           String        @unique
-  emailVerified   Boolean       @default(false) @map("email_verified")
-  image           String?
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  id                String            @id
+  name              String
+  email             String            @unique
+  emailVerified     Boolean           @default(false) @map("email_verified")
+  image             String?
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
   // username plugin: student control number (matrícula, 14 digits)
-  username        String?       @unique
-  displayUsername String?       @map("display_username")
+  username          String?           @unique
+  displayUsername   String?           @map("display_username")
   // Spec fields (Usuario)
-  plantelId       String        @map("plantel_id")
-  plantel         Plantel       @relation(fields: [plantelId], references: [id])
-  rol             Rol           @default(ALUMNO)
-  oficina         TipoPrograma? // scope of a VINCULACION user; null = both (RN-03b)
-  debeCambiar     Boolean       @default(false) @map("debe_cambiar")
-  activo          Boolean       @default(true)
-  sessions        Session[]
-  accounts        Account[]
-  alumno          Alumno?
+  plantelId         String            @map("plantel_id")
+  plantel           Plantel           @relation(fields: [plantelId], references: [id])
+  rol               Rol               @default(ALUMNO)
+  oficina           TipoPrograma? // scope of a VINCULACION user; null = both (RN-03b)
+  debeCambiar       Boolean           @default(false) @map("debe_cambiar")
+  activo            Boolean           @default(true)
+  sessions          Session[]
+  accounts          Account[]
+  alumno            Alumno?
+  suscripcionesPush SuscripcionPush[]
 
   @@map("users")
 }
@@ -295,41 +296,45 @@ model Expediente {
 }
 
 model Asistencia {
-  id                  String                @id // client-generated UUID (idempotency)
-  expedienteId        String                @map("expediente_id")
-  expediente          Expediente            @relation(fields: [expedienteId], references: [id])
-  entrada             DateTime              @db.Timestamptz
-  salida              DateTime?             @db.Timestamptz
-  salidaId            String?               @unique @map("salida_id") // client-generated UUID of the exit scan (idempotency)
-  minutosAcreditables Int?                  @map("minutos_acreditables")
-  estado              EstadoAsistencia      @default(ABIERTA)
-  sinConexion         Boolean               @default(false) @map("sin_conexion")
-  recibidoEn          DateTime              @default(now()) @map("recibido_en") @db.Timestamptz
-  semanaId            String?               @map("semana_id")
-  semana              SemanaBitacora?       @relation(fields: [semanaId], references: [id])
-  correcciones        SolicitudCorreccion[]
+  id                    String                @id // client-generated UUID (idempotency)
+  expedienteId          String                @map("expediente_id")
+  expediente            Expediente            @relation(fields: [expedienteId], references: [id])
+  entrada               DateTime              @db.Timestamptz
+  salida                DateTime?             @db.Timestamptz
+  salidaId              String?               @unique @map("salida_id") // client-generated UUID of the exit scan (idempotency)
+  minutosAcreditables   Int?                  @map("minutos_acreditables")
+  estado                EstadoAsistencia      @default(ABIERTA)
+  sinConexion           Boolean               @default(false) @map("sin_conexion")
+  recibidoEn            DateTime              @default(now()) @map("recibido_en") @db.Timestamptz
+  semanaId              String?               @map("semana_id")
+  semana                SemanaBitacora?       @relation(fields: [semanaId], references: [id])
+  correcciones          SolicitudCorreccion[]
+  // Instant the "forgot to clock out" reminder was sent (RF-28); null until then. At most one per shift.
+  recordatorioEnviadoEn DateTime?             @map("recordatorio_enviado_en") @db.Timestamptz
 
   @@index([expedienteId, entrada])
   @@map("asistencias")
 }
 
 model SemanaBitacora {
-  id                    String                   @id @default(uuid())
-  expedienteId          String                   @map("expediente_id")
-  expediente            Expediente               @relation(fields: [expedienteId], references: [id])
-  semanaInicio          DateTime                 @map("semana_inicio") @db.Date // Monday
-  actividades           String?
-  estado                EstadoValidacion         @default(BORRADOR)
-  validadoPor           String?                  @map("validado_por") // "supervisor" or VINCULACION user id
-  validadoEn            DateTime?                @map("validado_en") @db.Timestamptz
-  comentario            String?
+  id                     String                   @id @default(uuid())
+  expedienteId           String                   @map("expediente_id")
+  expediente             Expediente               @relation(fields: [expedienteId], references: [id])
+  semanaInicio           DateTime                 @map("semana_inicio") @db.Date // Monday
+  actividades            String?
+  estado                 EstadoValidacion         @default(BORRADOR)
+  validadoPor            String?                  @map("validado_por") // "supervisor" or VINCULACION user id
+  validadoEn             DateTime?                @map("validado_en") @db.Timestamptz
+  comentario             String?
   // Instant the week went to validation (RF-20) and last time the student edited the logbook (used by 0022).
-  enviadaEn             DateTime?                @map("enviada_en") @db.Timestamptz
-  bitacoraActualizadaEn DateTime?                @map("bitacora_actualizada_en") @db.Timestamptz
+  enviadaEn              DateTime?                @map("enviada_en") @db.Timestamptz
+  bitacoraActualizadaEn  DateTime?                @map("bitacora_actualizada_en") @db.Timestamptz
   // Instant the supervisor rejected the week (RF-22); 0022 compares it with bitacoraActualizadaEn.
-  rechazadaEn           DateTime?                @map("rechazada_en") @db.Timestamptz
-  asistencias           Asistencia[]
-  enlaces               EnlaceValidacionSemana[]
+  rechazadaEn            DateTime?                @map("rechazada_en") @db.Timestamptz
+  // Instant the Sunday "write your logbook" reminder was sent for this week (RF-28); null until then.
+  recordatorioBitacoraEn DateTime?                @map("recordatorio_bitacora_en") @db.Timestamptz
+  asistencias            Asistencia[]
+  enlaces                EnlaceValidacionSemana[]
 
   @@unique([expedienteId, semanaInicio])
   @@map("semanas_bitacora")
@@ -379,6 +384,22 @@ model SolicitudCorreccion {
   // Partial unique index in the migration: one PENDIENTE request per attendance (una_correccion_pendiente).
   @@index([asistenciaId])
   @@map("solicitudes_correccion")
+}
+
+// RF-28: a browser push subscription of a user (one per device/browser). The endpoint is unique: the same browser
+// signing in as another user reassigns it. A 404/410 from the push service deletes the row.
+model SuscripcionPush {
+  id            String   @id @default(uuid())
+  usuarioId     String   @map("usuario_id")
+  usuario       User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  endpoint      String   @unique
+  p256dh        String
+  auth          String
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz
+
+  @@index([usuarioId])
+  @@map("suscripciones_push")
 }
 
 model AuditLog {

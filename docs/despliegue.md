@@ -2,7 +2,7 @@
 
 Guía para publicar la app por primera vez. Después, cada merge a `main` se despliega solo en ambos servicios.
 
-Orden: **1) Railway** (base de datos y API) → **2) `vercel.json`** con la URL de Railway → **3) Vercel** → **4) volver a Railway** con la URL de Vercel → **5) primer administrador** → **6) correo semanal**.
+Orden: **1) Railway** (base de datos y API) → **2) `vercel.json`** con la URL de Railway → **3) Vercel** → **4) volver a Railway** con la URL de Vercel → **5) primer administrador** → **6) correo semanal** → **7) recordatorios push**.
 
 ## 1. Railway: base de datos y API
 
@@ -25,7 +25,7 @@ Orden: **1) Railway** (base de datos y API) → **2) `vercel.json`** con la URL 
 | `MAIL_FROM` | Remitente con dominio verificado en Resend, por ejemplo `Praxis <no-reply@tu-dominio.mx>`. Para un demo sin dominio: `Praxis <onboarding@resend.dev>`, que solo entrega correos a la dirección de tu cuenta de Resend |
 | `APP_TIMEZONE` | `America/Monterrey` |
 
-`PORT` lo pone Railway. En producción la API **no arranca** sin `RESEND_API_KEY` y `MAIL_FROM`.
+`PORT` lo pone Railway. En producción la API **no arranca** sin `RESEND_API_KEY` y `MAIL_FROM`. Las claves VAPID de los recordatorios push son opcionales (sección 7).
 
 4. En *Settings → Networking* genera un dominio público. Anota la URL (`https://<servicio>.up.railway.app`).
 5. Comprueba: `curl https://<servicio>.up.railway.app/api/health` → `{"status":"ok"}`.
@@ -83,6 +83,57 @@ railway ssh -- node dist/scripts/resumenSemanal.js --forzar
 
 `--forzar` salta la protección de 12 horas que evita mandar dos enlaces seguidos al mismo supervisor. Úsalo solo en pruebas o en el demo. La tarea envía las semanas en `ENVIADA`, y también envía sola las semanas ya cerradas que sigan en borrador. Con `MAIL_FROM=onboarding@resend.dev` solo llega el correo si el supervisor tiene la dirección de tu cuenta de Resend.
 
+## 7. Recordatorios push (RF-28)
+
+Sin este paso la app funciona igual: el push queda apagado y la tarjeta "Recordatorios" no aparece. El aviso "¿Olvidaste registrar tu salida?" dentro de la app sí se muestra.
+
+### Claves VAPID
+
+1. Genéralas **una sola vez** en tu equipo:
+
+   ```bash
+   cd backend
+   pnpm exec web-push generate-vapid-keys
+   ```
+
+2. Agrega en *Variables* del servicio de la API:
+
+| Variable | Valor |
+| --- | --- |
+| `VAPID_PUBLIC_KEY` | La *Public Key* que imprimió el comando |
+| `VAPID_PRIVATE_KEY` | La *Private Key*. Es secreta: no la subas al repo ni la compartas por chat |
+| `VAPID_SUBJECT` | `mailto:` con un correo de vinculación, por ejemplo `mailto:vinculacion@cbtis258.edu.mx` |
+
+Van las tres o ninguna: si falta una, la API no arranca y el log lo dice. Si faltan las tres, la API arranca y el log avisa `las notificaciones push están apagadas`.
+
+**No cambies las claves después.** Si las regeneras, las suscripciones guardadas dejan de servir y cada alumno tiene que volver a tocar "Activar recordatorios".
+
+### Dos servicios cron nuevos
+
+Créalos igual que el del correo semanal (sección 6): mismo repo, Root Directory `backend`, sin Pre-deploy Command, *Config as code* vacío y **las mismas variables que la API, incluidas las tres VAPID**.
+
+| Servicio | Custom Start Command | Cron Schedule (UTC) | Cuándo es en Monterrey |
+| --- | --- | --- | --- |
+| Recordatorio de salida | `node dist/scripts/recordatorioSalida.js` | `*/15 * * * *` | Cada 15 minutos |
+| Recordatorio de bitácora | `node dist/scripts/recordatorioBitacora.js` | `0 0 * * 1` | Domingo a las 18:00 |
+
+- **Salida:** avisa una sola vez por turno, cuando lleva 6 horas o más abierto y sigue siendo el mismo día (RN-08). Si no hay nada que avisar, termina en segundos.
+- **Bitácora:** avisa a quien registró asistencia esta semana y aún no tiene una bitácora válida. Una segunda ejecución el mismo día no repite el aviso.
+- Cada ejecución imprime cuántos avisos mandó y termina con error si algún envío falló.
+
+Despliega primero la API: ella aplica la migración `recordatorios` que estos servicios necesitan.
+
+### Probar sin esperar
+
+Con el CLI de Railway enlazado al servicio de la API:
+
+```bash
+railway ssh -- node dist/scripts/recordatorioSalida.js
+railway ssh -- node dist/scripts/recordatorioBitacora.js --forzar
+```
+
+`--forzar` repite el aviso de bitácora aunque ya se haya mandado esta semana. Úsalo solo en pruebas.
+
 ## Si algo falla
 
 | Síntoma | Causa probable |
@@ -91,6 +142,9 @@ railway ssh -- node dist/scripts/resumenSemanal.js --forzar
 | `403 INVALID_ORIGIN` al iniciar sesión | `FRONTEND_ORIGIN` o `BETTER_AUTH_URL` no coinciden con la URL de Vercel, o llevan `/` al final |
 | `500` al iniciar sesión y `table public.users does not exist` en los logs | No se aplicaron las migraciones: configura el Pre-deploy Command |
 | `/api/...` por Vercel devuelve 404 con cabeceras `x-railway-*` | `frontend/vercel.json` sigue con el dominio de Railway equivocado o con el placeholder |
+| La API no arranca y el log nombra una variable `VAPID_*` | Definiste solo una o dos de las tres claves VAPID |
+| La tarjeta "Recordatorios" no aparece | Faltan las claves VAPID en la API, o el navegador no soporta push. En iPhone, la app tiene que estar instalada en la pantalla de inicio |
+| Los cron de recordatorios terminan sin enviar nada | Faltan las claves VAPID en el servicio cron (no se heredan de la API), o ningún alumno activó los recordatorios |
 
 ## Lista de verificación después de desplegar
 
@@ -100,3 +154,5 @@ railway ssh -- node dist/scripts/resumenSemanal.js --forzar
 - [ ] Instalar la app en un iPhone y en un Android, y probar la cámara (necesita HTTPS)
 - [ ] Enviar un enlace de validación a un correo real (guía paso a paso: [`prueba-supervisor.md`](prueba-supervisor.md))
 - [ ] Respaldos automáticos de la base activados en Railway (RNF-08)
+- [ ] Recordatorios push en un iPhone (app instalada) y en un Android (pasos en `odd/tasks/0048-despliegue-recordatorios.md`)
+- [ ] Registro sin conexión: abrir la app instalada en modo avión, registrar y ver que se envía al volver la señal

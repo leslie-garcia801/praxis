@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { server } from './msw/server';
+import { resetPushMocks } from './push';
 
 // jsdom's fetch needs absolute URLs; resolve relative /api paths against a fake origin.
 const originalFetch = globalThis.fetch;
@@ -11,6 +12,7 @@ globalThis.fetch = (input, init) =>
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => {
   server.resetHandlers();
+  resetPushMocks();
   localStorage.clear();
   cleanup();
 });

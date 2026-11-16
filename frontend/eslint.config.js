@@ -24,6 +24,11 @@ export default tseslint.config(
     },
   },
   {
+    // Service worker script served as-is from public/ (not bundled).
+    files: ['public/push-sw.js'],
+    languageOptions: { globals: globals.serviceworker },
+  },
+  {
     // shadcn/ui generated components export variants next to components.
     files: ['src/components/ui/**/*.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
