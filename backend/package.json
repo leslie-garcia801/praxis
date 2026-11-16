@@ -22,6 +22,7 @@
     "job:resumen-semanal": "tsx --env-file-if-exists=.env src/scripts/resumenSemanal.ts",
     "job:recordatorio-salida": "tsx --env-file-if-exists=.env src/scripts/recordatorioSalida.ts",
     "job:recordatorio-bitacora": "tsx --env-file-if-exists=.env src/scripts/recordatorioBitacora.ts",
+    "job:metricas-piloto": "tsx --env-file-if-exists=.env src/scripts/metricasPiloto.ts",
     "dev:enlace": "tsx --env-file-if-exists=.env src/scripts/enviarEnlacePrueba.ts"
   },
   "dependencies": {
