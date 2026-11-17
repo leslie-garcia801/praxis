@@ -243,7 +243,7 @@ function construirFila(f: FilaBase, ahoraFecha: Date, hoy: FechaISO, minutosPorD
     institucion: f.institucion_id ? { id: f.institucion_id, nombre: f.institucion_nombre! } : null,
     minutosValidados: validados,
     metaMinutos,
-    porcentaje: Math.min(100, Math.floor((validados * 100) / metaMinutos)),
+    porcentaje: Math.min(100, Math.floor((validados * 1000) / metaMinutos) / 10), // one decimal, truncated
     minutosRegistrados: registrados,
     ultimoRegistro: f.ultimo_registro,
     semanasPendientes: Number(f.semanas_enviadas),

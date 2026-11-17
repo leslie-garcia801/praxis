@@ -112,8 +112,18 @@ describe('GET /api/expedientes/:id/avance (RF-18, RN-11, RN-16)', () => {
       minutosValidados: 240, // 120 + 60 + 60 transferidos
       minutosRegistrados: 120, // 30 (semana enviada) + 90 (sin semana)
       minutosFaltantes: 240 * 60 - 240, // solo las validadas restan
-      porcentaje: 1, // 240 / 14400 = 1.67 % → hacia abajo
+      porcentaje: 1.6, // 240 / 14400 = 1.67 % → un decimal, hacia abajo
     });
+  });
+
+  it('RF-18: el porcentaje muestra un decimal para que pocos minutos validados no se vean como 0 %', async () => {
+    const c = await caso({ tipo: 'SERVICIO_SOCIAL' });
+    await crearSemana({ expedienteId: c.id, semanaInicio: '2026-11-09', estado: 'VALIDADA', minutos: [38] });
+
+    const res = await pedir(c.id, await c.cookie());
+
+    expect(res.status).toBe(200);
+    expect(res.body.avance).toMatchObject({ minutosValidados: 38, porcentaje: 0.1 }); // 38 / 28800 = 0.13 %
   });
 
   it('RN-11: el porcentaje tiene tope de 100 y no hay faltantes', async () => {

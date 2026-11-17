@@ -397,7 +397,7 @@ export async function obtenerAvance(user: AuthUser, id: string, ahora: () => Dat
     minutosValidados: validados,
     minutosRegistrados,
     minutosFaltantes: Math.max(0, metaMinutos - validados),
-    porcentaje: Math.min(100, Math.floor((validados * 100) / metaMinutos)),
+    porcentaje: Math.min(100, Math.floor((validados * 1000) / metaMinutos) / 10), // one decimal, truncated
     // RN-16: the estimate follows the student's real pace, so registered minutes count as done.
     fechaEstimada: estimarFechaTermino({
       minutosFaltantes: Math.max(0, metaMinutos - validados - minutosRegistrados),
