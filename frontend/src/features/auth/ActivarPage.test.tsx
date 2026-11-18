@@ -180,14 +180,16 @@ describe('/activar (RF-02, RNF-07)', () => {
     expect(called).toBe(false);
   });
 
-  it('RNF-07: shows the provisional privacy notice and states which data is not collected', async () => {
+  it('RNF-07: shows the approved simplified privacy notice and states which data is not collected', async () => {
     const { user } = renderApp('/activar');
     await reachPasswordStep(user);
 
     const notice = screen.getByRole('region', { name: 'Aviso de privacidad' });
-    expect(notice).toHaveTextContent('Texto provisional pendiente de aprobación del plantel');
-    expect(notice).toHaveTextContent('departamento de vinculación del CBTIS 258');
-    expect(notice).toHaveTextContent('No se recaban CURP, edad, sexo, servicio médico ni número de afiliación');
+    expect(notice).not.toHaveTextContent('Texto provisional');
+    expect(notice).toHaveTextContent('a través de su Departamento de Vinculación, es responsable');
+    expect(notice).toHaveTextContent('No pedimos CURP, edad, sexo, servicio médico ni número de afiliación');
+    expect(notice).toHaveTextContent('Tu supervisor ve tus horas y tu bitácora para validarlas');
+    expect(notice).toHaveTextContent('aviso de privacidad integral en las oficinas de vinculación del plantel');
   });
 
   it('RF-02: activates, signs in by username with the new password and goes to /alumno', async () => {
