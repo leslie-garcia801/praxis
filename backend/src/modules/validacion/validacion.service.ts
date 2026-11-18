@@ -1,6 +1,7 @@
 import { env } from '../../config/env.js';
 import { turnoFueraDeHorario } from '../../domain/horario.js';
 import { generarToken, hashToken } from '../../domain/tokens.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../lib/errors.js';
 import { enviarCorreo } from '../../lib/mailer.js';
 import { prisma } from '../../lib/prisma.js';
@@ -61,6 +62,30 @@ export async function enviarEnlaceValidacion(supervisorId: string, semanaIds: st
     },
     { timeout: TIMEOUT_TRANSACCION_MS },
   );
+}
+
+// RF-21: weeks waiting for their supervisor. The weekly email and the resend after an address change use this filter.
+export const SEMANAS_POR_VALIDAR = { estado: 'ENVIADA', expediente: { estado: { not: 'CANCELADO' } } } satisfies Prisma.SemanaBitacoraWhereInput;
+
+// RF-09, RF-21: the supervisor's address changed, so every link still valid was sent to the old one. They expire now:
+// whoever opens one gets "use the latest email" (410).
+export async function anularEnlacesVigentes(tx: Prisma.TransactionClient, supervisorId: string, momento: Date) {
+  await tx.enlaceValidacion.updateMany({ where: { supervisorId, expiraEn: { gt: momento } }, data: { expiraEn: momento } });
+}
+
+// RF-09, RF-21: right after an address change, emails the supervisor's pending weeks to the new address instead of
+// waiting for Monday. A sending failure is only logged: the weekly job sends them again.
+export async function reenviarSemanasPorValidar(supervisorId: string) {
+  try {
+    const semanas = await prisma.semanaBitacora.findMany({
+      where: { ...SEMANAS_POR_VALIDAR, expediente: { ...SEMANAS_POR_VALIDAR.expediente, supervisorId } },
+      select: { id: true },
+    });
+    if (semanas.length === 0) return;
+    await enviarEnlaceValidacion(supervisorId, semanas.map((s) => s.id));
+  } catch (error) {
+    console.error(`No se pudo reenviar el enlace al supervisor ${supervisorId}; se enviará en el resumen semanal.`, error);
+  }
 }
 
 // RF-21: unknown token is 404, an expired one is 410 (the supervisor should use the latest email).

@@ -3,6 +3,7 @@ import type { Prisma, Supervisor } from '../../generated/prisma/client.js';
 import { AppError } from '../../lib/errors.js';
 import { prisma } from '../../lib/prisma.js';
 import type { AuthUser } from '../../middleware/auth.js';
+import { anularEnlacesVigentes, reenviarSemanasPorValidar } from '../validacion/validacion.service.js';
 import type { CrearSupervisorInput, EditarSupervisorInput } from './supervisores.schemas.js';
 
 // RN-03: the active states of a case file.
@@ -104,6 +105,7 @@ export async function editarSupervisor(user: AuthUser, id: string, input: Editar
     if (input.activo === false) await exigirSinExpedientesActivos(tx, id);
 
     const nuevo = await tx.supervisor.update({ where: { id }, data: input });
+    if (nuevo.correo !== actual.correo) await anularEnlacesVigentes(tx, id, new Date());
 
     const antes = instantanea(actual);
     const despues = instantanea(nuevo);
@@ -120,7 +122,8 @@ export async function editarSupervisor(user: AuthUser, id: string, input: Editar
         },
       });
     }
-    return nuevo;
+    return { nuevo, correoCambiado: nuevo.correo !== actual.correo };
   });
-  return aRespuestaSupervisor(actualizado, user);
+  if (actualizado.correoCambiado) await reenviarSemanasPorValidar(id);
+  return aRespuestaSupervisor(actualizado.nuevo, user);
 }
