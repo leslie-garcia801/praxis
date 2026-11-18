@@ -158,6 +158,11 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
       <Link to="/alumno/historial" className={linkClass}>
         Historial
       </Link>
+      {expediente.estado === 'EN_PROCESO' && (
+        <Link to="/alumno/libreta" className={linkClass}>
+          Agregar horas
+        </Link>
+      )}
       <DatosExpediente expedienteId={expediente.id} />
       <RegistrosRechazados />
       <PendientesAlumno />

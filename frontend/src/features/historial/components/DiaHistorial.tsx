@@ -1,5 +1,6 @@
 import { TOPE_DIARIO_TEXTO } from '@/lib/reglas';
 import { formatDiaCorto, formatHoras } from '@/lib/tiempo';
+import { EtiquetaLibreta } from '../../libreta/components/EtiquetaLibreta';
 import { CorreccionTurno, type VistaHistorial } from '../../correcciones/components/CorreccionTurno';
 import type { DiaHistorial as Dia, Turno } from '../api';
 import { textoRango } from '../rangoTurno';
@@ -8,11 +9,13 @@ function TurnoItem({ turno, vista }: { turno: Turno; vista: VistaHistorial }) {
   return (
     <li className="flex flex-col gap-0.5 rounded-lg border p-3">
       <span className="font-medium">{textoRango(turno)}</span>
+      {turno.origen === 'LIBRETA' && <EtiquetaLibreta />}
       {turno.minutosAcreditables !== null && (
         <span className="text-foreground">Acreditado: {formatHoras(turno.minutosAcreditables)}</span>
       )}
       {turno.sinConexion && <span className="text-sm text-muted-foreground">Registrado sin conexión</span>}
-      <CorreccionTurno turno={turno} vista={vista} />
+      {/* RN-19: notebook shifts are not corrected one by one; the whole week is corrected. */}
+      {turno.origen !== 'LIBRETA' && <CorreccionTurno turno={turno} vista={vista} />}
     </li>
   );
 }

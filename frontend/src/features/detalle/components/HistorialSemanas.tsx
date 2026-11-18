@@ -5,6 +5,7 @@ import { formatFecha, formatHoras, formatRangoSemana, hoyMonterrey, sumarDias } 
 import { messageOf } from '../../importaciones/archivo';
 import { DiaHistorial } from '../../historial/components/DiaHistorial';
 import type { EstadoValidacion, SemanaHistorial } from '../../historial/api';
+import { EtiquetaLibreta, TEXTO_SIN_BITACORA } from '../../libreta/components/EtiquetaLibreta';
 import { useSemanaDeExpediente } from '../api';
 import { AccionesSemana } from './AccionesSemana';
 
@@ -24,7 +25,15 @@ function BitacoraLectura({ semana }: { semana: SemanaHistorial }) {
       <h3 id="detalle-bitacora" className="text-lg font-semibold">
         Bitácora
       </h3>
-      {semana.id === null ? (
+      {semana.deLibreta ? (
+        <>
+          <p className="rounded-lg border bg-muted p-3 text-foreground">{TEXTO_SIN_BITACORA}</p>
+          {semana.enviadaEn && <p className="text-foreground">Enviada el {formatFecha(semana.enviadaEn)}</p>}
+          {semana.estadoValidacion === 'RECHAZADA' && semana.comentario && (
+            <p className="text-foreground">Comentario del supervisor: «{semana.comentario}»</p>
+          )}
+        </>
+      ) : semana.id === null ? (
         <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
           La semana aún no tiene registros ni bitácora
         </p>
@@ -53,6 +62,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
       <header className="flex flex-col gap-1">
         <h3 className="text-lg font-semibold">Semana del {formatRangoSemana(semana.inicio, semana.fin)}</h3>
         <p className="text-foreground">{semana.estadoValidacion ? TEXTO_VALIDACION[semana.estadoValidacion] : 'Sin registros'}</p>
+        {semana.deLibreta && <EtiquetaLibreta />}
       </header>
       <div className="flex max-w-md gap-2">
         <Button type="button" variant="outline" className="flex-1" onClick={() => onIr(sumarDias(semana.inicio, -7))}>

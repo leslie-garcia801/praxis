@@ -15,6 +15,8 @@ export type Pendiente = {
   estado: EstadoValidacion;
   motivo: MotivoPendiente;
   comentario: string | null;
+  // RF-17a: the week was captured from the paper notebook.
+  deLibreta: boolean;
 };
 
 export type SemanaBitacora = {

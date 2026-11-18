@@ -13,6 +13,7 @@ import { CorreccionesPendientesPage } from './features/correcciones/components/C
 import { PanelPage } from './features/panel/components/PanelPage';
 import { RegistrarPage } from './features/escaneo/components/RegistrarPage';
 import { ValidarSemanasPage } from './features/validacion/components/ValidarSemanasPage';
+import { LibretaPage } from './features/libreta/components/LibretaPage';
 import { PlaceholderPage } from './components/PlaceholderPage';
 import { VinculacionLayout } from './features/vinculacion/components/VinculacionLayout';
 import { ActivarPage } from './features/auth/components/ActivarPage';
@@ -47,6 +48,7 @@ export const routes: RouteObject[] = [
           { path: 'registrar', element: <RegistrarPage /> },
           { path: 'expediente', element: <ExpedientePage /> },
           { path: 'historial', element: <HistorialPage /> },
+          { path: 'libreta', element: <LibretaPage /> },
         ],
       },
     ],

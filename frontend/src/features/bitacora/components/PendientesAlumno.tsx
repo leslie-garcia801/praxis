@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { diaMonterrey, formatDiaCorto, formatRangoSemana, lunesDeSemana } from '@/lib/tiempo';
 import { useMisCorrecciones, type CorreccionConTurno } from '../../correcciones/api';
+import { EtiquetaLibreta } from '../../libreta/components/EtiquetaLibreta';
 import { usePendientes, type Pendiente } from '../api';
 
 // A rejected correction stays in the list for this many days, so the student sees the office's answer (RF-17).
@@ -12,6 +13,8 @@ const enlaceClass = 'text-primary underline underline-offset-4';
 
 function textoPendiente(p: Pendiente): string {
   const rango = formatRangoSemana(p.semanaInicio, p.semanaFin);
+  // RF-17a: a rejected notebook week is fixed by replacing its shifts; it has no logbook.
+  if (p.deLibreta) return `Corrige las horas de la semana del ${rango}`;
   switch (p.motivo) {
     case 'RECHAZADA':
       return `Corrige la bitácora de la semana del ${rango}`;
@@ -86,9 +89,17 @@ export function PendientesAlumno() {
         <ul aria-label="Pendientes" className="flex flex-col gap-2">
           {semanas.map((p) => (
             <li key={p.id} className="flex flex-col gap-1 rounded-lg border p-3">
-              <Link to={`/alumno/historial?semana=${encodeURIComponent(p.semanaInicio)}`} className={enlaceClass}>
+              <Link
+                to={
+                  p.deLibreta
+                    ? `/alumno/libreta?corregir=${encodeURIComponent(p.semanaInicio)}`
+                    : `/alumno/historial?semana=${encodeURIComponent(p.semanaInicio)}`
+                }
+                className={enlaceClass}
+              >
                 {textoPendiente(p)}
               </Link>
+              {p.deLibreta && <EtiquetaLibreta />}
               {p.comentario && <p className="text-foreground">Comentario de tu supervisor: «{p.comentario}»</p>}
             </li>
           ))}
