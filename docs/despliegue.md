@@ -134,6 +134,31 @@ railway ssh -- node dist/scripts/recordatorioBitacora.js --forzar
 
 `--forzar` repite el aviso de bitácora aunque ya se haya mandado esta semana. Úsalo solo en pruebas.
 
+Si el CLI está enlazado a otro servicio, agrega `--service praxis` (el servicio de la API) antes de `--`. Deja un espacio entre `--` y `node`: `railway ssh --node ...` falla con `unexpected argument '--node' found`.
+
+### Mostrar el aviso en una demostración
+
+El aviso de bitácora es el que se puede provocar al momento; el de salida solo llega cuando un turno lleva 6 horas abierto. Probado en producción en un iPhone el 2026-11-18.
+
+**Antes de la demostración:**
+
+1. En el celular, abre la app desde la pantalla de inicio (en iPhone tiene que estar instalada; en Safari no aparece la tarjeta).
+2. Entra con un alumno de prueba y, en **Recordatorios**, activa los avisos y acepta el permiso del sistema.
+3. Registra una entrada con ese alumno. Necesita asistencia esta semana y ninguna bitácora válida; si ya la tiene, no hay nada que avisar.
+4. En tu equipo, abre una terminal en `backend/` y deja el comando listo:
+
+   ```bash
+   railway ssh --service praxis -- node dist/scripts/recordatorioBitacora.js --forzar
+   ```
+
+**Durante la demostración:**
+
+1. Bloquea el celular o deja la app en segundo plano: así se ve como una notificación real.
+2. Ejecuta el comando. Debe imprimir `Notificaciones enviadas: 1` o más.
+3. La notificación llega al celular en unos segundos; al tocarla, abre el historial de esa semana en la app, donde el alumno escribe la bitácora.
+
+Si imprime `Notificaciones enviadas: 0`, el alumno ya tiene una bitácora válida esta semana o no tiene asistencia; usa otro alumno de prueba. Si imprime errores, revisa la tabla de la sección siguiente.
+
 ## Si algo falla
 
 | Síntoma | Causa probable |
