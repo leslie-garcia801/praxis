@@ -30,6 +30,9 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         // Precache the app shell only; /api responses are not cached (see frontend/CLAUDE.md).
+        // The basic Latin font files (Geist and Manrope, ~54 KB) are precached so text keeps its look offline;
+        // other subsets load on demand.
+        globPatterns: ['**/*.{js,css,html}', '**/*-latin-wght-normal-*.woff2'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         // Push and notification click handlers (RF-28): plain JS in public/, loaded by the generated sw.js.

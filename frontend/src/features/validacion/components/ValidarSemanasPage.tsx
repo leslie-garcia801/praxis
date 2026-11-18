@@ -60,14 +60,14 @@ export function ValidarSemanasPage() {
     if (error instanceof ApiError && error.code === 'ENLACE_NO_VALIDO') {
       return (
         <Pantalla>
-          <h1 className="text-2xl font-bold">Este enlace no es válido.</h1>
+          <h1 className="text-[1.75rem] font-extrabold">Este enlace no es válido.</h1>
         </Pantalla>
       );
     }
     if (error instanceof ApiError && error.code === 'ENLACE_VENCIDO') {
       return (
         <Pantalla>
-          <h1 className="text-2xl font-bold">Este enlace venció. Usa el del correo más reciente.</h1>
+          <h1 className="text-[1.75rem] font-extrabold">Este enlace venció. Usa el del correo más reciente.</h1>
         </Pantalla>
       );
     }
@@ -106,7 +106,7 @@ export function ValidarSemanasPage() {
   return (
     <Pantalla>
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">Hola, {supervisor.nombre}</h1>
+        <h1 className="text-[1.75rem] font-extrabold">Hola, {supervisor.nombre}</h1>
         {pendientes.length > 0 && (
           <p className="text-lg">
             {pendientes.length === 1 ? 'Tienes 1 semana pendiente.' : `Tienes ${pendientes.length} semanas pendientes.`}

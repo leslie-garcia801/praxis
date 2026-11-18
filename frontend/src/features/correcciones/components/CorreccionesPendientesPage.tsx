@@ -46,7 +46,7 @@ export function CorreccionesPendientesPage() {
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">Correcciones pendientes</h1>
+      <h1 className="text-[1.75rem] font-extrabold">Correcciones pendientes</h1>
       {correcciones.isPending && <p role="status">Cargando correcciones…</p>}
       {correcciones.isError && <ErrorConReintento message={messageOf(correcciones.error)} onRetry={() => void correcciones.refetch()} />}
       {correcciones.data?.length === 0 && (

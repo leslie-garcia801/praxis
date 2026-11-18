@@ -43,7 +43,7 @@ function Encabezado({ expediente }: { expediente: ExpedienteDetalle }) {
   const nombre = [alumno.nombre, alumno.apellidoPaterno, alumno.apellidoMaterno].filter(Boolean).join(' ');
   return (
     <header className="flex flex-col gap-2">
-      <h1 className="text-2xl font-bold">Detalle del alumno</h1>
+      <h1 className="text-[1.75rem] font-extrabold">Detalle del alumno</h1>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <p className="text-xl font-semibold">{nombre}</p>
         <span className="rounded-md border px-2 py-0.5 text-sm font-medium">{TEXTO_ESTADO[expediente.estado]}</span>

@@ -58,7 +58,7 @@ export function AsignarProgramaPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-6xl flex-col gap-6 px-4 py-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">Asignar el siguiente programa</h1>
+        <h1 className="text-[1.75rem] font-extrabold">Asignar el siguiente programa</h1>
         <p className="text-foreground">Alumnos que ya terminaron su primer programa y pueden empezar el que le toca a tu oficina.</p>
       </header>
 

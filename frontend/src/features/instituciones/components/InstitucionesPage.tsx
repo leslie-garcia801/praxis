@@ -39,7 +39,7 @@ export function InstitucionesPage() {
     <main className="mx-auto flex min-h-dvh max-w-5xl flex-col gap-6 px-4 py-8">
       <header className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">Instituciones</h1>
+          <h1 className="text-[1.75rem] font-extrabold">Instituciones</h1>
           <div className="flex flex-wrap gap-2">
             <Link to="/vinculacion/importar/instituciones" className={buttonVariants({ variant: 'outline', className: 'h-11 px-4' })}>
               Importar instituciones
