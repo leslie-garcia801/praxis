@@ -17,7 +17,7 @@ function EtiquetaRiesgo({ fila }: { fila: FilaPanel }) {
   if (fila.riesgo === 'EN_RIESGO') {
     return (
       <div className="flex flex-col items-start gap-1">
-        <span className="rounded-md bg-red-700 px-2 py-0.5 text-sm font-bold text-white">{ETIQUETA_RIESGO.EN_RIESGO}</span>
+        <span className="rounded-md bg-destructive px-2 py-0.5 text-sm font-bold text-destructive-foreground">{ETIQUETA_RIESGO.EN_RIESGO}</span>
         {fila.limite && <span className="text-xs">Límite: {formatFecha(fila.limite)}</span>}
       </div>
     );

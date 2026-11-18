@@ -50,7 +50,7 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
               <span className="font-medium">{textoTurno(turno)}</span>
               {turno.origen === 'LIBRETA' && <EtiquetaLibreta />}
               {turno.fueraDeHorario && (
-                <span className="w-fit rounded-md bg-amber-100 px-2 py-0.5 text-sm font-medium text-amber-950 dark:bg-amber-900 dark:text-amber-50">
+                <span className="w-fit rounded-md bg-aviso px-2 py-0.5 text-sm font-medium text-aviso-foreground">
                   Fuera del horario pactado
                 </span>
               )}
@@ -76,8 +76,8 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
         </p>
       )}
 
-      {semana.estado === 'VALIDADA' && <p className="font-semibold text-green-800 dark:text-green-400">Validada</p>}
-      {semana.estado === 'RECHAZADA' && <p className="font-semibold text-red-800 dark:text-red-400">Rechazada</p>}
+      {semana.estado === 'VALIDADA' && <p className="font-semibold text-exito-foreground">Validada</p>}
+      {semana.estado === 'RECHAZADA' && <p className="font-semibold text-destructive">Rechazada</p>}
 
       {semana.estado === 'ENVIADA' &&
         (rechazando ? (

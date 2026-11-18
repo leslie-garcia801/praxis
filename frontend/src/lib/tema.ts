@@ -7,8 +7,8 @@ export type TemaResuelto = 'claro' | 'oscuro';
 
 export const CLAVE_TEMA = 'praxis.tema';
 export const PREFERENCIAS_TEMA: readonly PreferenciaTema[] = ['claro', 'oscuro', 'sistema'];
-// Light: the PWA manifest color. Dark: the `.dark` --background (oklch(0.145 0 0)).
-export const COLOR_TEMA: Record<TemaResuelto, string> = { claro: '#1e3a8a', oscuro: '#0a0a0a' };
+// Light: the PWA manifest color. Dark: the `.dark` --background (oklch(0.18 0.03 255) = #08121f).
+export const COLOR_TEMA: Record<TemaResuelto, string> = { claro: '#1e3a8a', oscuro: '#08121f' };
 
 const CONSULTA_OSCURO = '(prefers-color-scheme: dark)';
 
