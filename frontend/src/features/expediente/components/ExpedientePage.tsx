@@ -27,7 +27,7 @@ export function ExpedientePage() {
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">Mi expediente</h1>
+      <h1 className="text-[1.75rem] font-extrabold">Mi expediente</h1>
       {me.isPending && <p>Cargando tu expediente…</p>}
       {me.isError && <ErrorConReintento message="No se pudo cargar tu expediente." onRetry={() => void me.refetch()} />}
       {me.data && !activo && (

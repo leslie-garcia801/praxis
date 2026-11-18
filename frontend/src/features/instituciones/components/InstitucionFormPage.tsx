@@ -19,7 +19,7 @@ function Shell({ titulo, children }: { titulo: string; children: React.ReactNode
       <Link to={LISTA} className="text-sm text-primary underline underline-offset-4">
         Volver a instituciones
       </Link>
-      <h1 className="text-2xl font-bold">{titulo}</h1>
+      <h1 className="text-[1.75rem] font-extrabold">{titulo}</h1>
       {children}
     </main>
   );

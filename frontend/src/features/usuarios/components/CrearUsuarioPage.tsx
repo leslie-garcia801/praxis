@@ -94,7 +94,7 @@ export function CrearUsuarioPage() {
       <Link to="/vinculacion/usuarios" className="text-sm underline">
         ← Volver a usuarios
       </Link>
-      <h1 className="text-2xl font-bold">Crear usuario de oficina</h1>
+      <h1 className="text-[1.75rem] font-extrabold">Crear usuario de oficina</h1>
       {creado ? (
         <ResultView creado={creado} onReset={resetAll} />
       ) : (

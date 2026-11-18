@@ -30,7 +30,7 @@ export function AlertasPanel({ alertas, activa, onSeleccionar }: Props) {
               onClick={() => onSeleccionar(seleccionada ? null : clave)}
               className={claseTarjeta}
             >
-              <span className="text-2xl font-bold">{alertas[clave].total}</span>
+              <span className="font-heading text-2xl font-extrabold tabular-nums">{alertas[clave].total}</span>
               <span className="text-sm">{TITULO_ALERTA[clave]}</span>
             </button>
           );
@@ -42,7 +42,7 @@ export function AlertasPanel({ alertas, activa, onSeleccionar }: Props) {
           onClick={() => setVerSupervisores((v) => !v)}
           className={claseTarjeta}
         >
-          <span className="text-2xl font-bold">{supervisoresSinConfirmar.total}</span>
+          <span className="font-heading text-2xl font-extrabold tabular-nums">{supervisoresSinConfirmar.total}</span>
           <span className="text-sm">Supervisores por confirmar</span>
         </button>
       </div>

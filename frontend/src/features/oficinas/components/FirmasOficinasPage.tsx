@@ -86,7 +86,7 @@ export function FirmasOficinasPage() {
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">Firmas de las oficinas</h1>
+      <h1 className="text-[1.75rem] font-extrabold">Firmas de las oficinas</h1>
       <p className="text-foreground">
         El nombre y el cargo aparecen en la firma del reporte PDF de horas de cada oficina.
       </p>

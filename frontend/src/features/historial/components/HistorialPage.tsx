@@ -83,7 +83,7 @@ export function HistorialPage() {
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">Historial</h1>
+      <h1 className="text-[1.75rem] font-extrabold">Historial</h1>
       {historial.isPending && !sinRed && <p>Cargando tu historial…</p>}
       {sinRed && (
         <ErrorConReintento

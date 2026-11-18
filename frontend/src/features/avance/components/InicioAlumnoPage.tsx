@@ -128,7 +128,7 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
           <section className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between">
               <span className="text-muted-foreground">Validado</span>
-              <span className="text-2xl font-bold">{avance.data.porcentaje} %</span>
+              <span className="font-heading text-2xl font-extrabold tabular-nums">{avance.data.porcentaje} %</span>
             </div>
             <Progress value={avance.data.porcentaje} aria-label="Avance validado" />
           </section>
@@ -244,7 +244,7 @@ export function InicioAlumnoPage() {
   const sinSesion = me.data === undefined;
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">Mi avance</h1>
+      <h1 className="text-[1.75rem] font-extrabold">Mi avance</h1>
       {aviso && <AvisoTemporal>{aviso}</AvisoTemporal>}
       {(!enLinea || sinSesion) && <AvisoSinConexion />}
       <EstadoRegistrosPendientes />

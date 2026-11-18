@@ -15,7 +15,7 @@ export function Dato({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border border-border p-3">
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-2xl font-bold">{value}</dd>
+      <dd className="font-heading text-2xl font-extrabold tabular-nums">{value}</dd>
     </div>
   );
 }

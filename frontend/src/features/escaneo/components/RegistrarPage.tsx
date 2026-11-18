@@ -284,7 +284,7 @@ export function RegistrarPage() {
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">Registrar asistencia</h1>
+      <h1 className="text-[1.75rem] font-extrabold">Registrar asistencia</h1>
       {contenido()}
       {!registrar.isSuccess && guardado !== 'listo' && (
         <Link to="/alumno" className={`${linkClass} self-start`}>
