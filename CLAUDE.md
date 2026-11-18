@@ -26,10 +26,10 @@ PWA para que los alumnos registren su asistencia de servicio social (480 h) y pr
 | Lenguaje | TypeScript en modo `strict` en ambos proyectos |
 | Runtime | Node 22 LTS |
 | Gestor de paquetes | pnpm (dentro de cada carpeta) |
-| Frontend | React, **Vite**, React Router, TanStack Query, React Hook Form + Zod, Tailwind CSS, shadcn/ui, vite-plugin-pwa, @zxing/browser (escáner QR) |
-| Backend | Express 5, Zod, Prisma, PostgreSQL, Better Auth, Resend, pdfmake (PDF), SheetJS (Excel/CSV), qrcode |
+| Frontend | React, **Vite**, React Router, TanStack Query, React Hook Form + Zod, Tailwind CSS, shadcn/ui, vite-plugin-pwa, @zxing/browser (escáner QR), @fontsource-variable/manrope (tipografía de títulos) |
+| Backend | Express 5, Zod, Prisma, PostgreSQL, Better Auth, Resend, pdfmake (PDF), SheetJS (Excel/CSV), qrcode, web-push (notificaciones push) |
 | Pruebas backend | Vitest + Supertest contra una base PostgreSQL de prueba |
-| Pruebas frontend | Vitest + React Testing Library + MSW; Playwright para flujos de punta a punta |
+| Pruebas frontend | Vitest + React Testing Library + MSW + fake-indexeddb (cola offline); Playwright para flujos de punta a punta |
 
 No agregues dependencias fuera de esta lista sin preguntar.
 
