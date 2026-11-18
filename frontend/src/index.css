@@ -192,4 +192,17 @@
   h1 {
     letter-spacing: -0.025em;
   }
+  /* iOS Safari gives native date/time inputs an intrinsic width that ignores width: 100%, so side-by-side fields
+     overlap on narrow phones. Dropping the native appearance makes WebKit respect the box. */
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'] {
+    appearance: none;
+    -webkit-appearance: none;
+    min-width: 0;
+    text-align: left;
+  }
+  input::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
