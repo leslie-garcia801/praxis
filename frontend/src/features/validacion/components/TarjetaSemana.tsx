@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { diaMonterrey, formatDiaCorto, formatHora, formatHoras, formatRangoSemana } from '@/lib/tiempo';
 import { EtiquetaLibreta, TEXTO_SIN_BITACORA } from '../../libreta/components/EtiquetaLibreta';
@@ -50,9 +51,7 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
               <span className="font-medium">{textoTurno(turno)}</span>
               {turno.origen === 'LIBRETA' && <EtiquetaLibreta />}
               {turno.fueraDeHorario && (
-                <span className="w-fit rounded-md bg-aviso px-2 py-0.5 text-sm font-medium text-aviso-foreground">
-                  Fuera del horario pactado
-                </span>
+                <Badge variant="aviso">Fuera del horario pactado</Badge>
               )}
             </li>
           ))}

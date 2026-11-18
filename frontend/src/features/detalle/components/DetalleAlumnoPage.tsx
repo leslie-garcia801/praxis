@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ApiError } from '@/lib/api';
 import { formatFecha, formatHoras } from '@/lib/tiempo';
@@ -46,7 +47,7 @@ function Encabezado({ expediente }: { expediente: ExpedienteDetalle }) {
       <h1 className="text-[1.75rem] font-extrabold">Detalle del alumno</h1>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <p className="text-xl font-semibold">{nombre}</p>
-        <span className="rounded-md border px-2 py-0.5 text-sm font-medium">{TEXTO_ESTADO[expediente.estado]}</span>
+        <Badge variant="neutral">{TEXTO_ESTADO[expediente.estado]}</Badge>
       </div>
       <p className="text-foreground">
         {alumno.matricula ?? 'Sin matrícula'} · {TEXTO_TIPO[expediente.tipo]}
