@@ -70,7 +70,11 @@ export function AsignarProgramaPage() {
         </p>
       )}
       {lista.isError && <ErrorConReintento message={messageOf(lista.error)} onRetry={() => void lista.refetch()} />}
-      {lista.data && candidatos.length === 0 && <p>No hay alumnos listos para asignar.</p>}
+      {lista.data && candidatos.length === 0 && (
+        <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
+          No hay alumnos listos para asignar.
+        </p>
+      )}
       {candidatos.length > 0 && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
