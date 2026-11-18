@@ -132,7 +132,7 @@ describe('horas de libreta en el alumno (RF-17a, RN-19)', () => {
     );
     renderApp('/alumno');
     const lista = within(await screen.findByRole('list', { name: 'Pendientes' }));
-    const enlace = lista.getByRole('link', { name: 'Corrige las horas de libreta de la semana del 2 al 8 de noviembre' });
+    const enlace = lista.getByRole('link', { name: 'Corrige las horas de la semana del 2 al 8 de noviembre' });
     expect(enlace).toHaveAttribute('href', '/alumno/libreta?corregir=2026-11-02');
     expect(lista.getByText('Libreta')).toBeInTheDocument();
   });

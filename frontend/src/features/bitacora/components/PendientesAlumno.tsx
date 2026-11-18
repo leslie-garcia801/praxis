@@ -14,7 +14,7 @@ const enlaceClass = 'text-primary underline underline-offset-4';
 function textoPendiente(p: Pendiente): string {
   const rango = formatRangoSemana(p.semanaInicio, p.semanaFin);
   // RF-17a: a rejected notebook week is fixed by replacing its shifts; it has no logbook.
-  if (p.deLibreta) return `Corrige las horas de libreta de la semana del ${rango}`;
+  if (p.deLibreta) return `Corrige las horas de la semana del ${rango}`;
   switch (p.motivo) {
     case 'RECHAZADA':
       return `Corrige la bitácora de la semana del ${rango}`;
