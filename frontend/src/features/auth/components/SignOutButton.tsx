@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { darDeBajaEsteDispositivo, pushKeys } from '@/features/recordatorios/push';
 import { meKey, signOut } from '../api';
 
-export function SignOutButton() {
+// enBarra: styled for the blue header bar; the default keeps the look on a light page.
+export function SignOutButton({ enBarra = false }: { enBarra?: boolean }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [pending, setPending] = useState(false);
@@ -32,11 +33,16 @@ export function SignOutButton() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Button variant="outline" onClick={() => void handleClick()} disabled={pending}>
+      <Button
+        variant="outline"
+        onClick={() => void handleClick()}
+        disabled={pending}
+        className={enBarra ? 'border-white/40 bg-transparent text-encabezado-foreground hover:border-white/60 hover:bg-white/10 hover:text-encabezado-foreground dark:border-white/40 dark:bg-transparent dark:hover:bg-white/10' : undefined}
+      >
         Cerrar sesión
       </Button>
       {failed && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className={enBarra ? 'text-sm font-medium text-encabezado-foreground' : 'text-sm text-destructive'}>
           No se pudo cerrar la sesión. Intenta de nuevo.
         </p>
       )}

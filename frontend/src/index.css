@@ -33,6 +33,10 @@
   --color-aviso: var(--aviso);
   --color-aviso-foreground: var(--aviso-foreground);
   --color-aviso-borde: var(--aviso-borde);
+  --color-encabezado: var(--encabezado);
+  --color-encabezado-foreground: var(--encabezado-foreground);
+  --color-encabezado-muted: var(--encabezado-muted);
+  --color-encabezado-borde: var(--encabezado-borde);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
   --color-info-borde: var(--info-borde);
@@ -99,6 +103,11 @@
   --info: oklch(0.96 0.03 235);
   --info-foreground: oklch(0.3 0.08 245);
   --info-borde: oklch(0.55 0.13 240);
+  /* App header bar: exactly #1e3a8a (the PWA theme-color) so it blends with the browser bar. */
+  --encabezado: oklch(0.379 0.138 265.5);
+  --encabezado-foreground: oklch(1 0 0);
+  --encabezado-muted: oklch(0.86 0.05 250);
+  --encabezado-borde: oklch(0.5 0.12 260);
   --radius: 0.625rem;
   --sidebar: oklch(0.97 0.01 250);
   --sidebar-foreground: oklch(0.2 0.03 260);
@@ -146,6 +155,11 @@
   --info: oklch(0.28 0.06 245);
   --info-foreground: oklch(0.93 0.04 235);
   --info-borde: oklch(0.7 0.12 240);
+  /* Equal to --background (#08121f = COLOR_TEMA.oscuro) so the header blends with the dark browser bar. */
+  --encabezado: oklch(0.18 0.03 255);
+  --encabezado-foreground: oklch(0.97 0.01 250);
+  --encabezado-muted: oklch(0.8 0.04 250);
+  --encabezado-borde: oklch(0.38 0.05 255);
   --sidebar: oklch(0.22 0.035 255);
   --sidebar-foreground: oklch(0.97 0.01 250);
   --sidebar-primary: oklch(0.72 0.14 250);

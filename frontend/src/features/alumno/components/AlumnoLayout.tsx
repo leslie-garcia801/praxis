@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router';
+import { Marca } from '@/components/Marca';
 import { SelectorTema } from '@/components/SelectorTema';
 import { useMe } from '@/features/auth/api';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
@@ -13,20 +14,20 @@ export function AlumnoLayout() {
   const nombre = usuario?.nombre ?? (me.data === undefined ? leerUltimaSesion()?.nombre : undefined);
   return (
     <div className="min-h-dvh">
-      <header className="border-b">
+      <header className="border-b border-encabezado-borde bg-encabezado text-encabezado-foreground">
         <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <span className="text-lg font-bold">Praxis</span>
+            <Marca />
             {nombre && (
-              <p className="truncate text-sm font-medium" title={nombre}>
+              <p className="truncate text-sm font-medium leading-tight" title={nombre}>
                 {nombre}
               </p>
             )}
-            {usuario?.matricula && <p className="text-sm text-muted-foreground">{usuario.matricula}</p>}
+            {usuario?.matricula && <p className="text-sm leading-tight text-encabezado-muted">{usuario.matricula}</p>}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <SelectorTema />
-            <SignOutButton />
+            <SignOutButton enBarra />
           </div>
         </div>
       </header>
