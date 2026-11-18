@@ -1,6 +1,8 @@
 # Aviso de privacidad — borrador para revisión
 
-> **Borrador, no aprobado.** Este texto lo preparó el equipo de desarrollo a partir de los datos que la app guarda realmente. Antes de usarlo, dirección del plantel (idealmente con su Unidad de Transparencia) debe revisarlo, completar los campos marcados como `[pendiente: …]` y confirmar el fundamento legal vigente. Mientras no se apruebe, la app sigue mostrando el texto provisional (specs §13, pregunta 7).
+> **Estado (2026-11-17):** la **versión simplificada está aprobada** y es la que muestra la app al activar la cuenta (specs §13, pregunta 7). Como todavía no hay enlace al aviso integral, la app indica que se consulta en las oficinas de vinculación del plantel.
+>
+> La **versión integral sigue en borrador**: dirección del plantel (idealmente con su Unidad de Transparencia) debe completar los campos marcados como `[pendiente: …]` y confirmar el fundamento legal vigente.
 
 El documento tiene dos versiones, como se acostumbra en el sector público:
 
@@ -11,7 +13,7 @@ El documento tiene dos versiones, como se acostumbra en el sector público:
 
 ---
 
-## Versión simplificada (para la app)
+## Versión simplificada (para la app) — aprobada
 
 **Aviso de privacidad simplificado**
 
@@ -25,7 +27,9 @@ El Centro de Bachillerato Tecnológico industrial y de servicios No. 258 (CBTIS 
 
 **¿Con quién los compartimos?** Tu supervisor ve tus horas y tu bitácora para validarlas. No vendemos ni compartimos tus datos con terceros con fines distintos a los descritos.
 
-Puedes consultar el aviso de privacidad integral en `[pendiente: enlace o lugar de consulta]` o en las oficinas de vinculación del plantel.
+Puedes consultar el aviso de privacidad integral en las oficinas de vinculación del plantel.
+
+> Cuando exista un enlace al aviso integral, se puede agregar a este texto y a la app.
 
 ---
 
@@ -116,6 +120,5 @@ Cualquier cambio a este aviso se publicará en la app y en `[pendiente: medio of
 - [ ] Decidir sobre el consentimiento de madre, padre o tutor para menores de edad
 - [ ] Decidir si se nombran los proveedores tecnológicos
 - [ ] Definir dónde se publica la versión integral
-- [ ] Aprobar el texto y la fecha
-
-Cuando esté aprobado, el texto simplificado se coloca en la app (un solo archivo: `frontend/src/features/auth/components/AvisoPrivacidad.tsx`).
+- [x] Aprobar el texto simplificado (2026-11-17); ya está en la app (`frontend/src/features/auth/components/AvisoPrivacidad.tsx`)
+- [ ] Aprobar el texto integral y su fecha

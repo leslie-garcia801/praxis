@@ -991,7 +991,7 @@ sequenceDiagram
 | 4 | ¿Qué datos del avance podría necesitar Edumedia? ¿Se capturan a mano allí? | Un export compatible ahorraría captura doble | Vinculación |
 | 5 | ¿Hay días inhábiles que no deban contar (vacaciones oficiales)? | Hoy se asume que todos los días cuentan | Vinculación |
 | 6 | ¿Quién además de vinculación debe ver la información de los alumnos (orientadores, tutores)? | La pregunta quedó sin respuesta; define roles | Vinculación |
-| 7 | ¿El plantel tiene un aviso de privacidad redactado que se pueda reutilizar? | RNF-07 | Vinculación y dirección |
+| 7 | ~~¿El plantel tiene un aviso de privacidad redactado que se pueda reutilizar?~~ **Resuelta (2026-11-17):** se aprobó la versión simplificada de `docs/aviso-privacidad-borrador.md` y la app la muestra al activar la cuenta. La versión integral sigue en borrador hasta que dirección complete sus campos pendientes | RNF-07 | Vinculación y dirección |
 | 8 | ¿Cada institución del piloto acepta el QR impreso? | Si alguna no, usar el código corto o validar con el supervisor | Instituciones |
 | 9 | Alumnos sin datos móviles ni wifi en su institución (2 de 11): ¿basta con el registro sin conexión? | Confirmar en el piloto | Alumnos |
 
