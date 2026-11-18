@@ -36,14 +36,14 @@ describe('horas de libreta en el alumno (RF-17a, RN-19)', () => {
   it('RF-17a: el inicio enlaza a la captura de horas de libreta cuando el expediente está en proceso', async () => {
     mockAlumno();
     renderApp('/alumno');
-    expect(await screen.findByRole('link', { name: 'Agregar horas de libreta' })).toHaveAttribute('href', '/alumno/libreta');
+    expect(await screen.findByRole('link', { name: 'Agregar horas' })).toHaveAttribute('href', '/alumno/libreta');
   });
 
   it('RN-19: el inicio no ofrece la captura si el expediente está suspendido', async () => {
     mockAlumno(buildExpedienteActivo({ estado: 'SUSPENDIDO' }));
     renderApp('/alumno');
     await screen.findByRole('link', { name: 'Historial' });
-    expect(screen.queryByRole('link', { name: 'Agregar horas de libreta' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Agregar horas' })).not.toBeInTheDocument();
   });
 
   it('RF-17a: el historial marca la semana y el turno de libreta y no ofrece solicitar corrección (RN-19)', async () => {
