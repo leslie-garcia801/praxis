@@ -208,6 +208,19 @@ describe('resumen semanal al supervisor (RF-20, RF-21, RF-21a, RF-22, RN-17, RF-
     expect(despues.notificados).toHaveLength(1);
   });
 
+  it('RF-21: un enlace anulado por cambio de correo no impide que otra ejecución del mismo día envíe', async () => {
+    const sup = await supervisorNuevo();
+    await alumnoConSemana(sup, { estado: 'ENVIADA' });
+    await ejecutarResumenSemanal({ ahora: LUNES });
+    const anulado = new Date(LUNES.getTime() + HORA);
+    await prisma.enlaceValidacion.updateMany({ where: { supervisorId: sup.supervisor.id }, data: { expiraEn: anulado } });
+
+    const segunda = await ejecutarResumenSemanal({ ahora: new Date(LUNES.getTime() + 2 * HORA) });
+
+    expect(segunda.notificados).toEqual([{ supervisorId: sup.supervisor.id, semanas: 1 }]);
+    expect(correosEnviados()).toHaveLength(2);
+  });
+
   it('RF-29: registra ENVIAR_SEMANA_AUTOMATICO sin usuario, con el estado anterior', async () => {
     const sup = await supervisorNuevo();
     const { semana } = await alumnoConSemana(sup);

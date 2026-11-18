@@ -2,7 +2,7 @@ import type { EstadoValidacion } from '../../generated/prisma/enums.js';
 import { prisma } from '../../lib/prisma.js';
 import { fechaLocal, sumarDias } from '../../lib/tiempo.js';
 import { bitacoraValida, ESTADOS_QUE_ENVIAN, semanaCerrada } from '../semanas/semanas.service.js';
-import { enviarEnlaceValidacion } from './validacion.service.js';
+import { enviarEnlaceValidacion, SEMANAS_POR_VALIDAR } from './validacion.service.js';
 
 // A supervisor who already got a link in this window is skipped, so a retried run does not email twice.
 export const VENTANA_PROTECCION_MS = 12 * 3_600_000;
@@ -37,7 +37,7 @@ export async function ejecutarResumenSemanal({
   const enviadasAutomaticamente = await enviarSemanasCerradas(ahora);
 
   const pendientes = await prisma.semanaBitacora.findMany({
-    where: { estado: 'ENVIADA', expediente: { estado: { not: 'CANCELADO' } } },
+    where: SEMANAS_POR_VALIDAR,
     select: { id: true, expediente: { select: { supervisorId: true } } },
     orderBy: { id: 'asc' },
   });
@@ -57,7 +57,8 @@ export async function ejecutarResumenSemanal({
   for (const [supervisorId, semanaIds] of porSupervisor) {
     if (!forzar) {
       const reciente = await prisma.enlaceValidacion.findFirst({
-        where: { supervisorId, creadoEn: { gt: new Date(ahora.getTime() - VENTANA_PROTECCION_MS) } },
+        // A link revoked by an address change (expired) does not count: its email went to the wrong address.
+        where: { supervisorId, creadoEn: { gt: new Date(ahora.getTime() - VENTANA_PROTECCION_MS) }, expiraEn: { gt: ahora } },
         select: { id: true },
       });
       if (reciente) {
