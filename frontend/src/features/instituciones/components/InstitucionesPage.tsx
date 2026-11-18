@@ -8,7 +8,7 @@ import { useCarreras, useInstituciones, type Filtros, type Institucion, type Tip
 import { DescargarQrButton } from './DescargarQrButton';
 
 const selectClass =
-  'h-10 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
+  'h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
 
 type Borrador = { q: string; municipio: string; carrera: string; turno: string; tipo: string; conCupo: boolean };
 const BORRADOR_VACIO: Borrador = { q: '', municipio: '', carrera: '', turno: '', tipo: '', conCupo: false };
@@ -95,7 +95,7 @@ export function InstitucionesPage() {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="flex min-h-10 items-center gap-2 text-sm">
+          <label className="flex min-h-11 items-center gap-2 text-sm">
             <input type="checkbox" className="size-4" checked={borrador.conCupo} onChange={(e) => set('conCupo', e.target.checked)} />
             Solo con cupo
           </label>
@@ -170,7 +170,7 @@ function Tabla({ instituciones }: { instituciones: Institucion[] }) {
                   <Link
                     to={`/vinculacion/instituciones/${i.id}/editar`}
                     aria-label={`Editar ${i.nombre}`}
-                    className={buttonVariants({ variant: 'outline', size: 'sm', className: 'min-h-9' })}
+                    className={buttonVariants({ variant: 'outline' })}
                   >
                     Editar
                   </Link>

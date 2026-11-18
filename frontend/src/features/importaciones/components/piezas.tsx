@@ -13,7 +13,7 @@ export function Alert({ children }: { children: React.ReactNode }) {
 
 export function Dato({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-border p-3">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="font-heading text-2xl font-extrabold tabular-nums">{value}</dd>
     </div>

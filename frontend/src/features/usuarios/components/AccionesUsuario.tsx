@@ -20,7 +20,7 @@ import { useEditarUsuario, useRestablecerContrasenaUsuario, type UsuarioOficina 
 import { editarUsuarioSchema, type EditarUsuarioValues } from '../schemas';
 
 const selectClass =
-  'h-10 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
+  'h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
 
 type Dialogo = 'editar' | 'estado' | 'restablecer' | null;
 
@@ -40,7 +40,7 @@ export function AccionesUsuario({ usuario, esYo }: { usuario: UsuarioOficina; es
 
   return (
     <div className="flex flex-wrap items-start gap-2">
-      <Button type="button" variant="outline" size="sm" aria-label={`Editar ${usuario.nombre}`} onClick={() => setDialogo('editar')}>
+      <Button type="button" variant="outline" aria-label={`Editar ${usuario.nombre}`} onClick={() => setDialogo('editar')}>
         Editar
       </Button>
       {!esYo && (
@@ -48,7 +48,6 @@ export function AccionesUsuario({ usuario, esYo }: { usuario: UsuarioOficina; es
           <Button
             type="button"
             variant="outline"
-            size="sm"
             aria-label={`${usuario.activo ? 'Desactivar' : 'Reactivar'} ${usuario.nombre}`}
             onClick={() => setDialogo('estado')}
           >
@@ -57,7 +56,6 @@ export function AccionesUsuario({ usuario, esYo }: { usuario: UsuarioOficina; es
           <Button
             type="button"
             variant="outline"
-            size="sm"
             aria-label={`Restablecer contraseña de ${usuario.nombre}`}
             onClick={() => setDialogo('restablecer')}
           >

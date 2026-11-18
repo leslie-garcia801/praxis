@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { Button } from '@/components/ui/button';
 import { NOMBRE_PROGRAMA } from '@/lib/oficinas';
 import type { ResultadoAsignacion } from '../api';
 
@@ -15,12 +16,12 @@ const linkClass = 'text-primary underline underline-offset-4';
 export function ResultadoAsignacionPanel({ resultado, nombres, onCerrar }: Props) {
   const nombreDe = (id: string) => nombres.get(id) ?? 'Alumno';
   return (
-    <section aria-label="Resultado de la asignación" className="flex flex-col gap-3 rounded-lg border p-4">
+    <section aria-label="Resultado de la asignación" className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Resultado de la asignación</h2>
-        <button type="button" className="min-h-10 rounded-lg border px-3 text-sm" onClick={onCerrar}>
+        <h2 className="font-heading text-lg font-bold">Resultado de la asignación</h2>
+        <Button type="button" variant="outline" onClick={onCerrar}>
           Cerrar
-        </button>
+        </Button>
       </div>
       {resultado.asignados.length > 0 && (
         <div className="flex flex-col gap-1">

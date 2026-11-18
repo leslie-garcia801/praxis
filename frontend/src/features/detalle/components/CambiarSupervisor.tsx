@@ -40,7 +40,7 @@ function Formulario({ expediente, institucionId, onCerrar, onListo }: { expedien
   }
 
   return (
-    <form aria-label="Cambiar supervisor" onSubmit={(e) => void enviar(e)} noValidate className="flex max-w-xl flex-col gap-3 rounded-lg border p-3">
+    <form aria-label="Cambiar supervisor" onSubmit={(e) => void enviar(e)} noValidate className="flex max-w-xl flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       <h3 className="text-base font-semibold">Cambiar supervisor</h3>
       {supervisores.isPending && (
         <p role="status" className="text-muted-foreground">

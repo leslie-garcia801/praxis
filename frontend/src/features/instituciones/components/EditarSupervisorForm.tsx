@@ -49,7 +49,7 @@ export function EditarSupervisorForm({
     <div
       role="group"
       aria-label="Editar supervisor"
-      className="flex flex-col gap-3 rounded-lg border p-3"
+      className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm"
       onKeyDown={(e) => {
         if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
           e.preventDefault();

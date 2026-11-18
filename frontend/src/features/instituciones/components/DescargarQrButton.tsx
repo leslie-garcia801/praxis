@@ -35,8 +35,6 @@ export function DescargarQrButton({ id, nombre }: { id: string; nombre: string }
       <Button
         type="button"
         variant="outline"
-        size="sm"
-        className="min-h-9"
         aria-label={`Descargar QR de ${nombre}`}
         onClick={() => {
           setError(null);

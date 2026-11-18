@@ -113,7 +113,7 @@ function Formulario({ id, carreras, inicial }: { id: string | undefined; carrera
   return (
     <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} noValidate className="flex flex-col gap-6">
       {actual && (
-        <section aria-label="Código QR" className="flex flex-col gap-2 rounded-lg border p-3">
+        <section aria-label="Código QR" className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm">
           <p className="text-sm">
             Código corto: <code className="font-mono font-semibold">{actual.codigoCorto}</code>
           </p>

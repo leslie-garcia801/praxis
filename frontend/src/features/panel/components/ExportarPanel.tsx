@@ -1,3 +1,4 @@
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { messageOf } from '../../importaciones/archivo';
@@ -22,10 +23,12 @@ export function ExportarPanel({ filtros, alerta }: Props) {
   return (
     <section aria-label="Exportar" className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-3">
-        <Button type="button" variant="outline" className="min-h-10" disabled={ocupado} onClick={() => exportar(tabla)}>
+        <Button type="button" variant="outline" disabled={ocupado} onClick={() => exportar(tabla)}>
+          <Download aria-hidden="true" />
           {tabla.isPending ? 'Descargando…' : 'Exportar tabla'}
         </Button>
-        <Button type="button" variant="outline" className="min-h-10" disabled={ocupado} onClick={() => exportar(edumedia)}>
+        <Button type="button" variant="outline" disabled={ocupado} onClick={() => exportar(edumedia)}>
+          <Download aria-hidden="true" />
           {edumedia.isPending ? 'Descargando…' : 'Exportar para Edumedia'}
         </Button>
       </div>

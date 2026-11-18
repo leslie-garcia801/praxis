@@ -31,7 +31,7 @@ function Formulario({ supervisor, onCerrar }: { supervisor: SupervisorOficina; o
   });
 
   return (
-    <form aria-label="Editar supervisor" onSubmit={(e) => void enviar(e)} noValidate className="flex max-w-xl flex-col gap-3 rounded-lg border p-3">
+    <form aria-label="Editar supervisor" onSubmit={(e) => void enviar(e)} noValidate className="flex max-w-xl flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       <Field id="edit-sup-titulo" label="Título (opcional)" error={errors.titulo?.message} {...register('titulo')} />
       <Field id="edit-sup-nombre" label="Nombre" error={errors.nombre?.message} {...register('nombre')} />
       <Field id="edit-sup-apellido-paterno" label="Apellido paterno" error={errors.apellidoPaterno?.message} {...register('apellidoPaterno')} />

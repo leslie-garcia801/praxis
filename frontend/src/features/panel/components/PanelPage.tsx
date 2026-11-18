@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useMe } from '@/features/auth/api';
 import { ApiError } from '@/lib/api';
 import { messageOf } from '../../importaciones/archivo';
@@ -76,7 +77,7 @@ export function PanelPage() {
       )}
       {panel.isError &&
         (panel.error instanceof ApiError && panel.error.status === 403 ? (
-          <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {panel.error.message}
           </p>
         ) : (
@@ -85,9 +86,9 @@ export function PanelPage() {
       {panel.data && (
         <section aria-busy={panel.isPlaceholderData} className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <p className="font-medium">{textoContador(alumnos.length)}</p>
+            <p className="font-heading font-bold">{textoContador(alumnos.length)}</p>
             {alerta && (
-              <p className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1 text-sm">
+              <p className="flex items-center gap-2 rounded-lg border border-info-borde/40 bg-info px-3 py-1 text-sm text-info-foreground">
                 <span>Mostrando: {TITULO_ALERTA[alerta]}</span>
                 <span aria-hidden="true">·</span>
                 <Button type="button" variant="link" className="h-auto p-0" onClick={() => cambiarParam(PARAM_ALERTA, null)}>
@@ -96,7 +97,13 @@ export function PanelPage() {
               </p>
             )}
           </div>
-          {alumnos.length === 0 ? <p>No hay alumnos con estos filtros</p> : <TablaAlumnos filas={alumnos} />}
+          {alumnos.length === 0 ? (
+            <p>No hay alumnos con estos filtros</p>
+          ) : (
+            <Card className="overflow-hidden py-0 md:py-0">
+              <TablaAlumnos filas={alumnos} />
+            </Card>
+          )}
         </section>
       )}
     </main>

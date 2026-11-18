@@ -116,7 +116,7 @@ export function ValidarSemanasPage() {
       </header>
 
       {errorEnvio && (
-        <p role="alert" className="text-destructive">
+        <p role="alert" className="rounded-lg border-2 border-destructive/60 bg-destructive/10 p-3 font-medium text-destructive">
           {errorEnvio}
         </p>
       )}
@@ -124,7 +124,7 @@ export function ValidarSemanasPage() {
       {pendientes.length === 0 ? (
         <p className="text-lg font-medium">Listo, no tienes semanas pendientes. Gracias.</p>
       ) : (
-        <Button type="button" className="h-12 text-base" onClick={() => setConfirmando(true)} disabled={resolver.isPending}>
+        <Button type="button" size="lg" onClick={() => setConfirmando(true)} disabled={resolver.isPending}>
           Validar todo
         </Button>
       )}
@@ -146,8 +146,8 @@ export function ValidarSemanasPage() {
 
       {agruparPorAlumno(semanas).map((grupo) => (
         <section key={grupo.nombre} aria-label={grupo.nombre} className="flex flex-col gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">{grupo.nombre}</h2>
+          <div className="border-l-4 border-primary pl-3">
+            <h2 className="font-heading text-xl font-bold">{grupo.nombre}</h2>
             <p className="text-foreground">{grupo.carrera}</p>
           </div>
           {grupo.semanas.map((semana) => (
