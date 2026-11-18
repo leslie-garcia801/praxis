@@ -6,6 +6,8 @@ import { ApiError } from '@/lib/api';
 import { esErrorDeRed, useEnLinea } from '@/lib/conexion';
 import { formatHoras, formatRangoSemana, hoyMonterrey, sumarDias } from '@/lib/tiempo';
 import { BitacoraSemana } from '../../bitacora/components/BitacoraSemana';
+import { EtiquetaLibreta } from '../../libreta/components/EtiquetaLibreta';
+import { PanelLibreta } from '../../libreta/components/PanelLibreta';
 import { useHistorial, type EstadoValidacion, type SemanaHistorial } from '../api';
 import { DiaHistorial } from './DiaHistorial';
 
@@ -30,6 +32,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
       <header className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold">Semana del {formatRangoSemana(semana.inicio, semana.fin)}</h2>
         <p className="text-foreground">{textoValidacion(semana.estadoValidacion)}</p>
+        {semana.deLibreta && <EtiquetaLibreta />}
       </header>
       <div className="flex gap-2">
         <Button type="button" variant="outline" className="flex-1" onClick={() => onIr(sumarDias(semana.inicio, -7))}>
@@ -61,7 +64,7 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
           </p>
         </>
       )}
-      <BitacoraSemana key={semana.inicio} semana={semana} />
+      {semana.deLibreta ? <PanelLibreta semana={semana} /> : <BitacoraSemana key={semana.inicio} semana={semana} />}
     </>
   );
 }

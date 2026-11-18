@@ -12,6 +12,8 @@ export type TurnoValidacion = {
   estado: string;
   minutosAcreditables: number | null;
   fueraDeHorario: boolean;
+  // RF-17a: 'LIBRETA' for shifts captured from the paper notebook.
+  origen: 'QR' | 'LIBRETA';
 };
 
 export type SemanaValidacion = {
@@ -22,6 +24,8 @@ export type SemanaValidacion = {
   semanaFin: string;
   estado: EstadoSemanaValidacion;
   actividades: string | null;
+  // RF-17a: a notebook week carries no logbook.
+  deLibreta: boolean;
   turnos: TurnoValidacion[];
   minutosAcreditables: number;
 };

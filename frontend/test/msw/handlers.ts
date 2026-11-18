@@ -83,6 +83,8 @@ export function buildSemana({
   enviadaEn = null,
   puedeEditar = false,
   puedeEnviar = false,
+  deLibreta = false,
+  puedeCorregirLibreta = false,
   turnosPorDia = {},
   totalesDia = {},
   totales,
@@ -95,6 +97,8 @@ export function buildSemana({
   enviadaEn?: string | null;
   puedeEditar?: boolean;
   puedeEnviar?: boolean;
+  deLibreta?: boolean;
+  puedeCorregirLibreta?: boolean;
   turnosPorDia?: Record<string, Record<string, unknown>[]>;
   totalesDia?: Record<string, { minutosDia: number; minutosAcreditablesDia: number }>;
   totales?: { minutos: number; minutosAcreditables: number };
@@ -113,6 +117,7 @@ export function buildSemana({
       estado: 'CERRADA',
       minutosAcreditables: 240,
       sinConexion: false,
+      origen: deLibreta ? 'LIBRETA' : 'QR',
       ...t,
     }));
     const suma = turnos.reduce((acc, t) => acc + (typeof t.minutosAcreditables === 'number' ? t.minutosAcreditables : 0), 0);
@@ -128,6 +133,8 @@ export function buildSemana({
     enviadaEn,
     puedeEditar,
     puedeEnviar,
+    deLibreta,
+    puedeCorregirLibreta,
     dias,
     totales: totales ?? {
       minutos: dias.reduce((a, d) => a + d.minutosDia, 0),
@@ -145,6 +152,30 @@ export function buildPendiente(overrides: Record<string, unknown> = {}) {
     estado: 'BORRADOR',
     motivo: 'BITACORA_PENDIENTE',
     comentario: null,
+    deLibreta: false,
+    ...overrides,
+  };
+}
+
+// Builds a week of the 201 of POST /api/semanas/libreta and the 200 of PUT /api/semanas/:id/libreta (RF-17a).
+export function buildSemanaLibreta(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '88888888-8888-4888-8888-888888888801',
+    semanaInicio: '2026-11-02',
+    semanaFin: '2026-11-08',
+    estado: 'ENVIADA',
+    deLibreta: true,
+    enviadaEn: '2026-11-11T18:00:00.000Z',
+    minutosAcreditables: 240,
+    turnos: [
+      {
+        id: '99999999-9999-4999-8999-999999999901',
+        entrada: '2026-11-02T16:00:00.000Z',
+        salida: '2026-11-02T20:00:00.000Z',
+        origen: 'LIBRETA',
+        minutosAcreditables: 240,
+      },
+    ],
     ...overrides,
   };
 }
@@ -268,6 +299,7 @@ export function buildSemanaValidacion(overrides: Record<string, unknown> = {}) {
     semanaFin: '2026-11-08',
     estado: 'ENVIADA',
     actividades: 'Apoyé en la captura de expedientes.\nAtendí al público.',
+    deLibreta: false,
     turnos: [
       {
         entrada: '2026-11-02T14:00:00.000Z', // Monday 08:00 in Monterrey
@@ -275,6 +307,7 @@ export function buildSemanaValidacion(overrides: Record<string, unknown> = {}) {
         estado: 'CERRADA',
         minutosAcreditables: 300,
         fueraDeHorario: false,
+        origen: 'QR',
       },
     ],
     minutosAcreditables: 300,

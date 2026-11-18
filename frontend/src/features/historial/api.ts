@@ -8,6 +8,8 @@ import type { Correccion } from '../correcciones/api';
 export type EstadoTurno = 'ABIERTA' | 'CERRADA' | 'INCOMPLETA';
 export type EstadoValidacion = 'BORRADOR' | 'ENVIADA' | 'VALIDADA' | 'RECHAZADA';
 
+export type OrigenTurno = 'QR' | 'LIBRETA';
+
 export type Turno = {
   id: string;
   entrada: string;
@@ -15,6 +17,8 @@ export type Turno = {
   estado: EstadoTurno;
   minutosAcreditables: number | null;
   sinConexion: boolean;
+  // RF-17a: shifts captured from the paper notebook cannot be corrected with a request (RN-19).
+  origen: OrigenTurno;
   // RF-17 (task 0037): the latest correction request and whether the student may request one now.
   correccion: Correccion | null;
   puedeSolicitarCorreccion: boolean;
@@ -38,6 +42,9 @@ export type SemanaHistorial = {
   enviadaEn: string | null;
   puedeEditar: boolean;
   puedeEnviar: boolean;
+  // RF-17a: a notebook week has no logbook; the student fixes a rejected one by replacing its shifts.
+  deLibreta: boolean;
+  puedeCorregirLibreta: boolean;
   dias: DiaHistorial[];
   totales: { minutos: number; minutosAcreditables: number };
 };
