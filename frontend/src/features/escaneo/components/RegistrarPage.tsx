@@ -27,7 +27,7 @@ const linkClass = 'text-primary underline underline-offset-4';
 
 function Aviso({ children }: { children: ReactNode }) {
   return (
-    <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+    <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
       {children}
     </p>
   );

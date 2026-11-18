@@ -31,7 +31,7 @@ export function ExpedientePage() {
       {me.isPending && <p>Cargando tu expediente…</p>}
       {me.isError && <ErrorConReintento message="No se pudo cargar tu expediente." onRetry={() => void me.refetch()} />}
       {me.data && !activo && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+        <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
           No tienes un expediente activo. {ACUDE_A_TU_OFICINA}
         </p>
       )}

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Bell } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { SeccionCard } from '@/components/SeccionCard';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { Button } from '@/components/ui/button';
 import { activarPush, desactivarPush, detectarEstado, pushKeys } from '../push';
@@ -8,11 +10,14 @@ const DESCRIPCION = 'Te avisamos si olvidas registrar tu salida y el domingo par
 
 function Tarjeta({ children }: { children: ReactNode }) {
   return (
-    <section aria-label="Recordatorios" className="flex flex-col gap-2 rounded-lg border p-3">
-      <h2 className="font-semibold">Recordatorios</h2>
+    <SeccionCard aria-label="Recordatorios">
+      <h2 className="flex items-center gap-2 font-heading text-lg font-bold">
+        <Bell aria-hidden="true" className="size-5 shrink-0 text-primary" />
+        Recordatorios
+      </h2>
       <p className="text-foreground">{DESCRIPCION}</p>
       {children}
-    </section>
+    </SeccionCard>
   );
 }
 
@@ -40,7 +45,7 @@ export function RecordatoriosCard() {
     case 'instalar':
       return (
         <Tarjeta>
-          <div role="status" className="flex flex-col gap-1 rounded-lg border bg-muted p-3 text-foreground">
+          <div role="status" className="flex flex-col gap-1 rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
             <p>Para recibir recordatorios en iPhone, agrega la app a tu pantalla de inicio: toca Compartir y luego Agregar a inicio.</p>
             <p className="text-sm">Necesitas iOS 16.4 o más reciente.</p>
           </div>
@@ -49,7 +54,7 @@ export function RecordatoriosCard() {
     case 'bloqueado':
       return (
         <Tarjeta>
-          <p className="rounded-lg border bg-muted p-3 text-foreground">
+          <p className="rounded-lg border-2 border-aviso-borde bg-aviso p-3 text-aviso-foreground">
             Bloqueaste las notificaciones de esta app. Para recibir recordatorios, actívalas en los ajustes del navegador o del
             teléfono.
           </p>
@@ -58,14 +63,14 @@ export function RecordatoriosCard() {
     case 'activo':
       return (
         <Tarjeta>
-          <p className="font-medium">Recordatorios activados</p>
+          <p className="font-medium text-exito-foreground">Recordatorios activados</p>
           {desactivar.isError ? (
             <ErrorConReintento
               message="No se pudieron desactivar los recordatorios. Intenta de nuevo."
               onRetry={() => desactivar.mutate()}
             />
           ) : (
-            <Button variant="outline" className="h-12" disabled={desactivar.isPending} onClick={() => desactivar.mutate()}>
+            <Button variant="outline" disabled={desactivar.isPending} onClick={() => desactivar.mutate()}>
               Desactivar
             </Button>
           )}
@@ -80,7 +85,7 @@ export function RecordatoriosCard() {
               onRetry={() => activar.mutate(actual.clavePublica)}
             />
           ) : (
-            <Button className="h-12" disabled={activar.isPending} onClick={() => activar.mutate(actual.clavePublica)}>
+            <Button disabled={activar.isPending} onClick={() => activar.mutate(actual.clavePublica)}>
               Activar recordatorios
             </Button>
           )}

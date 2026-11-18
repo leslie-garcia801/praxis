@@ -95,7 +95,7 @@ export function FormularioLibreta({ correccion, inicial, fechaInicio, onEnviado 
         {fields.map((campo, i) => {
           const e = errors.turnos?.[i];
           return (
-            <fieldset key={campo.clave} className="flex flex-col gap-3 rounded-lg border p-3">
+            <fieldset key={campo.clave} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
               <legend className="px-1 font-medium">{`Turno ${i + 1}`}</legend>
               <Field
                 id={`turno-${i}-fecha`}

@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
+import { cn } from 'cn';
 import { ACUDE_A_TU_OFICINA, NOMBRE_OFICINA, acudeALaOficina } from '@/lib/oficinas';
+import { History, NotebookPen, QrCode, ScanLine, UserRound } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { AvisoTemporal } from '@/components/AvisoTemporal';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { SeccionCard } from '@/components/SeccionCard';
 import { Progress } from '@/components/ui/progress';
 import { PendientesAlumno } from '@/features/bitacora/components/PendientesAlumno';
 import { useMe, type Me } from '@/features/auth/api';
@@ -19,26 +23,37 @@ type Expediente = NonNullable<Me['expedienteActivo']>;
 
 const linkClass = 'text-primary underline underline-offset-4';
 
+// Secondary destinations: a full-width row, at least 44 px tall, with a decorative icon.
+const filaClass = cn(buttonVariants({ variant: 'outline' }), 'h-12 w-full justify-start gap-3 text-base');
+
+const avisoBase = 'rounded-lg border-2 p-3';
+const avisoInfoClass = `${avisoBase} border-info-borde bg-info text-info-foreground`;
+const avisoAvisoClass = `${avisoBase} border-aviso-borde bg-aviso text-aviso-foreground`;
+
 function Aviso({ children }: { children: string }) {
   return (
-    <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+    <p role="status" className={avisoInfoClass}>
       {children}
     </p>
   );
 }
 
 function RegistrarButton({ habilitado }: { habilitado: boolean }) {
-  const className = 'h-14 w-full text-lg';
+  const className = 'h-16 w-full gap-3 text-xl font-bold shadow-md [&_svg:not([class*=size-])]:size-6';
   if (!habilitado) {
     return (
       <Button className={className} disabled>
+        <QrCode aria-hidden="true" />
         Registrar
       </Button>
     );
   }
   return (
     <Button asChild className={className}>
-      <Link to="/alumno/registrar">Registrar</Link>
+      <Link to="/alumno/registrar">
+        <ScanLine aria-hidden="true" />
+        Registrar
+      </Link>
     </Button>
   );
 }
@@ -46,9 +61,9 @@ function RegistrarButton({ habilitado }: { habilitado: boolean }) {
 // RF-28: the server flags a shift open for 6 h or more on the same day; there is still time to register the exit.
 function AvisoOlvidoSalida() {
   return (
-    <section role="alert" className="flex flex-col gap-2 rounded-lg border-2 border-aviso-borde bg-aviso p-3 text-aviso-foreground">
+    <section role="alert" className={`flex flex-col gap-2 ${avisoAvisoClass}`}>
       <p className="text-lg font-semibold">¿Olvidaste registrar tu salida?</p>
-      <Button asChild className="h-12 w-full">
+      <Button asChild className="w-full">
         <Link to="/alumno/registrar">Registrar salida</Link>
       </Button>
     </section>
@@ -77,7 +92,7 @@ function DatosExpediente({ expedienteId }: { expedienteId: string }) {
   const detalle = useExpediente(expedienteId);
   const { institucion, supervisor } = detalle.data ?? {};
   return (
-    <section aria-label="Mi expediente" className="flex flex-col gap-2 rounded-lg border p-3">
+    <SeccionCard aria-label="Mi expediente">
       {detalle.data && (
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-foreground">
           <dt>Institución</dt>
@@ -86,10 +101,11 @@ function DatosExpediente({ expedienteId }: { expedienteId: string }) {
           <dd className="text-right font-medium">{supervisor ? nombreSupervisor(supervisor) : 'Sin asignar'}</dd>
         </dl>
       )}
-      <Link to="/alumno/expediente" className={linkClass}>
+      <Link to="/alumno/expediente" className={filaClass}>
+        <UserRound aria-hidden="true" className="size-5 text-primary" />
         Mi expediente
       </Link>
-    </section>
+    </SeccionCard>
   );
 }
 
@@ -103,20 +119,20 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
         <Aviso>{`Tu expediente está suspendido; no puedes registrar asistencia. ${acudeALaOficina(expediente.tipo)}`}</Aviso>
       )}
       {avance.isPending && avance.fetchStatus === 'paused' && (
-        <p>Sin conexión. Tu avance se mostrará cuando vuelva la conexión.</p>
+        <p className={avisoInfoClass}>Sin conexión. Tu avance se mostrará cuando vuelva la conexión.</p>
       )}
       {avance.isPending && avance.fetchStatus !== 'paused' && <p>Cargando tu avance…</p>}
       {avance.isError && esErrorDeRed(avance.error) && !avance.data && (
-        <div role="alert" className="flex flex-col gap-2">
-          <p className="text-destructive">Sin conexión. No se pudo cargar tu avance.</p>
+        <div role="alert" className="flex flex-col gap-2 rounded-lg border-2 border-destructive/60 bg-destructive/10 p-3">
+          <p className="font-medium text-destructive">Sin conexión. No se pudo cargar tu avance.</p>
           <Button variant="outline" onClick={() => void avance.refetch()}>
             Reintentar
           </Button>
         </div>
       )}
       {avance.isError && !esErrorDeRed(avance.error) && (
-        <div role="alert" className="flex flex-col gap-2">
-          <p className="text-destructive">No se pudo cargar tu avance.</p>
+        <div role="alert" className="flex flex-col gap-2 rounded-lg border-2 border-destructive/60 bg-destructive/10 p-3">
+          <p className="font-medium text-destructive">No se pudo cargar tu avance.</p>
           <Button variant="outline" onClick={() => void avance.refetch()}>
             Reintentar
           </Button>
@@ -125,41 +141,53 @@ function AvanceContenido({ expediente }: { expediente: Expediente }) {
       {avance.data && (
         <>
           {avance.data.turnoAbierto?.recordarSalida && <AvisoOlvidoSalida />}
-          <section className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between">
-              <span className="text-muted-foreground">Validado</span>
-              <span className="font-heading text-2xl font-extrabold tabular-nums">{avance.data.porcentaje} %</span>
-            </div>
-            <Progress value={avance.data.porcentaje} aria-label="Avance validado" />
-          </section>
+          <Card>
+            <CardContent className="flex flex-col gap-4">
+              <section className="flex flex-col gap-2">
+                <div className="flex items-baseline justify-between">
+                  <span className="font-medium text-muted-foreground">Validado</span>
+                  <span className="font-heading text-5xl font-extrabold tabular-nums text-primary">{avance.data.porcentaje} %</span>
+                </div>
+                <Progress value={avance.data.porcentaje} aria-label="Avance validado" className="h-4" />
+              </section>
 
-          <section className="flex flex-col gap-1">
-            <p className="text-lg font-semibold">
-              {formatHoras(avance.data.minutosValidados)} de {formatHoras(avance.data.metaMinutos)}
-            </p>
-            <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-foreground">
-              <dt>Validadas por tu supervisor</dt>
-              <dd className="text-right font-medium">{formatHoras(avance.data.minutosValidados)}</dd>
-              <dt>Registradas sin validar</dt>
-              <dd className="text-right font-medium">{formatHoras(avance.data.minutosRegistrados)}</dd>
-              <dt>Faltan</dt>
-              <dd className="text-right font-medium">{formatHoras(avance.data.minutosFaltantes)}</dd>
-            </dl>
-          </section>
+              <section className="flex flex-col gap-3">
+                <p className="text-lg font-semibold tabular-nums">
+                  {formatHoras(avance.data.minutosValidados)} de {formatHoras(avance.data.metaMinutos)}
+                </p>
+                <dl className="grid grid-cols-3 gap-2 text-foreground">
+                  <div className="flex flex-col gap-1 rounded-lg border border-exito-borde/40 bg-exito p-2 text-exito-foreground">
+                    <dt className="text-xs leading-tight">Validadas por tu supervisor</dt>
+                    <dd className="font-heading text-lg font-extrabold tabular-nums">{formatHoras(avance.data.minutosValidados)}</dd>
+                  </div>
+                  <div className="flex flex-col gap-1 rounded-lg border border-info-borde/40 bg-info p-2 text-info-foreground">
+                    <dt className="text-xs leading-tight">Registradas sin validar</dt>
+                    <dd className="font-heading text-lg font-extrabold tabular-nums">{formatHoras(avance.data.minutosRegistrados)}</dd>
+                  </div>
+                  <div className="flex flex-col gap-1 rounded-lg border border-border bg-muted p-2">
+                    <dt className="text-xs leading-tight">Faltan</dt>
+                    <dd className="font-heading text-lg font-extrabold tabular-nums">{formatHoras(avance.data.minutosFaltantes)}</dd>
+                  </div>
+                </dl>
+              </section>
 
-          <p>{textoFechaEstimada(avance.data.fechaEstimada)}</p>
+              <p className="text-foreground">{textoFechaEstimada(avance.data.fechaEstimada)}</p>
 
-          <section className="flex flex-col gap-3">
-            <p className="font-medium">{textoTurno(avance.data.turnoAbierto)}</p>
-          </section>
+              <section className="flex flex-col gap-3 border-t border-border pt-3">
+                <p className="font-medium">{textoTurno(avance.data.turnoAbierto)}</p>
+              </section>
+            </CardContent>
+          </Card>
         </>
       )}
       <RegistrarButton habilitado={!suspendido} />
-      <Link to="/alumno/historial" className={linkClass}>
+      <Link to="/alumno/historial" className={filaClass}>
+        <History aria-hidden="true" className="size-5 text-primary" />
         Historial
       </Link>
       {expediente.estado === 'EN_PROCESO' && (
-        <Link to="/alumno/libreta" className={linkClass}>
+        <Link to="/alumno/libreta" className={filaClass}>
+          <NotebookPen aria-hidden="true" className="size-5 text-primary" />
           Agregar horas
         </Link>
       )}
@@ -188,7 +216,7 @@ function PendienteContenido({ expediente }: { expediente: Expediente }) {
   return (
     <>
       <Aviso>Completa tu expediente para empezar a registrar</Aviso>
-      <Button asChild className="h-12 w-full">
+      <Button asChild className="w-full">
         <Link to="/alumno/expediente">Completar expediente</Link>
       </Button>
     </>
@@ -229,7 +257,8 @@ function ContenidoSinConexion() {
   return (
     <>
       <RegistrarButton habilitado />
-      <Link to="/alumno/historial" className={linkClass}>
+      <Link to="/alumno/historial" className={filaClass}>
+        <History aria-hidden="true" className="size-5 text-primary" />
         Historial
       </Link>
       <RegistrosRechazados />

@@ -24,7 +24,7 @@ export function ResumenExpediente({ expediente }: { expediente: Expediente }) {
 
   return (
     <>
-      <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+      <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
         {aviso}
       </p>
       <dl className="grid grid-cols-1 gap-x-4 gap-y-1">
