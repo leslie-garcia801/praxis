@@ -60,15 +60,17 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
   });
   // RF-20: only the student writes the logbook, so the office never gets edit or send permission.
   const puedeEditar =
-    user.rol === 'ALUMNO' && bitacora !== null && (ESTADOS_EDITABLES as readonly string[]).includes(bitacora.estado);
+    user.rol === 'ALUMNO' && bitacora !== null && !bitacora.deLibreta && (ESTADOS_EDITABLES as readonly string[]).includes(bitacora.estado);
   const puedeEnviar =
     puedeEditar &&
     semanaCerrada(bitacora!.semanaInicio, ahora()) &&
     (ESTADOS_QUE_ENVIAN as readonly string[]).includes(expediente.estado);
 
   // RF-17: only the student asks for corrections, one pending request per shift at a time.
-  const puedeCorregir = (estadoTurno: (typeof turnos)[number]['estado'], estadoUltima: string | undefined) =>
+  // RF-17a: a libreta shift is corrected with its whole week, never one by one.
+  const puedeCorregir = (estadoTurno: (typeof turnos)[number]['estado'], origen: string, estadoUltima: string | undefined) =>
     user.rol === 'ALUMNO' &&
+    origen !== 'LIBRETA' &&
     estadoUltima !== 'PENDIENTE' &&
     turnoCorregible({ estadoTurno, estadoSemana: bitacora?.estado ?? null, estadoExpediente: expediente.estado }) === null;
 
@@ -85,8 +87,9 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
           estado: t.estado,
           minutosAcreditables: t.minutosAcreditables,
           sinConexion: t.sinConexion,
+          origen: t.origen,
           correccion: t.correcciones[0] ? aCorreccion(t.correcciones[0]) : null,
-          puedeSolicitarCorreccion: puedeCorregir(t.estado, t.correcciones[0]?.estado),
+          puedeSolicitarCorreccion: puedeCorregir(t.estado, t.origen, t.correcciones[0]?.estado),
         })),
       minutosDia: resumen.minutos,
       minutosAcreditablesDia: resumen.acreditables,
@@ -98,6 +101,9 @@ export async function obtenerHistorial(user: AuthUser, { semana, expedienteId }:
     fin: fechas[6]!,
     estadoValidacion: bitacora?.estado ?? null,
     id: bitacora?.id ?? null,
+    deLibreta: bitacora?.deLibreta ?? false,
+    // RF-17a: the student replaces the shifts of a libreta week the supervisor rejected (PUT /api/semanas/:id/libreta).
+    puedeCorregirLibreta: user.rol === 'ALUMNO' && bitacora?.deLibreta === true && bitacora.estado === 'RECHAZADA',
     actividades: bitacora?.actividades ?? null,
     // The supervisor's comment only matters while the week is waiting to be corrected.
     comentario: bitacora?.estado === 'RECHAZADA' ? bitacora.comentario : null,

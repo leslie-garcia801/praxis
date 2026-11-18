@@ -107,6 +107,7 @@ describe('GET /api/asistencias (RF-19)', () => {
             estado: 'CERRADA',
             minutosAcreditables: 120,
             sinConexion: false,
+            origen: 'QR',
             correccion: null,
             puedeSolicitarCorreccion: true,
           },

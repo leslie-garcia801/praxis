@@ -30,6 +30,7 @@ const aRespuesta = (s: SemanaBitacora) => ({
   id: s.id,
   semanaInicio: aFecha(s.semanaInicio),
   estado: s.estado,
+  deLibreta: s.deLibreta,
   actividades: s.actividades,
   enviadaEn: s.enviadaEn,
   bitacoraActualizadaEn: s.bitacoraActualizadaEn,
@@ -37,18 +38,23 @@ const aRespuesta = (s: SemanaBitacora) => ({
 
 // Only the student who owns the case file reaches the week (the routes already restrict the role). A week outside
 // the plantel does not exist (404); another student's week is 403.
-async function cargarSemana(db: Tx, user: AuthUser, id: string) {
+export async function cargarSemana(db: Tx, user: AuthUser, id: string) {
   const semana = await db.semanaBitacora.findUnique({ where: { id } });
   if (!semana) throw AppError.notFound('La semana no existe.');
   const expediente = await cargar(db, user, semana.expedienteId);
   return { semana, expediente };
 }
 
+// RN-17 exception (RF-17a): a libreta week has no logbook; the student replaces its shifts with PUT /:id/libreta.
+const deLibreta = () =>
+  conflicto('SEMANA_DE_LIBRETA', 'Esta semana se capturó desde tu libreta y no lleva bitácora. Si fue rechazada, corrige sus turnos.');
+
 const noEditable = () => conflicto('SEMANA_NO_EDITABLE', 'La bitácora de esta semana ya no se puede editar.');
 
 // RF-20: saves the logbook as a draft. `ahora` is injectable for tests.
 export async function guardarBitacora(user: AuthUser, id: string, { actividades }: BitacoraInput, ahora: () => Date = () => new Date()) {
   const { semana } = await cargarSemana(prisma, user, id);
+  if (semana.deLibreta) throw deLibreta();
   if (!(ESTADOS_EDITABLES as readonly string[]).includes(semana.estado)) throw noEditable();
 
   // The state is part of the condition so a concurrent send cannot be overwritten.
@@ -66,6 +72,7 @@ export async function enviarSemana(user: AuthUser, id: string, ahora: () => Date
     const { semana, expediente } = await cargarSemana(tx, user, id);
     const momento = ahora();
 
+    if (semana.deLibreta) throw deLibreta();
     if (!(ESTADOS_QUE_ENVIAN as readonly string[]).includes(expediente.estado)) {
       throw conflicto('EXPEDIENTE_NO_ACTIVO', 'Tu expediente no está en proceso, por lo que no puedes enviar la semana.');
     }
@@ -162,6 +169,7 @@ export async function listarPendientes(user: AuthUser, ahora: () => Date = () =>
     semanaInicio: string;
     semanaFin: string;
     estado: SemanaBitacora['estado'];
+    deLibreta: boolean;
     motivo: MotivoPendiente;
     comentario: string | null;
   }[] = [];
@@ -176,6 +184,7 @@ export async function listarPendientes(user: AuthUser, ahora: () => Date = () =>
       semanaInicio: inicio,
       semanaFin: sumarDias(inicio, 6),
       estado: s.estado,
+      deLibreta: s.deLibreta,
       motivo,
       comentario: s.estado === 'RECHAZADA' ? s.comentario : null,
     });

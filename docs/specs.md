@@ -2,12 +2,13 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 0.3 (borrador para revisión) |
-| Fecha | 15 de noviembre de 2026 |
+| Versión | 0.4 (borrador para revisión) |
+| Fecha | 17 de noviembre de 2026 |
 | Plantel | CBTIS 258, General Escobedo, N. L. |
 | Fuentes | Entrevista a vinculación (1 respuesta), entrevista a alumnos (11 respuestas), reglas de servicio social confirmadas y 4 formatos de Edumedia (solicitud y carta de presentación de prácticas; FSS1 y FSS3 de servicio social) |
 | Cambios en v0.2 | Reglas de servicio social, asignación del tipo por vinculación, dos oficinas responsables, campos tomados de Edumedia, validación en lote |
 | Cambios en v0.3 | §8 y §9 actualizados a lo construido (iteraciones 1–6): rutas reales de la API, modelos de corrección, validación por enlace, recordatorios y suscripciones push; §8.3 con los nombres actuales y el índice de correcciones pendientes; responsable de cada oficina para la firma del reporte PDF (`ResponsableOficina`, `/api/oficinas/responsables`); gestión de usuarios de la oficina (`/api/usuarios`: listar, editar, desactivar, restablecer contraseña); finalizar expediente (`FINALIZAR`, `finalizadoEn`), candidatos al siguiente programa (`/api/expedientes/candidatos`) y cómo se finaliza hoy (§11.2) |
+| Cambios en v0.4 | Horas de libreta (RF-17a, RN-19): el alumno captura en la app los turnos que ya tenía firmados en su libreta de papel; se envían al supervisor por el enlace semanal, sin bitácora. Columnas `origen` (`Asistencia`) y `deLibreta` (`SemanaBitacora`); rutas `POST /api/semanas/libreta` y `PUT /api/semanas/:id/libreta` |
 | Stack | PostgreSQL · Express · React · Node · TypeScript · Prisma (PWA) |
 | Despliegue | Frontend en Vercel · API y base de datos en Railway |
 
@@ -202,6 +203,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 | RN-16 | Fecha estimada de término = hoy + (horas faltantes ÷ promedio diario de los últimos 28 días). Con menos de 5 días registrados se muestra "aún sin datos suficientes" | Diseño | — |
 | RN-17 | Una semana solo puede enviarse a validación si tiene bitácora de actividades | Vinculación (enfoque en actividades) | — |
 | RN-18 | Si el supervisor no valida en 7 días, la semana queda visible para vinculación como pendiente | Diseño | — |
+| RN-19 | Los turnos registrados en libreta antes de usar la app se capturan como turnos con origen `LIBRETA`, solo en semanas cerradas y sin turnos de QR, no cruzan medianoche, se envían al supervisor sin bitácora (excepción a RN-17) y solo cuentan al validarse (RN-11); aplican RN-04 y RN-09. *(Decisión de la responsable del proyecto el 2026-11-17.)* | Responsable del proyecto | Por confirmar con las oficinas |
 
 ---
 
@@ -262,7 +264,9 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 
 **RF-16 Registro sin conexión (S).** Si no hay red, el registro se guarda en el dispositivo (IndexedDB) con un UUID y la hora local, y se envía al recuperar conexión o al abrir la app (RN-14). La pantalla muestra "Pendiente de sincronizar".
 
-**RF-17 Solicitud de corrección.** Para un turno `INCOMPLETA` u otro error, el alumno propone la hora correcta con un motivo. Vinculación la aprueba o rechaza.
+**RF-17 Solicitud de corrección.** Para un turno `INCOMPLETA` u otro error, el alumno propone la hora correcta con un motivo. Vinculación la aprueba o rechaza. Los turnos de libreta (RF-17a) no se corrigen uno por uno: se corrige la semana completa.
+
+**RF-17a Horas de libreta.** El alumno que ya tenía horas registradas y firmadas en una libreta de papel antes de usar la app puede capturar esos turnos (fecha, entrada y salida, hasta 200 por envío) en `POST /api/semanas/libreta`. Condiciones: expediente `EN_PROCESO` con supervisor asignado; cada fecha es igual o posterior a `fechaInicio` y pertenece a una semana ya cerrada (RN-15); el turno no cruza medianoche ni se traslapa con otro; la semana no tiene turnos de QR ni ya fue capturada de libreta (RN-19). La semana se crea con `deLibreta = true`, sin bitácora, y pasa directo a `ENVIADA`: el supervisor la recibe en el enlace semanal (RF-21) y la valida o rechaza como cualquier otra. Si la rechaza, la semana vuelve al alumno, que reemplaza sus turnos con `PUT /api/semanas/:id/libreta` y la reenvía (el comentario del rechazo se conserva como historial). Los turnos se guardan como `CERRADA` con origen `LIBRETA`, se les aplican RN-04 y RN-09, solo cuentan al validarse (RN-11) y quedan en el registro de auditoría (RF-29). Como respaldo, vinculación puede validar en nombre del supervisor al ver la libreta de papel (RF-22). No se sube foto de la libreta.
 
 ### M5. Avance (pantalla de inicio del alumno)
 
@@ -343,8 +347,8 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 | InstitucionCarrera | Carreras que acepta cada institución |
 | Supervisor | Contacto que valida las horas; `activo` permite ocultarlo sin borrarlo |
 | Expediente | Un servicio o una práctica de un alumno |
-| Asistencia | Un turno: entrada y salida; guarda el UUID del escaneo de salida (`salidaId`) y el aviso de olvido de salida (`recordatorioEnviadoEn`) |
-| SemanaBitacora | Actividades de una semana y su validación (`enviadaEn`, `rechazadaEn`, `recordatorioBitacoraEn`) |
+| Asistencia | Un turno: entrada y salida; guarda el UUID del escaneo de salida (`salidaId`) y el aviso de olvido de salida (`recordatorioEnviadoEn`) y su `origen` (`QR` o `LIBRETA`, RF-17a) |
+| SemanaBitacora | Actividades de una semana y su validación (`enviadaEn`, `rechazadaEn`, `recordatorioBitacoraEn`, `deLibreta`) |
 | EnlaceValidacion | Enlace con token (solo se guarda su hash) que agrupa las semanas que se envían a un supervisor en un correo; vence a los 14 días |
 | EnlaceValidacionSemana | Semanas incluidas en cada enlace |
 | SolicitudCorreccion | Cambio propuesto a un turno, con `comentario` de rechazo y `resueltoEn` |
@@ -395,6 +399,14 @@ enum EstadoAsistencia {
   INCOMPLETA
 
   @@map("estado_asistencia")
+}
+
+// RF-17a: origen del turno. QR es el escaneo; LIBRETA es un turno copiado de la libreta de papel.
+enum OrigenAsistencia {
+  QR
+  LIBRETA
+
+  @@map("origen_asistencia")
 }
 
 enum EstadoValidacion {
@@ -604,6 +616,7 @@ model Asistencia {
   minutosAcreditables   Int?                  @map("minutos_acreditables")
   estado                EstadoAsistencia      @default(ABIERTA)
   sinConexion           Boolean               @default(false) @map("sin_conexion")
+  origen                OrigenAsistencia      @default(QR) @map("origen")
   recibidoEn            DateTime              @default(now()) @map("recibido_en") @db.Timestamptz
   semanaId              String?               @map("semana_id")
   semana                SemanaBitacora?       @relation(fields: [semanaId], references: [id])
@@ -632,6 +645,8 @@ model SemanaBitacora {
   rechazadaEn            DateTime?                @map("rechazada_en") @db.Timestamptz
   // Instant the Sunday "write your logbook" reminder was sent for this week (RF-28); null until then.
   recordatorioBitacoraEn DateTime?                @map("recordatorio_bitacora_en") @db.Timestamptz
+  // RF-17a: la semana se copió de la libreta de papel; no tiene bitácora y va al supervisor tal cual.
+  deLibreta              Boolean                  @default(false) @map("de_libreta")
   asistencias            Asistencia[]
   enlaces                EnlaceValidacionSemana[]
 
@@ -829,6 +844,8 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | GET | `/api/semanas/pendientes` | Alumno | Semanas que requieren atención del alumno (RF-18) |
 | PUT | `/api/semanas/:id/bitacora` | Alumno | Guardar actividades |
 | POST | `/api/semanas/:id/enviar` | Alumno | Enviar a validación |
+| POST | `/api/semanas/libreta` | Alumno | `{ turnos: [{ id (uuid), fecha, entrada, salida }] }` → crea las semanas cerradas con turnos de libreta y las envía al supervisor (RF-17a, RN-19) |
+| PUT | `/api/semanas/:id/libreta` | Alumno | `{ turnos }` → reemplaza los turnos de una semana de libreta rechazada y la reenvía |
 | POST | `/api/semanas/:id/validacion` | Vinculación / Admin | Validar o rechazar una semana `ENVIADA` en nombre del supervisor |
 | GET | `/api/validacion/:token` | Público con token | Ver semana(s) a validar; incluye todas las del supervisor (RF-21a) |
 | POST | `/api/validacion/:token` | Público con token | Validar o rechazar |

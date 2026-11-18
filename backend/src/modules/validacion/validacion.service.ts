@@ -107,8 +107,10 @@ export async function obtenerEnlace(enlace: EnlaceVigente) {
         semanaInicio: inicio,
         semanaFin: sumarDias(inicio, 6),
         estado: s.estado,
+        deLibreta: s.deLibreta,
         actividades: s.actividades,
         turnos: s.asistencias.map((a) => ({
+          origen: a.origen,
           entrada: a.entrada,
           salida: a.salida,
           estado: a.estado,

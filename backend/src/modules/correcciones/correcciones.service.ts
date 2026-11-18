@@ -68,6 +68,11 @@ export async function solicitarCorreccion(
       // 404 outside the plantel, 403 for another student's shift (RN-03b).
       const expediente = await cargar(tx, user, turno.expedienteId);
 
+      // RF-17a: a libreta shift is corrected together with its week, after the supervisor rejects it.
+      if (turno.origen === 'LIBRETA') {
+        throw conflicto('TURNO_DE_LIBRETA', 'Los turnos de libreta no se corrigen uno por uno. Si el supervisor rechaza la semana, corrígela con los turnos de tu libreta.');
+      }
+
       const motivo = motivoRechazoCorreccion({
         estadoTurno: turno.estado,
         estadoSemana: turno.semana?.estado ?? null,

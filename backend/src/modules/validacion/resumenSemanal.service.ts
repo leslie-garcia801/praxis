@@ -85,6 +85,8 @@ async function enviarSemanasCerradas(ahora: Date): Promise<number> {
   const candidatas = await prisma.semanaBitacora.findMany({
     where: {
       estado: { in: ['BORRADOR', 'RECHAZADA'] },
+      // RF-17a: libreta weeks have no logbook; the student resends them with PUT /api/semanas/:id/libreta.
+      deLibreta: false,
       semanaInicio: { lt: limite },
       expediente: { estado: { in: [...ESTADOS_QUE_ENVIAN] } },
     },

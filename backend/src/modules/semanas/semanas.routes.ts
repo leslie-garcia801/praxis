@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getAuth, requireRol, requireSession } from '../../middleware/auth.js';
-import { bitacoraSchema, resolverSemanaSchema, semanaIdParamsSchema } from './semanas.schemas.js';
+import { bitacoraSchema, libretaSchema, resolverSemanaSchema, semanaIdParamsSchema } from './semanas.schemas.js';
+import { corregirLibreta, registrarLibreta } from './libreta.service.js';
 import { enviarSemana, guardarBitacora, listarPendientes, resolverSemanaPorOficina } from './semanas.service.js';
 
 export const semanasRouter = Router();
@@ -26,4 +27,15 @@ semanasRouter.post('/:id/validacion', requireSession(), requireRol('VINCULACION'
 semanasRouter.post('/:id/enviar', requireSession(), requireRol('ALUMNO'), async (req, res) => {
   const { id } = semanaIdParamsSchema.parse(req.params);
   res.json({ semana: await enviarSemana(getAuth(req).user, id) });
+});
+
+// RF-17a, RN-19: the student copies the shifts of the paper notebook into closed weeks.
+semanasRouter.post('/libreta', requireSession(), requireRol('ALUMNO'), async (req, res) => {
+  res.status(201).json(await registrarLibreta(getAuth(req).user, libretaSchema.parse(req.body)));
+});
+
+// RF-17a: after a rejection the student replaces the shifts of the week and sends it again.
+semanasRouter.put('/:id/libreta', requireSession(), requireRol('ALUMNO'), async (req, res) => {
+  const { id } = semanaIdParamsSchema.parse(req.params);
+  res.json({ semana: await corregirLibreta(getAuth(req).user, id, libretaSchema.parse(req.body)) });
 });

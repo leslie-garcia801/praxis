@@ -42,3 +42,23 @@ export const resolverSemanaSchema = z
   });
 
 export type ResolverSemanaInput = z.output<typeof resolverSemanaSchema>;
+
+// RF-17a: shifts copied from the paper notebook. Date and times are local wall-clock values (America/Monterrey).
+export const MAX_TURNOS_LIBRETA = 200;
+
+const turnoLibretaSchema = z.strictObject({
+  id: z.uuid('El identificador del turno no es válido.'),
+  fecha: z.iso.date('La fecha debe tener el formato AAAA-MM-DD.'),
+  entrada: z.string('La hora de entrada debe ser texto.').regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'La hora de entrada debe tener el formato HH:MM.'),
+  salida: z.string('La hora de salida debe ser texto.').regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'La hora de salida debe tener el formato HH:MM.'),
+});
+
+export const libretaSchema = z.strictObject({
+  turnos: z
+    .array(turnoLibretaSchema, 'Indica los turnos de la libreta.')
+    .min(1, 'Indica al menos un turno.')
+    .max(MAX_TURNOS_LIBRETA, `No puedes registrar más de ${MAX_TURNOS_LIBRETA} turnos a la vez.`),
+});
+
+export type LibretaInput = z.output<typeof libretaSchema>;
+export type TurnoLibretaInput = LibretaInput['turnos'][number];

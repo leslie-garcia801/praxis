@@ -214,6 +214,7 @@ describe('validación por enlace (RF-21, RF-21a, RF-22, RN-06b)', () => {
         salida: expect.any(String),
         estado: 'CERRADA',
         minutosAcreditables: 120,
+        origen: 'QR',
         fueraDeHorario: false,
       });
     });
