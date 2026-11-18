@@ -127,7 +127,7 @@ export function AuditoriaExpediente({ expedienteId }: { expedienteId: string }) 
       )}
       {auditoria.data &&
         (auditoria.data.entradas.length === 0 ? (
-          <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+          <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
             Aún no hay movimientos registrados
           </p>
         ) : (

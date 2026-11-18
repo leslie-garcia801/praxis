@@ -65,7 +65,7 @@ export function PanelAccion({ titulo, enviar, destructiva, confirmacion, validar
   const id = `motivo-${titulo.replace(/\s+/g, '-').toLowerCase()}`;
 
   return (
-    <form aria-label={titulo} onSubmit={alEnviar} noValidate className="flex max-w-xl flex-col gap-3 rounded-lg border p-3">
+    <form aria-label={titulo} onSubmit={alEnviar} noValidate className="flex max-w-xl flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       <h3 className="text-base font-semibold">{titulo}</h3>
       {children}
       <div className="flex flex-col gap-1.5">

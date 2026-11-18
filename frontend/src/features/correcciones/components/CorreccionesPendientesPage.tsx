@@ -11,7 +11,7 @@ const linkClass = 'text-primary underline underline-offset-4';
 function TarjetaCorreccion({ correccion }: { correccion: CorreccionOficina }) {
   const tituloId = `correccion-${correccion.id}`;
   return (
-    <article aria-labelledby={tituloId} className="flex flex-col gap-2 rounded-lg border p-4">
+    <article aria-labelledby={tituloId} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm">
       <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 id={tituloId} className="text-lg font-semibold">
           <Link to={`/vinculacion/expedientes/${correccion.expediente.id}`} className={linkClass}>
@@ -50,7 +50,7 @@ export function CorreccionesPendientesPage() {
       {correcciones.isPending && <p role="status">Cargando correcciones…</p>}
       {correcciones.isError && <ErrorConReintento message={messageOf(correcciones.error)} onRetry={() => void correcciones.refetch()} />}
       {correcciones.data?.length === 0 && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+        <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
           No hay correcciones pendientes
         </p>
       )}

@@ -38,7 +38,7 @@ function FormularioFirma({ responsable }: { responsable: Responsable }) {
       aria-labelledby={tituloId}
       onSubmit={(e) => void handleSubmit(onSubmit)(e)}
       noValidate
-      className="flex flex-col gap-4 rounded-lg border p-4"
+      className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2 id={tituloId} className="text-lg font-semibold">

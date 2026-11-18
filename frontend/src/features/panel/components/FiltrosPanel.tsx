@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,7 +7,7 @@ import { useCarreras, useInstituciones } from '../../instituciones/api';
 import type { ClaveFiltro, FiltrosPanel as Filtros } from '../api';
 
 const selectClass =
-  'h-10 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
+  'h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
 
 // RN-01: only 5th semester or higher has a case file; the import accepts up to 12.
 const SEMESTRES = [5, 6, 7, 8, 9, 10, 11, 12];
@@ -38,6 +39,8 @@ export function FiltrosPanel({ filtros, mostrarTipo, onCambiar, onLimpiar }: Pro
   });
 
   return (
+    <Card>
+    <CardContent>
     <form aria-label="Filtros" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(e) => e.preventDefault()}>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="p-estado">Estado</Label>
@@ -117,7 +120,7 @@ export function FiltrosPanel({ filtros, mostrarTipo, onCambiar, onLimpiar }: Pro
           </select>
         </div>
       )}
-      <label className="flex min-h-10 items-center gap-2 self-end text-sm">
+      <label className="flex min-h-11 items-center gap-2 self-end text-sm">
         <input
           type="checkbox"
           className="size-4"
@@ -127,10 +130,12 @@ export function FiltrosPanel({ filtros, mostrarTipo, onCambiar, onLimpiar }: Pro
         Solo en riesgo
       </label>
       <div className="flex items-end sm:col-span-2 lg:col-span-4">
-        <Button type="button" variant="outline" size="lg" className="h-11 px-6" onClick={onLimpiar}>
+        <Button type="button" variant="outline" className="px-6" onClick={onLimpiar}>
           Limpiar filtros
         </Button>
       </div>
     </form>
+    </CardContent>
+    </Card>
   );
 }

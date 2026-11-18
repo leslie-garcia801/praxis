@@ -45,7 +45,7 @@ function SupervisorItem({
   }
 
   return (
-    <li className={`flex flex-col gap-1 rounded-lg border p-3 ${inactivo ? 'bg-muted' : ''}`}>
+    <li className={`flex flex-col gap-1 rounded-xl border border-border p-3 shadow-sm ${inactivo ? 'bg-muted' : 'bg-card'}`}>
       <span className="font-medium">{nombre}</span>
       {supervisor.puesto && <span className="text-sm text-muted-foreground">{supervisor.puesto}</span>}
       {(supervisor.correo || supervisor.telefono) && (
@@ -59,13 +59,12 @@ function SupervisorItem({
         </p>
       )}
       <div className="mt-1 flex gap-2">
-        <Button type="button" variant="outline" size="sm" aria-label={`Editar a ${nombre}`} onClick={onEditar}>
+        <Button type="button" variant="outline" aria-label={`Editar a ${nombre}`} onClick={onEditar}>
           Editar
         </Button>
         <Button
           type="button"
           variant="outline"
-          size="sm"
           aria-label={`${inactivo ? 'Reactivar' : 'Desactivar'} a ${nombre}`}
           disabled={actualizar.isPending}
           onClick={() => void cambiarActivo(inactivo)}

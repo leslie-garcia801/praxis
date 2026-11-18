@@ -32,14 +32,14 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
   const idTitulo = `semana-${semana.id}`;
 
   return (
-    <article aria-labelledby={idTitulo} className="flex flex-col gap-3 rounded-xl border bg-card p-4">
+    <article aria-labelledby={idTitulo} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-col gap-0.5">
-        <h3 id={idTitulo} className="font-semibold">
+        <h3 id={idTitulo} className="font-heading text-lg font-bold">
           Semana del {formatRangoSemana(semana.semanaInicio, semana.semanaFin)}
         </h3>
         {semana.deLibreta && <EtiquetaLibreta />}
         <p className="text-foreground">{semana.institucion}</p>
-        <p className="font-medium">Total acreditado: {formatHoras(semana.minutosAcreditables)}</p>
+        <p className="font-medium tabular-nums">Total acreditado: {formatHoras(semana.minutosAcreditables)}</p>
       </div>
 
       {semana.turnos.length === 0 ? (
@@ -47,8 +47,8 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
       ) : (
         <ul className="flex flex-col gap-2">
           {semana.turnos.map((turno) => (
-            <li key={turno.entrada} className="flex flex-col gap-0.5 rounded-lg border p-3">
-              <span className="font-medium">{textoTurno(turno)}</span>
+            <li key={turno.entrada} className="flex flex-col items-start gap-0.5 rounded-lg border border-border bg-muted/50 p-3">
+              <span className="font-medium tabular-nums">{textoTurno(turno)}</span>
               {turno.origen === 'LIBRETA' && <EtiquetaLibreta />}
               {turno.fueraDeHorario && (
                 <Badge variant="aviso">Fuera del horario pactado</Badge>
@@ -59,7 +59,7 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
       )}
 
       {semana.deLibreta ? (
-        <p className="rounded-lg border bg-muted p-3 text-foreground">{TEXTO_SIN_BITACORA}</p>
+        <p className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">{TEXTO_SIN_BITACORA}</p>
       ) : (
         <div className="flex flex-col gap-1">
           <h4 className="font-medium">Bitácora</h4>
@@ -75,8 +75,16 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
         </p>
       )}
 
-      {semana.estado === 'VALIDADA' && <p className="font-semibold text-exito-foreground">Validada</p>}
-      {semana.estado === 'RECHAZADA' && <p className="font-semibold text-destructive">Rechazada</p>}
+      {semana.estado === 'VALIDADA' && (
+        <p>
+          <Badge variant="exito">Validada</Badge>
+        </p>
+      )}
+      {semana.estado === 'RECHAZADA' && (
+        <p>
+          <Badge variant="destructive">Rechazada</Badge>
+        </p>
+      )}
 
       {semana.estado === 'ENVIADA' &&
         (rechazando ? (
@@ -88,13 +96,13 @@ export function TarjetaSemana({ semana, aviso, ocupado, onValidar, onRechazar }:
           />
         ) : (
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button type="button" className="h-11 flex-1 text-base" onClick={onValidar} disabled={ocupado}>
+            <Button type="button" className="flex-1 text-base" onClick={onValidar} disabled={ocupado}>
               Validar
             </Button>
             <Button
               type="button"
               variant="outline"
-              className="h-11 flex-1 text-base"
+              className="flex-1 text-base"
               onClick={() => setRechazando(true)}
               disabled={ocupado}
             >
