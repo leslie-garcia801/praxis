@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { formatFecha, formatHora, formatHoras } from '@/lib/tiempo';
 import type { FilaPanel, Riesgo } from '../api';
@@ -17,12 +18,12 @@ function EtiquetaRiesgo({ fila }: { fila: FilaPanel }) {
   if (fila.riesgo === 'EN_RIESGO') {
     return (
       <div className="flex flex-col items-start gap-1">
-        <span className="rounded-md bg-destructive px-2 py-0.5 text-sm font-bold text-destructive-foreground">{ETIQUETA_RIESGO.EN_RIESGO}</span>
+        <Badge variant="destructive-solid">{ETIQUETA_RIESGO.EN_RIESGO}</Badge>
         {fila.limite && <span className="text-xs">Límite: {formatFecha(fila.limite)}</span>}
       </div>
     );
   }
-  return <span className="rounded-md border px-2 py-0.5 text-sm">{ETIQUETA_RIESGO[fila.riesgo]}</span>;
+  return <Badge variant="neutral">{ETIQUETA_RIESGO[fila.riesgo]}</Badge>;
 }
 
 function FechaEstimada({ fila }: { fila: FilaPanel }) {

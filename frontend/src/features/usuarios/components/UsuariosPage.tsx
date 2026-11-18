@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
+import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { useMe } from '@/features/auth/api';
 import { messageOf } from '@/features/importaciones/archivo';
@@ -15,8 +16,7 @@ function etiquetaOficina({ rol, oficina }: UsuarioOficina): string {
 }
 
 function Insignia({ children, tono = 'neutro' }: { children: string; tono?: 'neutro' | 'alerta' }) {
-  const color = tono === 'alerta' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground';
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${color}`}>{children}</span>;
+  return <Badge variant={tono === 'alerta' ? 'destructive' : 'neutral'}>{children}</Badge>;
 }
 
 // On a phone each row is a card (data-label shows the column name); from md up it is a table.
