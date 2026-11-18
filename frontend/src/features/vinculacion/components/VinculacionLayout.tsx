@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
+import { Marca } from '@/components/Marca';
 import { SelectorTema } from '@/components/SelectorTema';
 import { useMe } from '@/features/auth/api';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
@@ -22,8 +24,10 @@ const ENLACES_ADMIN: Enlace[] = [
 
 const claseEnlace = ({ isActive }: { isActive: boolean }) =>
   [
-    'rounded-lg px-3 py-2 text-sm font-medium',
-    isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted',
+    'flex min-h-11 items-center rounded-lg px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/70',
+    isActive
+      ? 'bg-white/15 text-encabezado-foreground shadow-[inset_0_-3px_0_0_currentColor]'
+      : 'text-encabezado-foreground/90 hover:bg-white/10 hover:text-encabezado-foreground',
   ].join(' ');
 
 // Shell of every office screen (RN-03b): app name, menu, the office of the user and sign out.
@@ -35,16 +39,17 @@ export function VinculacionLayout() {
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b">
+      <header className="border-b border-encabezado-borde bg-encabezado text-encabezado-foreground">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <span className="text-lg font-bold">Praxis</span>
+          <Marca />
           <button
             type="button"
             aria-expanded={abierto}
             aria-controls="menu-vinculacion"
             onClick={() => setAbierto((v) => !v)}
-            className="ml-auto min-h-10 rounded-lg border px-3 text-sm md:hidden"
+            className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/40 px-3 text-sm font-medium text-encabezado-foreground outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 md:hidden"
           >
+            {abierto ? <X aria-hidden="true" className="size-4" /> : <Menu aria-hidden="true" className="size-4" />}
             Menú
           </button>
           <nav
@@ -58,14 +63,14 @@ export function VinculacionLayout() {
               </NavLink>
             ))}
           </nav>
-          <div className="flex items-center gap-3 md:ml-auto">
+          <div className="flex items-center gap-2 md:ml-auto">
             {data && (
-              <p role="group" aria-label="Perfil" className="rounded-full bg-muted px-3 py-1 text-sm">
+              <p role="group" aria-label="Perfil" className="rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-encabezado-foreground">
                 {etiquetaPerfil(data.usuario)}
               </p>
             )}
             <SelectorTema />
-            <SignOutButton />
+            <SignOutButton enBarra />
           </div>
         </div>
       </header>

@@ -17,10 +17,10 @@ export function SelectorTema() {
       onChange={(e) => {
         if (esPreferenciaTema(e.target.value)) setPreferencia(e.target.value);
       }}
-      className="h-8 rounded-lg border border-input bg-background px-2 text-sm text-foreground"
+      className="h-11 rounded-lg border border-white/40 bg-white/10 px-2 text-sm text-encabezado-foreground outline-none hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/70"
     >
       {OPCIONES.map((o) => (
-        <option key={o.valor} value={o.valor}>
+        <option key={o.valor} value={o.valor} className="bg-popover text-popover-foreground">
           {o.etiqueta}
         </option>
       ))}

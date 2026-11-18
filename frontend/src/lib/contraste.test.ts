@@ -64,6 +64,8 @@ describe.each(TEMAS)('texto en %s', (selector) => {
     ['sidebar-foreground', 'sidebar'],
     ['sidebar-primary-foreground', 'sidebar-primary'],
     ['sidebar-accent-foreground', 'sidebar-accent'],
+    ['encabezado-foreground', 'encabezado'],
+    ['encabezado-muted', 'encabezado'],
   ];
   it.each(pares)('RNF-09: --%s tiene contraste 4.5:1 sobre --%s', (texto, fondo) => {
     expect(contraste(selector, texto, fondo)).toBeGreaterThanOrEqual(4.5);
@@ -88,7 +90,7 @@ describe.each(TEMAS)('texto en %s', (selector) => {
 });
 
 describe.each(TEMAS)('paleta azul en %s', (selector) => {
-  it.each(['background', 'primary', 'accent', 'ring', 'border', 'chart-1', 'chart-3', 'chart-5'])(
+  it.each(['background', 'primary', 'accent', 'ring', 'border', 'encabezado-muted', 'encabezado-borde', 'chart-1', 'chart-3', 'chart-5'])(
     'el tono de --%s se queda en el rango azul (230-265), nunca violeta',
     (token) => {
       expect(tono(selector, token)).toBeGreaterThanOrEqual(230);
