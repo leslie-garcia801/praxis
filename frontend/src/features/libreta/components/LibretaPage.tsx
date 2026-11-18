@@ -104,7 +104,7 @@ export function LibretaPage() {
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">{corregir ? 'Corregir horas de libreta' : 'Agregar horas de libreta'}</h1>
+      <h1 className="text-2xl font-bold">{corregir ? 'Corregir horas de libreta' : 'Agregar horas'}</h1>
       {enviadas ? (
         <Enviadas semanas={enviadas} />
       ) : (

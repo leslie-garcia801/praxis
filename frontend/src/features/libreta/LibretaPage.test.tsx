@@ -45,7 +45,7 @@ describe('/alumno/libreta (RF-17a, RN-19)', () => {
 
   it('RF-17a: explica que las horas se confirman con el supervisor y solo cuentan al validarse', async () => {
     renderApp('/alumno/libreta');
-    expect(await screen.findByRole('heading', { name: 'Agregar horas de libreta' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Agregar horas' })).toBeInTheDocument();
     expect(screen.getByText(/ya firmaste en tu libreta de papel/)).toBeInTheDocument();
     expect(screen.getByText(/solo cuentan cuando tu supervisor las valide/)).toBeInTheDocument();
     expect(screen.getByText(/semanas anteriores a la actual/)).toBeInTheDocument();
