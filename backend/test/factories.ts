@@ -228,6 +228,7 @@ type CrearAsistenciaInput = {
   minutosAcreditables?: number | null;
   semanaId?: string | null;
   sinConexion?: boolean;
+  origen?: 'QR' | 'LIBRETA';
 };
 
 // One attendance written straight to the database (no scan, no recalculation).
@@ -239,6 +240,7 @@ export async function crearAsistencia({
   minutosAcreditables,
   semanaId = null,
   sinConexion = false,
+  origen = 'QR',
 }: CrearAsistenciaInput) {
   return prisma.asistencia.create({
     data: {
@@ -250,6 +252,7 @@ export async function crearAsistencia({
       estado,
       semanaId,
       sinConexion,
+      origen,
     },
   });
 }
