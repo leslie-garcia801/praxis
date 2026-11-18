@@ -35,4 +35,15 @@ describe('SelectorTema (RNF-09)', () => {
     await user.selectOptions(screen.getByRole('combobox', { name: 'Tema' }), 'Claro');
     expect(document.documentElement).not.toHaveClass('dark');
   });
+
+  it('RNF-09: muestra un sol con Claro, una luna con Oscuro y un monitor con Sistema', async () => {
+    const user = userEvent.setup({ delay: null });
+    const { container } = render(<SelectorTema />);
+    const icono = () => container.querySelector('svg[data-icono-tema]')?.getAttribute('data-icono-tema');
+    expect(icono()).toBe('sistema');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Tema' }), 'Claro');
+    expect(icono()).toBe('claro');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Tema' }), 'Oscuro');
+    expect(icono()).toBe('oscuro');
+  });
 });
