@@ -72,8 +72,9 @@ describe('Piloto §12: reporte de métricas del piloto (RN-08, RN-15, RN-18, RNF
     return { usuario, expediente };
   }
 
-  const turno = (expedienteId: string, fecha: string, hora = '09:00', estado: EstadoAsistencia = 'CERRADA') =>
+  const turno = (expedienteId: string, fecha: string, hora = '09:00', estado: EstadoAsistencia = 'CERRADA', origen: 'QR' | 'LIBRETA' = 'QR') =>
     crearAsistencia({
+      origen,
       expedienteId,
       entrada: instanteLocal(fecha, hora),
       ...(estado === 'ABIERTA' ? {} : { minutos: 240 }),
@@ -226,6 +227,62 @@ describe('Piloto §12: reporte de métricas del piloto (RN-08, RN-15, RN-18, RNF
       await alumno();
       const r = await generar();
       expect(r.turnos.metrica).toMatchObject({ denominador: 0, porcentaje: null, cumple: null });
+    });
+  });
+
+  describe('turnos de libreta (RF-17a, RN-19)', () => {
+    it('RN-19: un día con solo turnos de libreta no cuenta como día registrado', async () => {
+      const a = await alumno();
+      for (const f of ['2026-11-02', '2026-11-03', '2026-11-04']) await turno(a.expediente.id, f);
+      await turno(a.expediente.id, '2026-11-05', '09:00', 'CERRADA', 'LIBRETA');
+      await turno(a.expediente.id, '2026-11-06', '09:00', 'CERRADA', 'LIBRETA');
+      // Same day as a QR shift: the day counts once, thanks to the QR shift.
+      await turno(a.expediente.id, '2026-11-04', '15:00', 'CERRADA', 'LIBRETA');
+
+      const r = await generar();
+
+      expect(r.registro.semanas[0]).toMatchObject({ semana: '2026-11-02', cumplen: 0, total: 1 });
+      expect(r.registro.semanas[0]!.bajo).toEqual([expect.objectContaining({ dias: 3 })]);
+      expect(r.filas[0]).toMatchObject({ dias: 3, cumple: false, turnos: 3 });
+    });
+
+    it('RN-19: los turnos de libreta no cuentan en la métrica 3, ni cerrados ni incompletos', async () => {
+      const a = await alumno();
+      await turno(a.expediente.id, '2026-11-02');
+      await turno(a.expediente.id, '2026-11-03', '09:00', 'INCOMPLETA');
+      await turno(a.expediente.id, '2026-11-04', '09:00', 'CERRADA', 'LIBRETA');
+      await turno(a.expediente.id, '2026-11-05', '09:00', 'INCOMPLETA', 'LIBRETA');
+
+      const r = await generar();
+
+      expect(r.turnos).toMatchObject({ cerrados: 1, incompletos: 1 });
+      expect(r.filas[0]).toMatchObject({ turnos: 2, turnosIncompletos: 1 });
+    });
+
+    it('RN-19: las semanas de libreta siguen contando en la métrica 2', async () => {
+      const a = await alumno();
+      await turno(a.expediente.id, '2026-11-02', '09:00', 'CERRADA', 'LIBRETA');
+      const enviadaEn = instanteLocal('2026-11-09', '10:00');
+      const semana = await semanaEnviada(a.expediente.id, '2026-11-02', 'VALIDADA', enviadaEn, new Date(enviadaEn.getTime() + 2 * 24 * HORA));
+      await prisma.semanaBitacora.update({ where: { id: semana.id }, data: { deLibreta: true } });
+
+      const r = await generar();
+
+      expect(r.validacion).toMatchObject({ enviadas: 1, aTiempo: 1 });
+      expect(r.filas[0]).toMatchObject({ enviadas: 1, validadasATiempo: 1, dias: 0 });
+    });
+
+    it('RN-19: el reporte informa cuántos turnos de libreta se excluyeron', async () => {
+      const a = await alumno();
+      await turno(a.expediente.id, '2026-11-02');
+      await turno(a.expediente.id, '2026-11-03', '09:00', 'CERRADA', 'LIBRETA');
+      await turno(a.expediente.id, '2026-11-04', '09:00', 'CERRADA', 'LIBRETA');
+      await turno(a.expediente.id, '2026-11-20', '09:00', 'CERRADA', 'LIBRETA'); // outside the range
+
+      const r = await generar();
+
+      expect(r.turnosLibretaExcluidos).toBe(2);
+      expect(formatearReporte(r)).toContain('se excluyeron 2 turno(s) de las métricas 1 y 3');
     });
   });
 

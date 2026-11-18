@@ -44,6 +44,8 @@ export function formatearReporte(r: ReportePiloto): string {
   l.push(`  Incompletos: ${entero(t.incompletos)}`);
   l.push(`  Abiertos hoy (no se cuentan todavía): ${entero(t.abiertosHoy)}`);
   l.push('');
+  l.push(`Turnos de libreta (RN-19): se excluyeron ${entero(r.turnosLibretaExcluidos)} turno(s) de las métricas 1 y 3; las semanas de libreta sí cuentan en la métrica 2. En el CSV, Días registrados, Turnos y Turnos incompletos solo cuentan turnos de QR.`);
+  l.push('');
   l.push('Las otras dos métricas de §12 se miden de forma manual: diferencia entre las horas de la app y de la hoja en papel (≤ 2 %) y utilidad percibida al final (≥ 4.5 en escala de 1 a 5).');
   return l.join('\n');
 }

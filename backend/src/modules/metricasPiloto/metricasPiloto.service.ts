@@ -3,6 +3,10 @@
 // Population: case files of the students that match the filters (campus, carrera, semestre, grupo, tipo) whose estado
 // is EN_PROCESO, SUSPENDIDO or FINALIZADO now, with fechaInicio <= hasta and (no fechaTermino or fechaTermino >= desde).
 // The data keeps no estado history, so this is the closest approximation to "was EN_PROCESO at some point in the range".
+//
+// Notebook shifts (RF-17a, RN-19: origen LIBRETA) are copied from paper, not scanned, so they are excluded from metrics 1
+// and 3 (and from the CSV columns dias, turnos and turnosIncompletos). Metric 2 still counts notebook weeks: it measures
+// how fast the supervisor validates.
 import {
   clasificarTurno,
   clasificarValidacion,
@@ -52,6 +56,8 @@ export type ReportePiloto = {
   registro: { metrica: Meta; semanas: SemanaRegistro[] };
   validacion: ResumenValidacion;
   turnos: ResumenTurnos;
+  /** Notebook shifts (origen LIBRETA) in the range, left out of metrics 1 and 3. */
+  turnosLibretaExcluidos: number;
   filas: FilaCsv[];
 };
 
@@ -128,7 +134,7 @@ export async function generarReportePiloto(args: ArgsMetricas, ahora: Date): Pro
   const asistencias = ids.length
     ? await prisma.asistencia.findMany({
         where: { expedienteId: { in: ids }, entrada: { gte: inicioRango, lt: finRango } },
-        select: { expedienteId: true, entrada: true, estado: true },
+        select: { expedienteId: true, entrada: true, estado: true, origen: true },
       })
     : [];
   const semanas = ids.length
@@ -141,8 +147,12 @@ export async function generarReportePiloto(args: ArgsMetricas, ahora: Date): Pro
       })
     : [];
 
+  // RN-19: only QR shifts feed metrics 1 and 3.
+  const turnosQr = asistencias.filter((a) => a.origen !== 'LIBRETA');
+  const turnosLibretaExcluidos = asistencias.length - turnosQr.length;
+
   const asistenciasDe = new Map<string, typeof asistencias>();
-  for (const a of asistencias) asistenciasDe.set(a.expedienteId, [...(asistenciasDe.get(a.expedienteId) ?? []), a]);
+  for (const a of turnosQr) asistenciasDe.set(a.expedienteId, [...(asistenciasDe.get(a.expedienteId) ?? []), a]);
 
   // Metric 2: weeks sent within the range.
   const claseDeSemana = (s: (typeof semanas)[number]): ClaseValidacion | null =>
@@ -153,7 +163,7 @@ export async function generarReportePiloto(args: ArgsMetricas, ahora: Date): Pro
 
   // Metric 3: every shift of the population whose entry falls in the range.
   const claseTurno = (a: (typeof asistencias)[number]): ClaseTurno => clasificarTurno(a, hoy);
-  const clasesTurno = asistencias.map(claseTurno);
+  const clasesTurno = turnosQr.map(claseTurno);
 
   // Metric 1 and CSV: one row per student-week.
   const filas: FilaCsv[] = [];
@@ -207,6 +217,7 @@ export async function generarReportePiloto(args: ArgsMetricas, ahora: Date): Pro
     registro: { metrica: resumirRegistro(filas.map((f) => f.dias)), semanas: semanasRegistro },
     validacion: resumirValidacion(clasesValidacion),
     turnos: resumirTurnos(clasesTurno),
+    turnosLibretaExcluidos,
     filas,
   };
 }

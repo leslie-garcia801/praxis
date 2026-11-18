@@ -315,6 +315,26 @@ flowchart TD
 - **Solicitar corrección** (RF-17) solo aparece mientras la semana está en BORRADOR o RECHAZADA, para que la firma del supervisor no cambie. Tampoco aparece con un turno abierto, con el expediente no activo ni si ya hay una solicitud en revisión.
 - La entrada se queda en el mismo día (RN-15); la salida puede ser del día siguiente y no puede ser futura.
 
+### Horas de libreta
+
+El alumno puede copiar a la app turnos que ya tenía firmados en su libreta de papel (RF-17a, RN-19).
+
+```mermaid
+flowchart TD
+    H([Mi avance]) -- "Agregar horas<br/>(solo EN_PROCESO)" --> LP["/alumno/libreta"]
+    LP --> F[Filas de turno: fecha, entrada y salida<br/>solo semanas cerradas, desde la fecha de inicio]
+    F --> RV[Revisar y enviar, con vista previa por semana]
+    RV --> OK[Semanas ENVIADAS con etiqueta Libreta,<br/>sin bitácora]
+    OK --> SUP[El supervisor las valida en su enlace semanal<br/>o la oficina en su nombre, RF-22]
+    SUP -- Validada --> V[Las horas cuentan como validadas]
+    SUP -- Rechazada --> PEN[Pendiente: Corrige las horas<br/>de la semana del…]
+    PEN --> CH["Corregir horas: turnos precargados<br/>/alumno/libreta?corregir=lunes"]
+    CH -- Reenviar --> OK
+```
+
+- Los turnos de libreta no tienen **Solicitar corrección**; se corrigen reemplazándolos cuando se rechaza la semana.
+- Las métricas 1 y 3 del piloto los excluyen; la 2 incluye las semanas de libreta (ver [`piloto.md`](piloto.md)).
+
 ## Supervisor
 
 El supervisor no tiene cuenta. Recibe un correo con un enlace que vale 14 días y valida desde ahí las semanas de todos sus alumnos.
@@ -382,7 +402,7 @@ Lo que falta o sigue siendo manual hoy:
 | No se pueden listar, editar, desactivar ni restablecer la contraseña de usuarios de oficina | El administrador solo puede crearlos; si alguien de vinculación olvida su contraseña, no hay forma de recuperarla desde la app |
 | No hay forma de editar un turno una vez enviada la semana | Las correcciones del alumno solo valen en semanas BORRADOR o RECHAZADA |
 | El alumno no tiene las pantallas **Instituciones** ni **Perfil** de las specs (§10) | Instalar la app y activar notificaciones se hace desde Mi avance (tarjeta Recordatorios); no hay buscador de instituciones |
-| El texto del aviso de privacidad es provisional | La app lo marca "Texto provisional pendiente de aprobación del plantel" (specs §13, pregunta 7) |
+| Falta el aviso de privacidad integral | La app muestra la versión simplificada aprobada y dice que el integral se consulta en las oficinas de vinculación (specs §13, pregunta 7) |
 | Pruebas manuales en celulares reales pendientes | Cámara, instalación en iPhone, push y modo sin conexión están cubiertos por pruebas automáticas, no probados en dispositivos |
 
 Ya cubierto por la interfaz, en el detalle del alumno: confirmar el expediente, suspender, reactivar o cancelar, transferir de institución, validar o rechazar semanas en nombre del supervisor, resolver correcciones y editar o confirmar al supervisor. En **Editar institución** la oficina lista, agrega, edita y desactiva o reactiva supervisores; un supervisor con expedientes activos (PENDIENTE, EN_PROCESO o SUSPENDIDO) no se puede desactivar.
