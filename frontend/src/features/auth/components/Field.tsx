@@ -19,7 +19,8 @@ export function Field({ id, label, error, hint, trailing, ...inputProps }: Props
   const input = <Input id={id} aria-invalid={error ? true : undefined} aria-describedby={describedBy} {...inputProps} />;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    // min-w-0 lets the field shrink inside grid/flex rows instead of overflowing into its neighbour.
+    <div className="flex min-w-0 flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       {trailing ? (
         <div className="relative">
