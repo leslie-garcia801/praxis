@@ -219,7 +219,7 @@ describe('/alumno/libreta (RF-17a, RN-19)', () => {
       );
       const { user } = renderApp('/alumno/libreta?corregir=2026-11-02');
 
-      expect(await screen.findByRole('heading', { name: 'Corregir horas de libreta' })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: 'Corregir horas' })).toBeInTheDocument();
       expect(await screen.findByText(/Faltó el turno del jueves\./)).toBeInTheDocument();
       expect(screen.getByText('Semana del 2 al 8 de noviembre')).toBeInTheDocument();
       expect(await screen.findByLabelText('Fecha del turno 1')).toHaveValue('2026-11-02');
