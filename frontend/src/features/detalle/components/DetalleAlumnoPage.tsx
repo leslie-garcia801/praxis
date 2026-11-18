@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +7,8 @@ import { ApiError } from '@/lib/api';
 import { formatFecha, formatHoras } from '@/lib/tiempo';
 import { useAvance, type Avance } from '../../avance/api';
 import { messageOf } from '../../importaciones/archivo';
+import type { ReenvioEnlace } from '../../expediente/api';
+import { AvisoReenvio } from '../../expediente/components/AvisoReenvio';
 import { nombreSupervisor } from '../../expediente/nombreSupervisor';
 import { DIAS } from '../../expediente/schemas';
 import { DescargarReporte } from '../../reporte/components/DescargarReporte';
@@ -65,6 +68,8 @@ function DatosExpediente({ expediente }: { expediente: ExpedienteDetalle }) {
   const practicas = expediente.tipo === 'PRACTICAS';
   const dias = DIAS.filter((d) => expediente.diasPactados.includes(d.valor)).map((d) => d.nombre);
   const { supervisor } = expediente;
+  // `n` remounts the notice so a second save shows it again.
+  const [reenvio, setReenvio] = useState<{ r: ReenvioEnlace | null; n: number } | null>(null);
   const contacto = supervisor ? [supervisor.correo, supervisor.telefono && `Tel. ${supervisor.telefono}${supervisor.extension ? ` ext. ${supervisor.extension}` : ''}`].filter(Boolean) : [];
 
   return (
@@ -95,7 +100,14 @@ function DatosExpediente({ expediente }: { expediente: ExpedienteDetalle }) {
         <Dato etiqueta="Meta">{formatHoras(expediente.metaHoras * 60)}</Dato>
       </dl>
       <CambiarSupervisor expediente={expediente} />
-      {supervisor && <EditarSupervisor key={`${supervisor.id}-${supervisor.correo}-${supervisor.nombre}`} supervisor={supervisor} />}
+      {supervisor && (
+        <EditarSupervisor
+          key={`${supervisor.id}-${supervisor.correo}-${supervisor.nombre}`}
+          supervisor={supervisor}
+          onGuardado={(r) => setReenvio({ r, n: (reenvio?.n ?? 0) + 1 })}
+        />
+      )}
+      {reenvio && <AvisoReenvio key={reenvio.n} reenvio={reenvio.r} />}
     </section>
   );
 }

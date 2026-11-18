@@ -32,7 +32,7 @@ describe('cambio de correo del supervisor cuando falla el envío', () => {
     await prisma.$disconnect();
   });
 
-  it('RF-21: the address is saved and the old link revoked even if the new email fails; the weekly job retries', async () => {
+  it('RN-20: the address is saved and the old link revoked even if the new email fails; the weekly job retries', async () => {
     const institucion = await crearInstitucion({ plantelId });
     const supervisor = await crearSupervisor({ institucionId: institucion.id, datos: { correo: 'equivocado@empresa.com' } });
     const alumno = await crearAlumnoPrecargado({ plantelId, matricula: '25319063992001' });
@@ -51,6 +51,7 @@ describe('cambio de correo del supervisor cuando falla el envío', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.supervisor.correo).toBe('correcto@empresa.com');
+    expect(res.body.reenvio).toEqual({ semanas: 1, enviado: false });
     const fila = await prisma.enlaceValidacion.findUniqueOrThrow({ where: { id: viejo.id } });
     expect(fila.expiraEn.getTime()).toBeLessThanOrEqual(Date.now());
     expect(await prisma.enlaceValidacion.count({ where: { supervisorId: supervisor.id } })).toBe(1);

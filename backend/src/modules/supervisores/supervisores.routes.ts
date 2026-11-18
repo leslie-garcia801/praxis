@@ -28,6 +28,6 @@ export const supervisoresRouter = Router();
 
 supervisoresRouter.patch('/:id', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
   const { id } = supervisorIdParamsSchema.parse(req.params);
-  const supervisor = await editarSupervisor(getAuth(req).user, id, editarSupervisorSchema.parse(req.body));
-  res.json({ supervisor });
+  // `reenvio` tells the office whether the pending weeks went to the new address (RF-21); null when nothing was sent.
+  res.json(await editarSupervisor(getAuth(req).user, id, editarSupervisorSchema.parse(req.body)));
 });

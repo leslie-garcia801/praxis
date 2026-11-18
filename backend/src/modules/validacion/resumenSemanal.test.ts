@@ -208,7 +208,7 @@ describe('resumen semanal al supervisor (RF-20, RF-21, RF-21a, RF-22, RN-17, RF-
     expect(despues.notificados).toHaveLength(1);
   });
 
-  it('RF-21: un enlace anulado por cambio de correo no impide que otra ejecución del mismo día envíe', async () => {
+  it('RN-20: un enlace anulado por cambio de correo no impide que otra ejecución del mismo día envíe', async () => {
     const sup = await supervisorNuevo();
     await alumnoConSemana(sup, { estado: 'ENVIADA' });
     await ejecutarResumenSemanal({ ahora: LUNES });

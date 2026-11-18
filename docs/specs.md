@@ -204,6 +204,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 | RN-17 | Una semana solo puede enviarse a validación si tiene bitácora de actividades | Vinculación (enfoque en actividades) | — |
 | RN-18 | Si el supervisor no valida en 7 días, la semana queda visible para vinculación como pendiente | Diseño | — |
 | RN-19 | Los turnos registrados en libreta antes de usar la app se capturan como turnos con origen `LIBRETA`, solo en semanas cerradas y sin turnos de QR, no cruzan medianoche, se envían al supervisor sin bitácora (excepción a RN-17) y solo cuentan al validarse (RN-11); aplican RN-04 y RN-09. *(Decisión de la responsable del proyecto el 2026-11-17.)* | Responsable del proyecto | Por confirmar con las oficinas |
+| RN-20 | Si vinculación o el admin cambian el correo de un supervisor, sus enlaces de validación vigentes quedan anulados (quien los abra recibe "Este enlace venció. Usa el del correo más reciente.") y sus semanas pendientes (`ENVIADA`, expediente no cancelado) se envían de inmediato en un enlace nuevo a la dirección corregida. Si el correo no sale, el cambio se guarda igual y el resumen semanal lo vuelve a intentar. *(Caso detectado en la demostración del 2026-11-18: un correo mal escrito después de enviar semanas.)* | Responsable del proyecto | — |
 
 ---
 
@@ -283,7 +284,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 
 **RF-20 Bitácora.** Cada semana (lunes a domingo) el alumno escribe sus actividades (mínimo 50 caracteres). Puede editarla hasta que la envía.
 
-**RF-21 Envío al supervisor.** Al cerrar la semana, o cuando el alumno la envía, el supervisor recibe un correo con un enlace válido por 14 días. El enlace muestra los turnos y la bitácora, con botones **Validar** y **Rechazar** (este último con comentario obligatorio). No requiere cuenta.
+**RF-21 Envío al supervisor.** Al cerrar la semana, o cuando el alumno la envía, el supervisor recibe un correo con un enlace válido por 14 días. El enlace muestra los turnos y la bitácora, con botones **Validar** y **Rechazar** (este último con comentario obligatorio). No requiere cuenta. Si se corrige el correo del supervisor, los enlaces anteriores se anulan y las semanas pendientes se reenvían a la nueva dirección (RN-20).
 
 **RF-21a Validación en lote.** Si un supervisor tiene varios alumnos (por ejemplo, la jefa de Escolares del propio plantel), recibe **un solo correo semanal** con todas sus semanas pendientes y puede validarlas todas a la vez o una por una.
 
@@ -806,7 +807,7 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | POST | `/api/instituciones/:id/qr` | Vinculación / Admin | Generar o regenerar QR (devuelve PDF imprimible) |
 | GET | `/api/instituciones/:id/supervisores` | Alumno / Vinculación / Admin | Supervisores de la institución |
 | POST | `/api/instituciones/:id/supervisores` | Alumno / Vinculación / Admin | Alta de supervisor en la institución |
-| PATCH | `/api/supervisores/:id` | Vinculación / Admin | Editar, activar o desactivar un supervisor |
+| PATCH | `/api/supervisores/:id` | Vinculación / Admin | Editar, activar o desactivar un supervisor → `{ supervisor, reenvio }`; `reenvio` es `{ semanas, enviado }` cuando un cambio de correo reenvió las semanas pendientes (RN-20), o `null` |
 | GET | `/api/importaciones/{alumnos\|instituciones}/plantilla` | Vinculación / Admin | Descargar la plantilla de importación (xlsx) |
 | POST | `/api/importaciones/{alumnos\|instituciones}/preview` | Vinculación / Admin | Validar archivo y devolver errores por fila |
 | POST | `/api/importaciones/{alumnos\|instituciones}/confirmar` | Vinculación / Admin | Aplicar importación |
