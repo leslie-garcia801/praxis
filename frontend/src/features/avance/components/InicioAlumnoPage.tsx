@@ -46,7 +46,7 @@ function RegistrarButton({ habilitado }: { habilitado: boolean }) {
 // RF-28: the server flags a shift open for 6 h or more on the same day; there is still time to register the exit.
 function AvisoOlvidoSalida() {
   return (
-    <section role="alert" className="flex flex-col gap-2 rounded-lg border-2 border-amber-600 bg-amber-50 p-3 text-amber-950 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-50">
+    <section role="alert" className="flex flex-col gap-2 rounded-lg border-2 border-aviso-borde bg-aviso p-3 text-aviso-foreground">
       <p className="text-lg font-semibold">¿Olvidaste registrar tu salida?</p>
       <Button asChild className="h-12 w-full">
         <Link to="/alumno/registrar">Registrar salida</Link>

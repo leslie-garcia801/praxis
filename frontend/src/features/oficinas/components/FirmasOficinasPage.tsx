@@ -69,7 +69,7 @@ function FormularioFirma({ responsable }: { responsable: Responsable }) {
         </div>
       )}
       {mutation.isSuccess && !isDirty && (
-        <p role="status" className="text-sm font-medium text-green-800 dark:text-green-400">
+        <p role="status" className="text-sm font-medium text-exito-foreground">
           Guardado
         </p>
       )}

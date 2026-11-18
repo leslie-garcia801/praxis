@@ -51,7 +51,7 @@ function SupervisorItem({
       {(supervisor.correo || supervisor.telefono) && (
         <span className="text-sm text-muted-foreground">{[supervisor.correo, supervisor.telefono].filter(Boolean).join(' · ')}</span>
       )}
-      {!supervisor.confirmado && <span className="text-sm font-medium text-amber-800 dark:text-amber-400">Por confirmar</span>}
+      {!supervisor.confirmado && <span className="text-sm font-medium text-aviso-foreground">Por confirmar</span>}
       {inactivo && <span className="text-sm font-medium text-muted-foreground">Inactivo</span>}
       {error && (
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
