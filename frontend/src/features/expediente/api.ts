@@ -129,11 +129,16 @@ export function useSupervisores(institucionId: string | undefined) {
   });
 }
 
+// RF-21: when the email changed and the supervisor had weeks to validate, the API resends them to the new address.
+// `enviado: false` means the email failed and the weekly job will retry. null when nothing was sent.
+export type ReenvioEnlace = { semanas: number; enviado: boolean };
+export type EditarSupervisorRespuesta = { supervisor: Supervisor; reenvio: ReenvioEnlace | null };
+
 export function useActualizarSupervisor(institucionId: string, supervisorId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: EditarSupervisorInput) =>
-      apiFetch<{ supervisor: Supervisor }>(`/api/supervisores/${supervisorId}`, { method: 'PATCH', body: JSON.stringify(input) }),
+      apiFetch<EditarSupervisorRespuesta>(`/api/supervisores/${supervisorId}`, { method: 'PATCH', body: JSON.stringify(input) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: supervisoresKeys.lista(institucionId) }),
   });
 }

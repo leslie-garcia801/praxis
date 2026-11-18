@@ -4,11 +4,20 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/features/auth/components/Field';
 import { messageOf } from '../../importaciones/archivo';
+import type { ReenvioEnlace } from '../../expediente/api';
 import type { NuevoSupervisorValues } from '../../expediente/schemas';
 import { useEditarSupervisor, type SupervisorOficina } from '../api';
 import { aEditarSupervisorPayload, editarSupervisorSchema, valoresDeSupervisor } from '../schemas';
 
-function Formulario({ supervisor, onCerrar }: { supervisor: SupervisorOficina; onCerrar: () => void }) {
+function Formulario({
+  supervisor,
+  onCerrar,
+  onGuardado,
+}: {
+  supervisor: SupervisorOficina;
+  onCerrar: () => void;
+  onGuardado: (reenvio: ReenvioEnlace | null) => void;
+}) {
   const editar = useEditarSupervisor(supervisor.id);
   const [error, setError] = useState<string | null>(null);
   const {
@@ -23,7 +32,8 @@ function Formulario({ supervisor, onCerrar }: { supervisor: SupervisorOficina; o
   const enviar = handleSubmit(async (values) => {
     setError(null);
     try {
-      await editar.mutateAsync(aEditarSupervisorPayload(values));
+      const { reenvio } = await editar.mutateAsync(aEditarSupervisorPayload(values));
+      onGuardado(reenvio);
       onCerrar();
     } catch (e) {
       setError(messageOf(e));
@@ -58,8 +68,15 @@ function Formulario({ supervisor, onCerrar }: { supervisor: SupervisorOficina; o
   );
 }
 
-// RF-09: the office fixes the supervisor data (contact included) from the detail.
-export function EditarSupervisor({ supervisor }: { supervisor: SupervisorOficina }) {
+// RF-09: the office fixes the supervisor data (contact included) from the detail. `onGuardado` receives the resend
+// result (RF-21); the parent keeps it because this component remounts when the email changes.
+export function EditarSupervisor({
+  supervisor,
+  onGuardado,
+}: {
+  supervisor: SupervisorOficina;
+  onGuardado: (reenvio: ReenvioEnlace | null) => void;
+}) {
   const [abierto, setAbierto] = useState(false);
   return (
     <div className="flex flex-col gap-3">
@@ -68,7 +85,7 @@ export function EditarSupervisor({ supervisor }: { supervisor: SupervisorOficina
           Editar supervisor
         </Button>
       </div>
-      {abierto && <Formulario supervisor={supervisor} onCerrar={() => setAbierto(false)} />}
+      {abierto && <Formulario supervisor={supervisor} onCerrar={() => setAbierto(false)} onGuardado={onGuardado} />}
     </div>
   );
 }

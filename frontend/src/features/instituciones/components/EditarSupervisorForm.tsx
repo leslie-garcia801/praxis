@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { useActualizarSupervisor, type Supervisor } from '@/features/expediente/api';
+import { useActualizarSupervisor, type ReenvioEnlace, type Supervisor } from '@/features/expediente/api';
 import { CamposSupervisor } from '@/features/expediente/components/CamposSupervisor';
 import {
   aEditarSupervisorPayload,
@@ -21,7 +21,8 @@ export function EditarSupervisorForm({
 }: {
   supervisor: Supervisor;
   institucionId: string;
-  onListo: () => void;
+  // Receives the resend result after an email change (RF-21).
+  onListo: (reenvio: ReenvioEnlace | null) => void;
   onCancelar: () => void;
 }) {
   const actualizar = useActualizarSupervisor(institucionId, supervisor.id);
@@ -38,8 +39,8 @@ export function EditarSupervisorForm({
   const guardar = handleSubmit(async (values) => {
     setError(null);
     try {
-      await actualizar.mutateAsync(aEditarSupervisorPayload(values));
-      onListo();
+      const { reenvio } = await actualizar.mutateAsync(aEditarSupervisorPayload(values));
+      onListo(reenvio);
     } catch (e) {
       setError(messageOf(e));
     }

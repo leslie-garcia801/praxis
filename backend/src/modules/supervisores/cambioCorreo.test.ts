@@ -64,7 +64,7 @@ describe('cambio de correo del supervisor (RF-09, RF-21)', () => {
     await prisma.$disconnect();
   });
 
-  it('RF-21: the link sent to the old address stops working once the address is fixed', async () => {
+  it('RN-20: the link sent to the old address stops working once the address is fixed', async () => {
     const { supervisor, token } = await supervisorConEnlace();
     expect((await abrirEnlace(token)).status).toBe(200);
 
@@ -76,11 +76,12 @@ describe('cambio de correo del supervisor (RF-09, RF-21)', () => {
     expect(viejo.body.error.code).toBe('ENLACE_VENCIDO');
   });
 
-  it('RF-21: the pending weeks are emailed right away to the new address with a link that works', async () => {
+  it('RN-20: the pending weeks are emailed right away to the new address with a link that works', async () => {
     const { supervisor, semana } = await supervisorConEnlace();
 
-    await editar(supervisor.id, { correo: 'Correcto@Empresa.com' });
+    const res = await editar(supervisor.id, { correo: 'Correcto@Empresa.com' });
 
+    expect(res.body.reenvio).toEqual({ semanas: 1, enviado: true });
     const correos = correosEnviados();
     expect(correos).toHaveLength(1);
     expect(correos[0]!.para).toBe('correcto@empresa.com');
@@ -91,16 +92,17 @@ describe('cambio de correo del supervisor (RF-09, RF-21)', () => {
     expect(enlaces.find((e) => e.expiraEn > new Date())!.semanas.map((s) => s.semanaId)).toEqual([semana.id]);
   });
 
-  it('RF-21: with no pending weeks the old link stops working and no email is sent', async () => {
+  it('RN-20: with no pending weeks the old link stops working and no email is sent', async () => {
     const { supervisor, token } = await supervisorConEnlace({ estado: 'VALIDADA' });
 
-    await editar(supervisor.id, { correo: 'correcto@empresa.com' });
+    const res = await editar(supervisor.id, { correo: 'correcto@empresa.com' });
 
+    expect(res.body.reenvio).toBeNull();
     expect((await abrirEnlace(token)).status).toBe(410);
     expect(correosEnviados()).toHaveLength(0);
   });
 
-  it('RF-21: weeks of a cancelled case file are not emailed', async () => {
+  it('RN-20: weeks of a cancelled case file are not emailed', async () => {
     const { supervisor } = await supervisorConEnlace({ expedienteEstado: 'CANCELADO' });
 
     await editar(supervisor.id, { correo: 'correcto@empresa.com' });
@@ -108,12 +110,14 @@ describe('cambio de correo del supervisor (RF-09, RF-21)', () => {
     expect(correosEnviados()).toHaveLength(0);
   });
 
-  it('RF-09: editing other fields, or sending the same address, keeps the link and sends nothing', async () => {
+  it('RN-20: editing other fields, or sending the same address, keeps the link and sends nothing', async () => {
     const { supervisor, token } = await supervisorConEnlace();
 
-    await editar(supervisor.id, { puesto: 'Director' });
-    await editar(supervisor.id, { correo: 'EQUIVOCADO@empresa.com' });
+    const otroCampo = await editar(supervisor.id, { puesto: 'Director' });
+    const mismoCorreo = await editar(supervisor.id, { correo: 'EQUIVOCADO@empresa.com' });
 
+    expect(otroCampo.body.reenvio).toBeNull();
+    expect(mismoCorreo.body.reenvio).toBeNull();
     expect((await abrirEnlace(token)).status).toBe(200);
     expect(correosEnviados()).toHaveLength(0);
   });

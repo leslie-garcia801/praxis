@@ -296,7 +296,11 @@ describe('/vinculacion/instituciones/:id/editar (RF-08)', () => {
 
   describe('RF-09: edit, deactivate and reactivate a supervisor', () => {
     // Serves the list from `lista` and applies every PATCH to it, like the API would.
-    function mockSupervisores(lista: Record<string, unknown>[], rechazo?: { code: string; message: string }) {
+    function mockSupervisores(
+      lista: Record<string, unknown>[],
+      rechazo?: { code: string; message: string },
+      reenvio: { semanas: number; enviado: boolean } | null = null,
+    ) {
       const patches: Record<string, unknown>[] = [];
       server.use(
         http.get(`*/api/instituciones/${ID}`, () => HttpResponse.json({ institucion: buildInstitucion() })),
@@ -307,7 +311,7 @@ describe('/vinculacion/instituciones/:id/editar (RF-08)', () => {
           if (rechazo) return apiError(rechazo.code, rechazo.message, 409);
           const i = lista.findIndex((x) => x.id === params.id);
           lista[i] = { ...lista[i], ...body };
-          return HttpResponse.json({ supervisor: lista[i] });
+          return HttpResponse.json({ supervisor: lista[i], reenvio });
         }),
       );
       return patches;
@@ -332,6 +336,24 @@ describe('/vinculacion/instituciones/:id/editar (RF-08)', () => {
       expect(await seccion.findByText(/Directora/)).toBeInTheDocument();
       expect(patches[0]).toMatchObject({ nombre: 'Laura', apellidoPaterno: 'Mendoza', correo: 'laura@example.com', puesto: 'Directora', telefono: null });
       expect(seccion.queryByRole('group', { name: 'Editar supervisor' })).not.toBeInTheDocument();
+      // Nothing was resent, so there is no notice.
+      expect(seccion.queryByText(/enlace nuevo/)).not.toBeInTheDocument();
+    });
+
+    it('RN-20: after fixing the email, tells the office the pending weeks went to the new address', async () => {
+      mockStaff();
+      const lista = [buildSupervisor({ correo: 'equivocado@example.com', activo: true })];
+      mockSupervisores(lista, undefined, { semanas: 2, enviado: true });
+      const { user } = renderApp(RUTA);
+
+      const seccion = within(await screen.findByRole('region', { name: 'Supervisores' }));
+      await user.click(await seccion.findByRole('button', { name: 'Editar a Lic. Laura Mendoza Ruiz' }));
+      const grupo = within(seccion.getByRole('group', { name: 'Editar supervisor' }));
+      await user.clear(grupo.getByLabelText('Correo'));
+      await user.type(grupo.getByLabelText('Correo'), 'laura@example.com');
+      await user.click(grupo.getByRole('button', { name: 'Guardar cambios' }));
+
+      expect(await seccion.findByRole('status')).toHaveTextContent('Se envió un enlace nuevo al supervisor con 2 semanas pendientes de validar.');
     });
 
     it('shows the validation message and does not call the API when the correo is invalid', async () => {

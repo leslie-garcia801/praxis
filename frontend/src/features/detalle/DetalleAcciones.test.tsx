@@ -380,6 +380,29 @@ describe('/vinculacion/expedientes/:id office actions (RF-12, RF-22, RN-12, RN-0
     });
   });
 
+  it('RN-20: after fixing the email, says the new link went out, or that it failed and Monday retries', async () => {
+    mockDetalle('EN_PROCESO');
+    let reenvio = { semanas: 1, enviado: true };
+    server.use(http.patch(`*/api/supervisores/${supervisor.id}`, () => HttpResponse.json({ supervisor, reenvio })));
+    const { user } = renderApp(RUTA);
+    await esperarDetalle();
+
+    const guardarCorreo = async (correo: string) => {
+      await user.click(screen.getByRole('button', { name: 'Editar supervisor' }));
+      const form = within(screen.getByRole('form', { name: 'Editar supervisor' }));
+      await user.clear(form.getByLabelText('Correo'));
+      await user.type(form.getByLabelText('Correo'), correo);
+      await user.click(form.getByRole('button', { name: 'Guardar supervisor' }));
+    };
+
+    await guardarCorreo('lucia@hospital.test');
+    expect(await screen.findByText('Se envió un enlace nuevo al supervisor con 1 semana pendiente de validar.')).toBeInTheDocument();
+
+    reenvio = { semanas: 3, enviado: false };
+    await guardarCorreo('lucia.m@hospital.test');
+    expect(await screen.findByText(/No se pudo enviar el enlace nuevo al supervisor \(3 semanas pendientes de validar\)/)).toHaveAttribute('role', 'alert');
+  });
+
   it('RF-09: the supervisor form validates the required fields and shows API errors', async () => {
     mockDetalle('EN_PROCESO');
     server.use(

@@ -3,7 +3,7 @@ import { apiFetch } from '@/lib/api';
 import { candidatosKeys } from '../asignacion/api';
 import { avanceKeys } from '../avance/api';
 import type { SemanaHistorial } from '../historial/api';
-import { supervisoresKeys, type Expediente } from '../expediente/api';
+import { supervisoresKeys, type Expediente, type ReenvioEnlace } from '../expediente/api';
 import { panelKeys } from '../panel/api';
 import type { Turno } from '../instituciones/api';
 
@@ -163,7 +163,7 @@ export function useEditarSupervisor(supervisorId: string) {
   const invalidar = useInvalidarDetalle();
   return useMutation({
     mutationFn: (input: EditarSupervisorInput) =>
-      apiFetch<{ supervisor: unknown }>(`/api/supervisores/${supervisorId}`, { method: 'PATCH', body: JSON.stringify(input) }),
+      apiFetch<{ supervisor: unknown; reenvio: ReenvioEnlace | null }>(`/api/supervisores/${supervisorId}`, { method: 'PATCH', body: JSON.stringify(input) }),
     onSuccess: invalidar,
   });
 }

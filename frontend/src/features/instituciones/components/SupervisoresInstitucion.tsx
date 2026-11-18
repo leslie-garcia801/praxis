@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
-import { useActualizarSupervisor, useSupervisores, type Supervisor } from '@/features/expediente/api';
+import { useActualizarSupervisor, useSupervisores, type ReenvioEnlace, type Supervisor } from '@/features/expediente/api';
+import { AvisoReenvio } from '@/features/expediente/components/AvisoReenvio';
 import { NuevoSupervisorForm } from '@/features/expediente/components/NuevoSupervisorForm';
 import { nombreSupervisor } from '@/features/expediente/nombreSupervisor';
 import { messageOf } from '@/features/importaciones/archivo';
@@ -14,12 +15,14 @@ function SupervisorItem({
   editando,
   onEditar,
   onCerrarEdicion,
+  onGuardado,
 }: {
   supervisor: Supervisor;
   institucionId: string;
   editando: boolean;
   onEditar: () => void;
   onCerrarEdicion: () => void;
+  onGuardado: (reenvio: ReenvioEnlace | null) => void;
 }) {
   const actualizar = useActualizarSupervisor(institucionId, supervisor.id);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +42,15 @@ function SupervisorItem({
   if (editando) {
     return (
       <li>
-        <EditarSupervisorForm supervisor={supervisor} institucionId={institucionId} onListo={onCerrarEdicion} onCancelar={onCerrarEdicion} />
+        <EditarSupervisorForm
+          supervisor={supervisor}
+          institucionId={institucionId}
+          onListo={(reenvio) => {
+            onGuardado(reenvio);
+            onCerrarEdicion();
+          }}
+          onCancelar={onCerrarEdicion}
+        />
       </li>
     );
   }
@@ -82,10 +93,13 @@ export function SupervisoresInstitucion({ institucionId }: { institucionId: stri
   const supervisores = useSupervisores(institucionId);
   const [agregando, setAgregando] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  // `n` remounts the notice so a second save shows it again.
+  const [reenvio, setReenvio] = useState<{ r: ReenvioEnlace | null; n: number } | null>(null);
 
   return (
     <section aria-label="Supervisores" className="flex flex-col gap-3 border-t pt-6">
       <h2 className="text-lg font-semibold">Supervisores</h2>
+      {reenvio && <AvisoReenvio key={reenvio.n} reenvio={reenvio.r} />}
       {supervisores.isPending && (
         <p role="status" className="text-muted-foreground">
           Cargando supervisores…
@@ -107,6 +121,7 @@ export function SupervisoresInstitucion({ institucionId }: { institucionId: stri
                 editando={editandoId === s.id}
                 onEditar={() => setEditandoId(s.id)}
                 onCerrarEdicion={() => setEditandoId(null)}
+                onGuardado={(r) => setReenvio({ r, n: (reenvio?.n ?? 0) + 1 })}
               />
             ))}
           </ul>

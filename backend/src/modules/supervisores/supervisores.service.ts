@@ -124,6 +124,6 @@ export async function editarSupervisor(user: AuthUser, id: string, input: Editar
     }
     return { nuevo, correoCambiado: nuevo.correo !== actual.correo };
   });
-  if (actualizado.correoCambiado) await reenviarSemanasPorValidar(id);
-  return aRespuestaSupervisor(actualizado.nuevo, user);
+  const reenvio = actualizado.correoCambiado ? await reenviarSemanasPorValidar(id) : null;
+  return { supervisor: aRespuestaSupervisor(actualizado.nuevo, user), reenvio };
 }

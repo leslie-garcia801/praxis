@@ -74,17 +74,24 @@ export async function anularEnlacesVigentes(tx: Prisma.TransactionClient, superv
 }
 
 // RF-09, RF-21: right after an address change, emails the supervisor's pending weeks to the new address instead of
-// waiting for Monday. A sending failure is only logged: the weekly job sends them again.
-export async function reenviarSemanasPorValidar(supervisorId: string) {
+// waiting for Monday. A sending failure is only logged: the weekly job sends them again. Returns what happened so the
+// office can be told, or null when there was nothing to send.
+export type ReenvioEnlace = { semanas: number; enviado: boolean };
+
+export async function reenviarSemanasPorValidar(supervisorId: string): Promise<ReenvioEnlace | null> {
+  let semanaIds: string[] = [];
   try {
     const semanas = await prisma.semanaBitacora.findMany({
       where: { ...SEMANAS_POR_VALIDAR, expediente: { ...SEMANAS_POR_VALIDAR.expediente, supervisorId } },
       select: { id: true },
     });
-    if (semanas.length === 0) return;
-    await enviarEnlaceValidacion(supervisorId, semanas.map((s) => s.id));
+    semanaIds = semanas.map((s) => s.id);
+    if (semanaIds.length === 0) return null;
+    await enviarEnlaceValidacion(supervisorId, semanaIds);
+    return { semanas: semanaIds.length, enviado: true };
   } catch (error) {
     console.error(`No se pudo reenviar el enlace al supervisor ${supervisorId}; se enviará en el resumen semanal.`, error);
+    return semanaIds.length > 0 ? { semanas: semanaIds.length, enviado: false } : null;
   }
 }
 
