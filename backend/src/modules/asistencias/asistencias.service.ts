@@ -213,8 +213,12 @@ async function escanear(tx: Tx, user: AuthUser, input: EscaneoInput, ahora: Date
     ON CONFLICT ("expediente_id", "semana_inicio") DO NOTHING`;
   const semana = await tx.semanaBitacora.findUniqueOrThrow({
     where: { expedienteId_semanaInicio: { expedienteId: expediente.id, semanaInicio: new Date(`${inicio}T00:00:00.000Z`) } },
-    select: { id: true },
+    select: { id: true, deLibreta: true },
   });
+  // RF-17a, RN-19: a week copied from the notebook never receives scans.
+  if (semana.deLibreta) {
+    throw conflicto('SEMANA_DE_LIBRETA', 'Esta semana se registró desde tu libreta, por lo que no se puede registrar asistencia con el código QR.');
+  }
   const nueva = await tx.asistencia.create({
     data: { id: input.id, expedienteId: expediente.id, entrada: instante, estado: 'ABIERTA', sinConexion: input.sinConexion, semanaId: semana.id },
   });

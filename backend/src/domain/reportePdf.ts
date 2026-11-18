@@ -12,6 +12,8 @@ export type TurnoReporte = {
   salida: Date | null;
   minutosAcreditables: number;
   semanaId: string | null;
+  /** RF-17a: LIBRETA shifts are marked in the report. */
+  origen?: 'QR' | 'LIBRETA';
 };
 
 export type SemanaReporte = {
@@ -112,7 +114,7 @@ export function construirReporte(datos: DatosReporte): TDocumentDefinitions {
             body: [
               ['Fecha', 'Entrada', 'Salida', 'Horas'].map(celdaEncabezado),
               ...turnos.map((t): TableCell[] => [
-                formatearFecha(fechaLocal(t.entrada)),
+                t.origen === 'LIBRETA' ? `${formatearFecha(fechaLocal(t.entrada))} (libreta)` : formatearFecha(fechaLocal(t.entrada)),
                 horaLocal(t.entrada),
                 t.salida ? horaLocal(t.salida) : '—',
                 formatearHorasMinutos(t.minutosAcreditables),

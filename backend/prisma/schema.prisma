@@ -57,6 +57,14 @@ enum EstadoAsistencia {
   @@map("estado_asistencia")
 }
 
+// RF-17a: where a shift comes from. QR is the scan; LIBRETA is a shift copied from the paper notebook.
+enum OrigenAsistencia {
+  QR
+  LIBRETA
+
+  @@map("origen_asistencia")
+}
+
 enum EstadoValidacion {
   BORRADOR
   ENVIADA
@@ -308,6 +316,7 @@ model Asistencia {
   minutosAcreditables   Int?                  @map("minutos_acreditables")
   estado                EstadoAsistencia      @default(ABIERTA)
   sinConexion           Boolean               @default(false) @map("sin_conexion")
+  origen                OrigenAsistencia      @default(QR) @map("origen")
   recibidoEn            DateTime              @default(now()) @map("recibido_en") @db.Timestamptz
   semanaId              String?               @map("semana_id")
   semana                SemanaBitacora?       @relation(fields: [semanaId], references: [id])
@@ -336,6 +345,8 @@ model SemanaBitacora {
   rechazadaEn            DateTime?                @map("rechazada_en") @db.Timestamptz
   // Instant the Sunday "write your logbook" reminder was sent for this week (RF-28); null until then.
   recordatorioBitacoraEn DateTime?                @map("recordatorio_bitacora_en") @db.Timestamptz
+  // RF-17a: the week was copied from the paper notebook; it has no logbook and goes to the supervisor as it is.
+  deLibreta              Boolean                  @default(false) @map("de_libreta")
   asistencias            Asistencia[]
   enlaces                EnlaceValidacionSemana[]
 

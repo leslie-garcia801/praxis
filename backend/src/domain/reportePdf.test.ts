@@ -54,6 +54,17 @@ describe('construirReporte (RF-27)', () => {
     expect(t).not.toContain('"03/03/2026"');
   });
 
+  it('RF-17a: marks the shifts copied from the notebook', () => {
+    const datos = {
+      ...base,
+      semanas: [semana('s1', '2026-03-02', 'VALIDADA', null)],
+      turnos: [{ ...turno('2026-03-03T14:00:00Z', 120, 's1'), origen: 'LIBRETA' as const }, turno('2026-03-04T14:00:00Z', 60, 's1')],
+    };
+    const t = texto(datos);
+    expect(t).toContain('03/03/2026 (libreta)');
+    expect(t).toContain('"04/03/2026"');
+  });
+
   it('includes only shifts and logbooks of VALIDADA weeks', () => {
     const datos = {
       ...base,

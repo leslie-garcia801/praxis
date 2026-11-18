@@ -24,7 +24,7 @@ export async function datosReporte(user: AuthUser, id: string, { desde, hasta }:
     prisma.semanaBitacora.findMany({ where: { expedienteId: id, estado: 'VALIDADA' } }),
     prisma.asistencia.findMany({
       where: { expedienteId: id, estado: 'CERRADA', semana: { estado: 'VALIDADA' } },
-      select: { entrada: true, salida: true, minutosAcreditables: true, semanaId: true },
+      select: { entrada: true, salida: true, minutosAcreditables: true, semanaId: true, origen: true },
     }),
     prisma.asistencia.aggregate({
       where: { expedienteId: id, semana: { estado: 'VALIDADA' } },

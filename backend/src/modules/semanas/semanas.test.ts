@@ -301,6 +301,7 @@ describe('semanas de bitácora (RF-20, RN-17)', () => {
           semanaInicio: SEMANA_CERRADA,
           semanaFin: '2026-11-08',
           estado: 'RECHAZADA',
+          deLibreta: false,
           motivo: 'RECHAZADA',
           comentario: 'Falta detalle.',
         },
