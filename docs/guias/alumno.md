@@ -59,6 +59,17 @@ La bitácora es lo que tu supervisor lee para validar tus horas. Es de lunes a d
 
 Tus horas cuentan como **Validadas por tu supervisor** solo cuando la semana está validada. Mientras tanto aparecen como **Registradas sin validar**.
 
+## Agregar horas de tu libreta de papel
+
+Si ya tenías horas firmadas en tu libreta antes de usar la app, puedes copiarlas. Úsalo solo para eso: lo de esta semana se registra con QR.
+
+1. En **Mi avance** pulsa **Agregar horas**. Solo aparece mientras tu expediente está en proceso.
+2. Agrega una fila por turno: fecha, **hora de entrada** y **hora de salida** (cada turno empieza y termina el mismo día). Las fechas van desde el inicio de tu expediente y solo de **semanas ya terminadas**, no de la actual.
+3. La vista previa suma las horas por día y por semana. Pulsa **Revisar y enviar** y confirma.
+4. Estas semanas **no llevan bitácora**: van directo a tu supervisor, con la etiqueta **Libreta**, en su siguiente correo semanal.
+
+Las horas **cuentan solo cuando tu supervisor las valida**. Si las rechaza, en **Pendientes** aparece "Corrige las horas de la semana del…" con su comentario; al abrirlo se muestra **Corregir horas** con tus turnos ya llenos. Corrígelos y envía de nuevo. Los turnos de libreta no tienen el botón **Solicitar corrección**.
+
 ## Corregir un registro
 
 Si te equivocaste de hora o el turno quedó incompleto:

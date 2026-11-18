@@ -24,6 +24,12 @@ Con esta guía vas a dar seguimiento diario a los alumnos de tu oficina en **Pra
 
 **Columnas:** **Alumno**, **Carrera**, **Institución**, **Horas validadas / meta**, **Registradas sin validar**, último registro, **Semanas pendientes**, **Fecha estimada** y **Riesgo** (**En riesgo**, **En tiempo**, **Sin datos suficientes**, **No evaluable** o **Completado**).
 
+## Semanas de libreta
+
+El alumno puede copiar a la app horas firmadas en su libreta de papel (**Agregar horas**). En **Historial por semana** del detalle, esas semanas y sus turnos llevan la etiqueta **Libreta** y, en lugar de la bitácora, dicen que la semana no lleva bitácora. El supervisor las valida por su enlace semanal.
+
+**Respaldo (RF-22):** si el supervisor no responde, pide ver la libreta de papel firmada del alumno y, si coincide, usa **Validar en nombre del supervisor** (con motivo; queda en la auditoría). Si no coincide, **Rechazar** con un comentario. Los turnos de libreta no se corrigen desde **Correcciones**: el alumno reemplaza los turnos de la semana rechazada.
+
 ## Confirmar expedientes
 
 Cuando el alumno completa su expediente, aparece en **Alumnos por confirmar**. Abre su nombre, revisa institución, supervisor y fechas, y pulsa **Confirmar**. Si falta algo, la app muestra "Falta capturar:" con la lista. Al confirmar, el alumno puede empezar a registrar y el supervisor queda confirmado.

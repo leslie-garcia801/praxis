@@ -11,6 +11,10 @@ Esta guía te explica cómo revisar y validar las horas de los alumnos del CBTIS
 
 Para aceptar todo de una vez, pulsa **Validar todo** y confirma con **Sí, validar**.
 
+## Semanas de libreta
+
+Una semana con la etiqueta **Libreta** son horas que el alumno copió de su libreta de papel, de antes de usar la app. Llega en el mismo enlace semanal, pero **no lleva bitácora**: la pantalla lo indica. Compara los turnos con la libreta firmada del alumno y pulsa **Validar** si coinciden. Si no coinciden, pulsa **Rechazar** y escribe el motivo: el alumno corrige las horas y se te vuelve a enviar.
+
 ## Si quieres rechazar una semana
 
 1. Pulsa **Rechazar** en esa semana.

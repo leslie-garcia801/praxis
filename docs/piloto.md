@@ -34,7 +34,7 @@ Marca cada punto cuando esté hecho. La persona responsable es la que debe confi
 | [ ] | **Supervisores con correo real** en cada institución (**Editar** la institución, sección **Supervisores**, **Nuevo supervisor**). Revisa letra por letra: un correo mal escrito significa semanas sin validar | Cada oficina |
 | [ ] | **QR impreso por institución** (**Descargar QR**) y pegado en un lugar visible de la institución. Descargarlo otra vez genera uno nuevo y el impreso deja de funcionar | Cada oficina |
 | [ ] | **Cada institución confirmó que acepta el QR impreso** (specs §13, pregunta 8). Si alguna no, el alumno usa el código corto de 6 caracteres que va junto al QR | Cada oficina |
-| [ ] | **Aviso de privacidad:** el texto que muestra la app al activar la cuenta es **provisional** y dice "Texto provisional pendiente de aprobación del plantel". Confirmar con vinculación y dirección el texto definitivo (specs §13, pregunta 7) y pedir que se cambie antes del piloto | Mtra. Delfina e Ing. Stephany; Leslie lo cambia |
+| [x] | **Aviso de privacidad:** la versión simplificada está aprobada y es la que muestra la app al activar la cuenta. Queda pendiente la versión integral (sigue como borrador en [`aviso-privacidad-borrador.md`](aviso-privacidad-borrador.md)); mientras tanto la app indica que se consulta en las oficinas de vinculación (specs §13, pregunta 7) | Mtra. Delfina e Ing. Stephany |
 | [ ] | **Alumnos activan su cuenta e instalan la app** (guía del alumno). Revisa en el panel que todos aparezcan en **Alumnos por confirmar** o ya confirmados | Cada oficina y Leslie |
 | [ ] | **Expedientes confirmados:** cada oficina abre el detalle del alumno y pulsa **Confirmar** cuando institución y supervisor están correctos | Cada oficina |
 | [ ] | **Prueba de punta a punta con un alumno:** entrada, salida, bitácora, correo al supervisor, validación y reporte ([`prueba-supervisor.md`](prueba-supervisor.md)) | Leslie |
@@ -94,20 +94,24 @@ railway ssh -- node dist/scripts/metricasPiloto.js --desde 2026-11-16 --hasta 20
 railway ssh -- node dist/scripts/metricasPiloto.js --desde 2026-11-16 --hasta 2026-12-20 --carrera Programación --semestre 5 --csv - > metricas.csv
 ```
 
-Cada métrica termina con `CUMPLE`, `NO CUMPLE` o `sin datos`. Cómo leerlas:
+Cada métrica termina con `CUMPLE`, `NO CUMPLE` o `sin datos`.
+
+**Horas de libreta (RN-19).** Un alumno puede copiar a la app horas que ya tenía firmadas en su libreta de papel (opción **Agregar horas**). Esos turnos no se escanearon, así que no deben inflar la adopción ni la precisión del QR: las métricas 1 y 3 los excluyen, y el reporte indica al final cuántos turnos de libreta se excluyeron. La métrica 2 sí incluye las semanas de libreta. En el CSV, las columnas **Días registrados**, **Cumple 4 días**, **Turnos** y **Turnos incompletos** también cuentan solo turnos de QR; **Semanas enviadas** y **Validadas a tiempo** incluyen las semanas de libreta.
+
+Cómo leerlas:
 
 | Métrica | Qué cuenta el comando | Lectura |
 | --- | --- | --- |
-| 1. Registro ≥ 4 días | Cada alumno en cada semana completa (lunes a domingo) cuenta una vez; cumple si registró en 4 días o más. El resultado es el porcentaje de esas "semanas de alumno" que cumplen. Muestra el desglose por semana y quién tiene menos de 4 días | Si baja en una semana, mira qué alumnos faltaron y pregunta el motivo. La semana en la que un expediente empieza a mitad de semana no cuenta |
-| 2. Validadas en 7 días | De las semanas enviadas dentro del rango, cuántas se validaron en 7 días o menos desde el envío. También informa tardías, rechazadas y pendientes | Una semana enviada hace menos de 7 días aún puede cumplir: corre el comando al menos una semana después del último envío. Una semana rechazada no cuenta como validada a tiempo |
-| 3. Turnos incompletos | Turnos sin salida (INCOMPLETA, o abiertos desde un día anterior) entre todos los turnos con entrada en el rango. Los abiertos de hoy no cuentan | Un porcentaje alto suele significar olvidos de salida: refuerza el recordatorio o revisa si el QR de la institución falla |
+| 1. Registro ≥ 4 días | Cada alumno en cada semana completa (lunes a domingo) cuenta una vez; cumple si registró en 4 días o más. **Solo cuentan los turnos de QR**: un día con únicamente turnos de libreta no es un día registrado. El resultado es el porcentaje de esas "semanas de alumno" que cumplen. Muestra el desglose por semana y quién tiene menos de 4 días | Si baja en una semana, mira qué alumnos faltaron y pregunta el motivo. La semana en la que un expediente empieza a mitad de semana no cuenta |
+| 2. Validadas en 7 días | De las semanas enviadas dentro del rango, cuántas se validaron en 7 días o menos desde el envío. También informa tardías, rechazadas y pendientes | Una semana enviada hace menos de 7 días aún puede cumplir: corre el comando al menos una semana después del último envío. Una semana rechazada no cuenta como validada a tiempo. **Las semanas de libreta sí cuentan**: esta métrica mide qué tan rápido responde el supervisor |
+| 3. Turnos incompletos | Turnos sin salida (INCOMPLETA, o abiertos desde un día anterior) entre todos los turnos con entrada en el rango. Los abiertos de hoy no cuentan. **Los turnos de libreta no cuentan** | Un porcentaje alto suele significar olvidos de salida: refuerza el recordatorio o revisa si el QR de la institución falla |
 
 Cuándo correrlo: **semana 2** (primera mirada), **semana 4** y **al cierre**, una semana después de la última entrada para dar tiempo a las validaciones.
 
 ### Diferencia contra el papel (métrica 4)
 
 1. **Elige a los alumnos:** todos si el grupo es chico, o al menos 10 de distintas instituciones y de ambas oficinas.
-2. **Elige las semanas:** las mismas semanas completas para app y papel (por ejemplo, semanas 2 a 4).
+2. **Elige las semanas:** las mismas semanas completas para app y papel (por ejemplo, semanas 2 a 4). Compara solo semanas registradas con QR: salta las que tengan la etiqueta **Libreta** en **Historial por semana**, porque esas horas se copiaron del papel y coincidirían con él por construcción.
 3. **Suma el papel:** horas totales de esas semanas en la hoja o libreta de cada alumno.
 4. **Suma la app:** en el detalle del alumno, **Historial por semana**, anota el **Total de la semana** de cada una (son horas acreditadas).
 5. **Calcula** por alumno y en total: `diferencia % = |horas de la app − horas del papel| ÷ horas del papel × 100`.
@@ -137,6 +141,7 @@ Se mide con la encuesta final de [`encuesta-piloto.md`](encuesta-piloto.md): la 
 | **No llegan los recordatorios** | Primero, en **Mi avance** busca la tarjeta **Recordatorios**. Si no aparece, el teléfono no los admite o faltan las claves en el servidor (Leslie). En iPhone la app debe estar instalada en la pantalla de inicio y el teléfono tener iOS 16.4 o más reciente. Si dice "Bloqueaste las notificaciones", hay que activarlas en los ajustes del navegador o del teléfono |
 | **El alumno no puede instalar la app en iPhone** | Debe abrir la dirección en **Safari** (no en otro navegador), tocar **Compartir** y luego **Agregar a inicio** |
 | **La semana de un alumno se rechazó** | Es normal: el alumno ve el comentario del supervisor en **Pendientes**, corrige y vuelve a enviar. Revisa que no se quede atorada más de una semana |
+| **El alumno quiere agregar horas de su libreta de papel de antes de usar la app** | Que use **Agregar horas** en **Mi avance** ([guía del alumno](guias/alumno.md)). Solo admite semanas ya terminadas y desde la fecha de inicio del expediente. El supervisor las valida con el enlace semanal; si no responde, la oficina puede validar en su nombre tras ver la libreta firmada (RF-22). No entran en las métricas 1 y 3 ni en la comparación con el papel |
 | **El alumno olvidó su contraseña** | **Restablecer contraseña** en su detalle |
 | **Algo no está en esta lista** | Anota qué pantalla, qué hizo la persona y qué mensaje vio, y avisa a Leslie |
 
