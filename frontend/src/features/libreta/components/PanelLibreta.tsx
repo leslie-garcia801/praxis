@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { buttonVariants } from '@/components/ui/button';
 import type { SemanaHistorial } from '../../historial/api';
 import { TEXTO_SIN_BITACORA } from './EtiquetaLibreta';
 
@@ -9,7 +10,7 @@ export function PanelLibreta({ semana }: { semana: SemanaHistorial }) {
       <h3 id="libreta-titulo" className="text-lg font-semibold">
         Horas de libreta
       </h3>
-      <p className="rounded-lg border bg-muted p-3 text-foreground">{TEXTO_SIN_BITACORA}</p>
+      <p className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">{TEXTO_SIN_BITACORA}</p>
       {semana.estadoValidacion === 'RECHAZADA' && semana.comentario && (
         <p role="alert" className="rounded-lg border border-destructive bg-destructive/10 p-3 font-medium text-destructive">
           Tu supervisor la rechazó: «{semana.comentario}»
@@ -18,7 +19,7 @@ export function PanelLibreta({ semana }: { semana: SemanaHistorial }) {
       {semana.puedeCorregirLibreta && (
         <Link
           to={`/alumno/libreta?corregir=${encodeURIComponent(semana.inicio)}`}
-          className="inline-flex h-12 items-center justify-center rounded-lg bg-primary px-4 font-medium text-primary-foreground"
+          className={buttonVariants()}
         >
           Corregir turnos
         </Link>

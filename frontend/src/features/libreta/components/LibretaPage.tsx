@@ -12,7 +12,7 @@ const linkClass = 'text-primary underline underline-offset-4';
 
 function Aviso({ children }: { children: ReactNode }) {
   return (
-    <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+    <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
       {children}
     </p>
   );
@@ -25,7 +25,7 @@ function Enviadas({ semanas }: { semanas: SemanaLibreta[] }) {
       <p className="text-foreground">Tu supervisor las recibirá para validarlas. Las horas solo cuentan al validarse.</p>
       <ul className="flex flex-col gap-2">
         {semanas.map((s) => (
-          <li key={s.id} className="flex flex-col gap-0.5 rounded-lg border p-3">
+          <li key={s.id} className="flex flex-col gap-0.5 rounded-xl border border-border bg-card p-4 shadow-sm">
             <span className="font-medium">Semana del {formatRangoSemana(s.semanaInicio, s.semanaFin)}</span>
             <span className="text-foreground">Enviada al supervisor</span>
             <span className="text-foreground">{`Por validar: ${formatHoras(s.minutosAcreditables)}`}</span>
@@ -80,7 +80,7 @@ function Correccion({ inicio, onEnviado }: { inicio: string; onEnviado: (semanas
     <>
       <h2 className="text-lg font-semibold">{`Corrigiendo la semana del ${formatRangoSemana(semana.inicio, semana.fin)}`}</h2>
       {semana.comentario && (
-        <p className="rounded-lg border bg-muted p-3 text-foreground">{`Tu supervisor la rechazó: «${semana.comentario}»`}</p>
+        <p className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">{`Tu supervisor la rechazó: «${semana.comentario}»`}</p>
       )}
       <p className="text-foreground">
         Los turnos que captures reemplazan a los anteriores de esta semana. Todas las fechas deben caer dentro de ella.

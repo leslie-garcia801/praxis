@@ -1,4 +1,6 @@
+import { ClipboardList } from 'lucide-react';
 import { Link } from 'react-router';
+import { SeccionCard, TituloSeccion } from '@/components/SeccionCard';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
 import { diaMonterrey, formatDiaCorto, formatRangoSemana, lunesDeSemana } from '@/lib/tiempo';
 import { useMisCorrecciones, type CorreccionConTurno } from '../../correcciones/api';
@@ -44,7 +46,7 @@ function CorreccionItem({ correccion }: { correccion: CorreccionConTurno }) {
       ? `Tu corrección del ${formatDiaCorto(dia)} está en revisión`
       : `Tu oficina rechazó la corrección del ${formatDiaCorto(dia)}`;
   return (
-    <li className="flex flex-col gap-1 rounded-lg border p-3">
+    <li className="flex flex-col gap-1 rounded-lg border border-aviso-borde/60 bg-aviso/60 p-3">
       <Link to={`/alumno/historial?semana=${encodeURIComponent(lunesDeSemana(dia))}`} className={enlaceClass}>
         {texto}
       </Link>
@@ -69,10 +71,10 @@ export function PendientesAlumno() {
   const listo = pendientes.isSuccess && correcciones.isSuccess;
 
   return (
-    <section aria-labelledby="pendientes-titulo" className="flex flex-col gap-2">
-      <h2 id="pendientes-titulo" className="text-lg font-semibold">
+    <SeccionCard aria-labelledby="pendientes-titulo">
+      <TituloSeccion id="pendientes-titulo" icono={ClipboardList}>
         Pendientes
-      </h2>
+      </TituloSeccion>
       {cargando && !error && <p>Cargando tus pendientes…</p>}
       {sinRed && <p className="text-foreground">Sin conexión. Tus pendientes se mostrarán cuando vuelva la conexión.</p>}
       {error && (
@@ -108,6 +110,6 @@ export function PendientesAlumno() {
           ))}
         </ul>
       )}
-    </section>
+    </SeccionCard>
   );
 }

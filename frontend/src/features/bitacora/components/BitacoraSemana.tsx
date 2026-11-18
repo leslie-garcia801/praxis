@@ -109,7 +109,7 @@ function Editor({ semana, semanaId }: { semana: SemanaHistorial; semanaId: strin
         </p>
       )}
       {enCurso && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+        <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
           {AVISO_EN_CURSO}
         </p>
       )}
@@ -173,7 +173,7 @@ export function BitacoraSemana({ semana }: { semana: SemanaHistorial }) {
   if (semana.id === null) {
     return (
       <Seccion>
-        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+        <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
           La bitácora se habilita con tu primer registro de la semana
         </p>
       </Seccion>

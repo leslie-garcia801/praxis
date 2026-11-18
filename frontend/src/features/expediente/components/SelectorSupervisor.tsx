@@ -91,7 +91,7 @@ function Lista({ institucionId, valueId, onChange, tipo }: Props & { institucion
         />
       )}
       {aviso && !abierto && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+        <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
           La {NOMBRE_OFICINA[tipo]} revisará los datos de tu supervisor
         </p>
       )}

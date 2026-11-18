@@ -1,4 +1,6 @@
+import { FileDown } from 'lucide-react';
 import { useId, useState } from 'react';
+import { SeccionCard } from '@/components/SeccionCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +32,7 @@ export function DescargarReporte({ expedienteId }: { expedienteId: string }) {
   }
 
   return (
-    <section aria-label="Reporte de horas y actividades" className="flex flex-col gap-3">
+    <SeccionCard aria-label="Reporte de horas y actividades">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <Label htmlFor={`${id}-desde`}>Desde</Label>
@@ -40,16 +42,17 @@ export function DescargarReporte({ expedienteId }: { expedienteId: string }) {
           <Label htmlFor={`${id}-hasta`}>Hasta</Label>
           <Input id={`${id}-hasta`} type="date" value={hasta} min={desde || undefined} onChange={(e) => setHasta(e.target.value)} />
         </div>
-        <Button type="button" variant="outline" className="min-h-10" disabled={descarga.isPending} onClick={descargar}>
+        <Button type="button" variant="outline" disabled={descarga.isPending} onClick={descargar}>
+          <FileDown aria-hidden="true" />
           {descarga.isPending ? 'Descargando…' : 'Descargar reporte'}
         </Button>
       </div>
       <p className="text-sm text-muted-foreground">Sin fechas, el reporte incluye todo el expediente. Solo cuenta las semanas validadas.</p>
       {(error ?? (rangoInvalido ? MENSAJE_RANGO : null)) && (
-        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error ?? MENSAJE_RANGO}
         </p>
       )}
-    </section>
+    </SeccionCard>
   );
 }

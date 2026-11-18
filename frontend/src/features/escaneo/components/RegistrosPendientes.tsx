@@ -1,3 +1,5 @@
+import { CloudOff, TriangleAlert } from 'lucide-react';
+import { SeccionCard, TituloSeccion } from '@/components/SeccionCard';
 import { Button } from '@/components/ui/button';
 import { useEstadoCola } from '@/offline/estadoCola';
 import { formatFecha, formatHora } from '@/lib/tiempo';
@@ -9,8 +11,11 @@ function textoPendientes(cantidad: number): string {
 // RF-16: "Sin conexión" notice for the student screens that cannot show data without a network.
 export function AvisoSinConexion() {
   return (
-    <div role="status" className="flex flex-col gap-1 rounded-lg border bg-muted p-3 text-foreground">
-      <p className="font-semibold">Sin conexión</p>
+    <div role="status" className="flex flex-col gap-1 rounded-lg border-2 border-aviso-borde bg-aviso p-3 text-aviso-foreground">
+      <p className="flex items-center gap-2 font-semibold">
+        <CloudOff aria-hidden="true" className="size-4 shrink-0" />
+        Sin conexión
+      </p>
       <p>Puedes registrar tu asistencia; se enviará cuando tengas conexión.</p>
     </div>
   );
@@ -22,12 +27,12 @@ export function EstadoRegistrosPendientes() {
   const { pendientes, detenidoPor } = useEstadoCola();
   if (pendientes === 0) return null;
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
       <p role="status" className="font-medium">
         {textoPendientes(pendientes)}
       </p>
       {detenidoPor === 'SESION' && (
-        <p role="alert" className="text-destructive">
+        <p role="alert" className="font-medium text-destructive">
           Inicia sesión para enviar tus registros pendientes.
         </p>
       )}
@@ -41,13 +46,13 @@ export function RegistrosRechazados() {
   const { rechazados, descartar } = useEstadoCola();
   if (rechazados.length === 0) return null;
   return (
-    <section aria-labelledby="rechazados-titulo" className="flex flex-col gap-2">
-      <h2 id="rechazados-titulo" className="text-lg font-semibold">
+    <SeccionCard aria-labelledby="rechazados-titulo">
+      <TituloSeccion id="rechazados-titulo" icono={TriangleAlert}>
         Registros que no se aceptaron
-      </h2>
+      </TituloSeccion>
       <ul aria-label="Registros que no se aceptaron" className="flex flex-col gap-2">
         {rechazados.map((registro) => (
-          <li key={registro.id} className="flex flex-col gap-2 rounded-lg border border-destructive/40 p-3">
+          <li key={registro.id} className="flex flex-col gap-2 rounded-lg border-2 border-destructive/50 bg-destructive/10 p-3">
             <p className="font-medium">{`Registro del ${formatFecha(registro.hora)} a las ${formatHora(registro.hora)}`}</p>
             <p className="text-foreground">{registro.estado.message}</p>
             <Button type="button" variant="outline" className="h-11 w-full" onClick={() => void descartar(registro.id)}>
@@ -56,6 +61,6 @@ export function RegistrosRechazados() {
           </li>
         ))}
       </ul>
-    </section>
+    </SeccionCard>
   );
 }

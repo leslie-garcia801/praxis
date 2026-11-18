@@ -1,6 +1,7 @@
 import { ACUDE_A_TU_OFICINA } from '@/lib/oficinas';
 import { Link, useSearchParams } from 'react-router';
 import { ErrorConReintento } from '@/components/ErrorConReintento';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api';
 import { esErrorDeRed, useEnLinea } from '@/lib/conexion';
@@ -8,6 +9,7 @@ import { formatHoras, formatRangoSemana, hoyMonterrey, sumarDias } from '@/lib/t
 import { BitacoraSemana } from '../../bitacora/components/BitacoraSemana';
 import { EtiquetaLibreta } from '../../libreta/components/EtiquetaLibreta';
 import { PanelLibreta } from '../../libreta/components/PanelLibreta';
+import { VARIANTE_VALIDACION } from '../varianteValidacion';
 import { useHistorial, type EstadoValidacion, type SemanaHistorial } from '../api';
 import { DiaHistorial } from './DiaHistorial';
 
@@ -30,8 +32,10 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
   return (
     <>
       <header className="flex flex-col gap-1">
-        <h2 className="text-lg font-semibold">Semana del {formatRangoSemana(semana.inicio, semana.fin)}</h2>
-        <p className="text-foreground">{textoValidacion(semana.estadoValidacion)}</p>
+        <h2 className="font-heading text-xl font-bold">Semana del {formatRangoSemana(semana.inicio, semana.fin)}</h2>
+        <p>
+          <Badge variant={VARIANTE_VALIDACION[semana.estadoValidacion ?? 'BORRADOR']}>{textoValidacion(semana.estadoValidacion)}</Badge>
+        </p>
         {semana.deLibreta && <EtiquetaLibreta />}
       </header>
       <div className="flex gap-2">
@@ -49,17 +53,17 @@ function SemanaContenido({ semana, onIr }: { semana: SemanaHistorial; onIr: (fec
         </Button>
       </div>
       {sinTurnos ? (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+        <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
           No hay registros esta semana
         </p>
       ) : (
         <>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {semana.dias.map((dia) => (
               <DiaHistorial key={dia.fecha} dia={dia} />
             ))}
           </div>
-          <p className="text-lg font-semibold">
+          <p className="rounded-lg bg-accent px-3 py-2 font-heading text-lg font-bold tabular-nums text-accent-foreground">
             Total de la semana: {formatHoras(semana.totales.minutosAcreditables)}
           </p>
         </>
@@ -92,7 +96,7 @@ export function HistorialPage() {
         />
       )}
       {sinExpediente && (
-        <p role="status" className="rounded-lg border bg-muted p-3 text-foreground">
+        <p role="status" className="rounded-lg border-2 border-info-borde bg-info p-3 text-info-foreground">
           No tienes un expediente. {ACUDE_A_TU_OFICINA}
         </p>
       )}
