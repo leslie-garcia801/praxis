@@ -67,8 +67,6 @@ export const puedeTransferir = (estado: EstadoExpediente) => estado === 'EN_PROC
 // RN-03a: the second program is the other type.
 export const tipoContrario = (tipo: TipoPrograma): TipoPrograma => (tipo === 'SERVICIO_SOCIAL' ? 'PRACTICAS' : 'SERVICIO_SOCIAL');
 
-export const SEMESTRE_SEGUNDO_PROGRAMA = 6;
-
 export const ESTADOS_ACTIVOS: readonly EstadoExpediente[] = ['PENDIENTE', 'EN_PROCESO', 'SUSPENDIDO'];
 
 export type ExpedienteResumen = { tipo: TipoPrograma; estado: EstadoExpediente; creadoEn: Date };
@@ -79,7 +77,8 @@ export const primerTipoPrograma = (expedientes: readonly ExpedienteResumen[]): T
 
 // RF-01, RN-03, RN-03a, RN-03b: whether the next program can be assigned to a student, and which one.
 // The first program is the type of the oldest case file (a cancelled attempt that is repeated keeps the type);
-// it must have ended in FINALIZADO. Returns the type to assign or the reason to skip the student.
+// it must have ended in FINALIZADO. The second program may start in 5th semester as soon as the first one is
+// finished (RN-03a, decided 2026-11-18); RN-01 still applies. Returns the type to assign or the reason to skip.
 export function decidirAsignacion(datos: {
   semestreAlumno: number;
   expedientes: readonly ExpedienteResumen[];
@@ -100,8 +99,8 @@ export function decidirAsignacion(datos: {
   if (expedientes.some((e) => e.tipo === siguiente && e.estado === 'FINALIZADO')) {
     return { motivo: 'El alumno ya tiene un expediente del otro programa.' };
   }
-  if (semestreAlumno < SEMESTRE_SEGUNDO_PROGRAMA) {
-    return { motivo: `El alumno aún no está en ${SEMESTRE_SEGUNDO_PROGRAMA}.º semestre.` };
+  if (!semestreValido(semestreAlumno)) {
+    return { motivo: `El alumno aún no está en ${SEMESTRE_MINIMO}.º semestre.` };
   }
   if (!alcance.includes(siguiente)) {
     return { motivo: 'El siguiente programa corresponde a la otra oficina de vinculación.' };
