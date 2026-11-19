@@ -242,13 +242,13 @@ describe('GET /api/expedientes/candidatos (RF-01, RN-03a, RN-03b)', () => {
     expect(ids(res.body)).toContain(reintento.alumnoId);
   });
 
-  it('RN-03a: excludes 5th-semester students (the second program starts in 6th)', async () => {
+  it('RN-03a: lists 5th-semester students whose first program is finished (the second one may start early)', async () => {
     const quinto = await egresado('SERVICIO_SOCIAL', { semestre: 5 });
     const sexto = await egresado('SERVICIO_SOCIAL', { semestre: 6 });
 
     const res = await pedir(cookiePracticas);
 
-    expect(ids(res.body)).not.toContain(quinto.alumnoId);
+    expect(ids(res.body)).toContain(quinto.alumnoId);
     expect(ids(res.body)).toContain(sexto.alumnoId);
   });
 

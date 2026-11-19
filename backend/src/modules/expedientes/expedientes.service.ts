@@ -2,7 +2,7 @@ import {
   decidirAsignacion,
   ESTADOS_ACTIVOS,
   primerTipoPrograma,
-  SEMESTRE_SEGUNDO_PROGRAMA,
+  SEMESTRE_MINIMO,
   faltantesParaConfirmar,
   formatearDuracion,
   horarioValido,
@@ -570,7 +570,7 @@ export async function listarCandidatos(user: AuthUser) {
   const alumnos = await prisma.alumno.findMany({
     where: {
       usuario: { plantelId: user.plantelId },
-      semestre: { gte: SEMESTRE_SEGUNDO_PROGRAMA },
+      semestre: { gte: SEMESTRE_MINIMO },
       expedientes: { some: { estado: 'FINALIZADO' }, none: { estado: { in: [...ESTADOS_ACTIVOS] } } },
     },
     select: {

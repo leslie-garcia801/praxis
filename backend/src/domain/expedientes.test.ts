@@ -174,8 +174,12 @@ describe('RN-03a: siguiente programa', () => {
     expect(r).toEqual({ tipo: 'PRACTICAS' });
   });
 
-  it('RN-03a: omite si el alumno está por debajo de 6.º semestre', () => {
-    expect(decidirAsignacion({ ...base, semestreAlumno: 5, expedientes: [exp('SERVICIO_SOCIAL', 'FINALIZADO')] })).toHaveProperty('motivo');
+  it('RN-03a: asigna el segundo programa en 5.º semestre si el primero está finalizado', () => {
+    expect(decidirAsignacion({ ...base, semestreAlumno: 5, expedientes: [exp('SERVICIO_SOCIAL', 'FINALIZADO')] })).toEqual({ tipo: 'PRACTICAS' });
+  });
+
+  it('RN-01: omite si el alumno está por debajo de 5.º semestre', () => {
+    expect(decidirAsignacion({ ...base, semestreAlumno: 4, expedientes: [exp('SERVICIO_SOCIAL', 'FINALIZADO')] })).toHaveProperty('motivo');
   });
 
   it('RN-03b: omite si el tipo contrario no es de la oficina', () => {

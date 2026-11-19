@@ -18,7 +18,7 @@
 
 PWA (primero para celular, también usable en escritorio) para que los alumnos registren su asistencia de servicio social y prácticas profesionales escaneando un código QR en la institución. La app calcula las horas, muestra el avance y la fecha estimada de término, y permite que el supervisor valide las horas cada semana. Vinculación administra el catálogo de instituciones y da seguimiento a los alumnos.
 
-En 5.º semestre vinculación asigna a cada alumno servicio social o prácticas; en 6.º semestre hace el otro. La app lleva los dos expedientes del alumno a lo largo de ambos semestres.
+En 5.º semestre vinculación asigna a cada alumno servicio social o prácticas; en 6.º semestre hace el otro (o antes, si ya terminó el primero; RN-03a). La app lleva los dos expedientes del alumno a lo largo de ambos semestres.
 
 **Objetivo del MVP:** piloto con la carrera de **Programación**, para comprobar que el registro con QR y el conteo automático son más rápidos y confiables que la libreta o la hoja de papel.
 
@@ -184,7 +184,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 | RN-01 | Solo los alumnos de **5.º semestre o superior** pueden tener un expediente | Vinculación y servicio social | Confirmada |
 | RN-02 | Meta de horas: **480 para servicio social** y **240 para prácticas**. Es configurable | Servicio social y formatos | Confirmada |
 | RN-03 | Un alumno no puede tener servicio y prácticas en proceso al mismo tiempo. Puede hacer ambos en la misma institución en periodos distintos | Vinculación | Confirmada |
-| RN-03a | **El tipo de programa lo asigna vinculación**, no el alumno. En 5.º semestre se asigna servicio o prácticas, y en 6.º el otro | Servicio social | Confirmada |
+| RN-03a | **El tipo de programa lo asigna vinculación**, no el alumno. En 5.º semestre se asigna servicio o prácticas, y en 6.º el otro. Si el alumno finaliza el primero mientras sigue en 5.º, el segundo puede asignarse de inmediato, sin esperar al 6.º (sigue aplicando RN-03: nunca dos programas activos a la vez). *(Adelanto decidido por la responsable del proyecto el 2026-11-18.)* | Servicio social; responsable del proyecto | Confirmada |
 | RN-03b | Cada usuario de vinculación administra solo los expedientes de su oficina (Prácticas o Servicio Social); el administrador ve ambos | Formatos de Edumedia | Confirmada |
 | RN-04 | Máximo **6 h 30 min (390 minutos) acreditables por día** por alumno. Si un turno las supera, el excedente se registra pero no se acredita, y se avisa al alumno. *(Antes 5 horas; cambiado por decisión de la responsable del proyecto el 2026-11-11.)* | Vinculación | Confirmada |
 | RN-05 | Todos los días cuentan, incluidos sábados y domingos | Vinculación | Confirmada |
@@ -215,7 +215,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 
 **RF-01 Importación de alumnos.** Vinculación sube un Excel o CSV con: número de control, nombre, apellido paterno, apellido materno, carrera, semestre, grupo, turno y **tipo asignado** (servicio social o prácticas). Al importar se crea el expediente en estado `PENDIENTE` con el tipo asignado.
 - La plantilla usa los mismos nombres de columna que Edumedia para poder copiar y pegar desde su exportación (confirmar si Edumedia exporta a Excel).
-- Al pasar a 6.º semestre, una acción "Asignar siguiente programa" crea el expediente del tipo contrario para los alumnos que finalizaron el primero.
+- Una acción "Asignar siguiente programa" crea el expediente del tipo contrario para los alumnos que finalizaron el primero, normalmente al pasar a 6.º semestre o antes si lo terminan en 5.º (RN-03a).
 - Se descarga una plantilla con las columnas exactas.
 - Vista previa con errores por fila (matrícula repetida, carrera desconocida, semestre inválido) antes de confirmar.
 - Una matrícula existente se actualiza; no se duplica.
@@ -818,7 +818,7 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | Método | Ruta | Rol | Descripción |
 | --- | --- | --- | --- |
 | GET | `/api/expedientes` | Vinculación / Admin | Listado de expedientes |
-| GET | `/api/expedientes/candidatos` | Vinculación / Admin | Alumnos a los que la oficina puede asignar el siguiente programa (primer programa `FINALIZADO`, 6.º semestre, sin expediente activo; RN-03a, RN-03b) |
+| GET | `/api/expedientes/candidatos` | Vinculación / Admin | Alumnos a los que la oficina puede asignar el siguiente programa (primer programa `FINALIZADO`, 5.º semestre o superior, sin expediente activo; RN-03a, RN-03b) |
 | POST | `/api/expedientes/asignar` | Vinculación / Admin | Asignar tipo de programa (individual o en lote; 5.º y 6.º semestre) |
 | GET | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Detalle del expediente |
 | PATCH | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Completar o corregir institución, supervisor, periodo y horario; vinculación lo edita desde el detalle del alumno mientras el expediente esté abierto (la fecha de inicio respeta RN-21) |

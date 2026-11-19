@@ -651,11 +651,12 @@ describe('acciones de vinculación sobre el expediente (RF-11, RF-12, RN-12, RN-
       expect(await prisma.expediente.count({ where: { alumnoId: c.alumnoId, tipo: 'PRACTICAS', estado: 'PENDIENTE' } })).toBe(1);
     });
 
-    it('RN-03a: omite al alumno de menos de 6.º semestre', async () => {
+    it('RN-03a: asigna el segundo programa a un alumno de 5.º semestre con el primero finalizado', async () => {
       const c = await egresado('SERVICIO_SOCIAL', 5);
       const res = await pedir('post', '/asignar', { alumnoIds: [c.alumnoId] }, cookieAdmin);
-      expect(res.body.asignados).toEqual([]);
-      expect(res.body.omitidos).toEqual([{ alumnoId: c.alumnoId, motivo: expect.stringContaining('semestre') }]);
+      expect(res.body.omitidos).toEqual([]);
+      expect(res.body.asignados).toEqual([expect.objectContaining({ alumnoId: c.alumnoId, tipo: 'PRACTICAS' })]);
+      expect(await prisma.expediente.count({ where: { alumnoId: c.alumnoId, tipo: 'PRACTICAS', estado: 'PENDIENTE' } })).toBe(1);
     });
 
     it('RN-03a: omite al alumno inexistente y al de otro plantel', async () => {
