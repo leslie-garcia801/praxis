@@ -3,7 +3,7 @@ import { apiFetch } from '@/lib/api';
 import { candidatosKeys } from '../asignacion/api';
 import { avanceKeys } from '../avance/api';
 import type { SemanaHistorial } from '../historial/api';
-import { supervisoresKeys, type Expediente, type ReenvioEnlace } from '../expediente/api';
+import { supervisoresKeys, type EditarExpedienteInput, type Expediente, type ReenvioEnlace } from '../expediente/api';
 import { panelKeys } from '../panel/api';
 import type { Turno } from '../instituciones/api';
 
@@ -169,6 +169,16 @@ export function useEditarSupervisor(supervisorId: string) {
 }
 
 // RF-10, RF-29: PATCH /api/expedientes/:id with only `supervisorId`; the change is audited by the server.
+// RF-10: PATCH /api/expedientes/:id with the period, schedule and department fields the office fixes.
+export function useEditarExpediente(expedienteId: string) {
+  const invalidar = useInvalidarDetalle();
+  return useMutation({
+    mutationFn: (input: EditarExpedienteInput) =>
+      apiFetch<{ expediente: ExpedienteDetalle }>(`/api/expedientes/${expedienteId}`, { method: 'PATCH', body: JSON.stringify(input) }),
+    onSuccess: invalidar,
+  });
+}
+
 export function useCambiarSupervisor(expedienteId: string) {
   const invalidar = useInvalidarDetalle();
   return useMutation({

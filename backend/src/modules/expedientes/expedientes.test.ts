@@ -5,6 +5,7 @@ import type { EstadoExpediente, TipoPrograma } from '../../generated/prisma/enum
 import {
   borrarPlantel,
   crearAlumnoPrecargado,
+  crearAsistencia,
   crearExpediente,
   crearInstitucion,
   crearPlantel,
@@ -15,6 +16,7 @@ import {
 } from '../../../test/factories.js';
 import { createApp } from '../../app.js';
 import { prisma } from '../../lib/prisma.js';
+import { instanteLocal } from '../../lib/tiempo.js';
 
 const ORIGIN = process.env.FRONTEND_ORIGIN!;
 
@@ -483,6 +485,33 @@ describe('expedientes (RF-10, RF-11)', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.error.code).toBe('PERIODO_INVALIDO');
+    });
+
+    it('RN-21: the start date cannot move past a registered shift (409 TURNOS_ANTES_DEL_INICIO); up to its day it can', async () => {
+      const c = await caso({ tipo: 'PRACTICAS', estado: 'EN_PROCESO', datos: { fechaInicio: new Date('2026-03-02'), fechaTermino: new Date('2026-08-28') } });
+      // 00:30 in Monterrey is still March 5 locally, although it is 06:30 UTC.
+      await crearAsistencia({ expedienteId: c.id, entrada: instanteLocal('2026-03-05', '00:30'), minutos: 60 });
+
+      const despues = await pedir('patch', `/${c.id}`, { fechaInicio: '2026-03-06' });
+      const mismoDia = await pedir('patch', `/${c.id}`, { fechaInicio: '2026-03-05' });
+      const antes = await pedir('patch', `/${c.id}`, { fechaInicio: '2026-02-23' });
+
+      expect(despues.status).toBe(409);
+      expect(despues.body.error).toMatchObject({
+        code: 'TURNOS_ANTES_DEL_INICIO',
+        message: 'Hay turnos registrados desde el 05/03/2026. La fecha de inicio no puede ser posterior a esa fecha.',
+        details: { primerTurno: '2026-03-05' },
+      });
+      expect(mismoDia.status).toBe(200);
+      expect(antes.status).toBe(200);
+      const fila = await prisma.expediente.findUniqueOrThrow({ where: { id: c.id } });
+      expect(fila.fechaInicio?.toISOString().slice(0, 10)).toBe('2026-02-23');
+    });
+
+    it('RN-21: without shifts the start date moves freely', async () => {
+      const c = await caso({ tipo: 'PRACTICAS', estado: 'EN_PROCESO', datos: { fechaInicio: new Date('2026-03-02'), fechaTermino: new Date('2026-08-28') } });
+
+      expect((await pedir('patch', `/${c.id}`, { fechaInicio: '2026-04-06' })).status).toBe(200);
     });
 
     it('RN-06b: entry must be before exit (400 HORARIO_INVALIDO), also against the stored time', async () => {

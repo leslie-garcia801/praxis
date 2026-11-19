@@ -403,6 +403,69 @@ describe('/vinculacion/expedientes/:id office actions (RF-12, RF-22, RN-12, RN-0
     expect(await screen.findByText(/No se pudo enviar el enlace nuevo al supervisor \(3 semanas pendientes de validar\)/)).toHaveAttribute('role', 'alert');
   });
 
+  describe('RF-10: editar expediente', () => {
+    it('sends only the period, schedule and department, then closes with a confirmation', async () => {
+      mockDetalle('EN_PROCESO');
+      const cuerpos = capturar('patch', `*/api/expedientes/${ID}`, { expediente: expedienteEn('EN_PROCESO') });
+      const { user } = renderApp(RUTA);
+      await esperarDetalle();
+
+      await user.click(screen.getByRole('button', { name: 'Editar expediente' }));
+      const form = within(screen.getByRole('form', { name: 'Editar expediente' }));
+      expect(form.getByLabelText('Fecha de término')).toHaveValue('2026-08-28');
+      expect(form.queryByLabelText(/Institución/)).not.toBeInTheDocument();
+      await user.clear(form.getByLabelText('Fecha de término'));
+      await user.type(form.getByLabelText('Fecha de término'), '2026-12-18');
+      await user.click(form.getByLabelText('Martes'));
+      await user.click(form.getByRole('button', { name: 'Guardar expediente' }));
+
+      await waitFor(() => expect(cuerpos).toHaveLength(1));
+      expect(cuerpos[0]).toEqual({
+        departamento: null,
+        fechaInicio: '2026-03-02',
+        fechaTermino: '2026-12-18',
+        diasPactados: [1, 3, 5, 2],
+        horaEntrada: '08:00',
+        horaSalida: '12:00',
+      });
+      expect(await screen.findByText('Expediente actualizado.')).toBeInTheDocument();
+      expect(screen.queryByRole('form', { name: 'Editar expediente' })).not.toBeInTheDocument();
+    });
+
+    it('checks the period before sending and shows API errors', async () => {
+      mockDetalle('EN_PROCESO');
+      const cuerpos = capturar(
+        'patch',
+        `*/api/expedientes/${ID}`,
+        { error: { code: 'HORARIO_INVALIDO', message: 'La hora de entrada debe ser anterior a la hora de salida.' } },
+        400,
+      );
+      const { user } = renderApp(RUTA);
+      await esperarDetalle();
+
+      await user.click(screen.getByRole('button', { name: 'Editar expediente' }));
+      const form = within(screen.getByRole('form', { name: 'Editar expediente' }));
+      await user.clear(form.getByLabelText('Fecha de término'));
+      await user.type(form.getByLabelText('Fecha de término'), '2026-03-01');
+      await user.click(form.getByRole('button', { name: 'Guardar expediente' }));
+      expect(await form.findByText('La fecha de término debe ser posterior a la de inicio.')).toBeInTheDocument();
+      expect(cuerpos).toHaveLength(0);
+
+      await user.clear(form.getByLabelText('Fecha de término'));
+      await user.type(form.getByLabelText('Fecha de término'), '2026-12-18');
+      await user.click(form.getByRole('button', { name: 'Guardar expediente' }));
+      expect(await form.findByRole('alert')).toHaveTextContent('La hora de entrada debe ser anterior a la hora de salida.');
+    });
+
+    it('is not offered for a finished case file', async () => {
+      mockDetalle('FINALIZADO');
+      renderApp(RUTA);
+      await screen.findByText('Ana María López García');
+
+      expect(screen.queryByRole('button', { name: 'Editar expediente' })).not.toBeInTheDocument();
+    });
+  });
+
   it('RF-09: the supervisor form validates the required fields and shows API errors', async () => {
     mockDetalle('EN_PROCESO');
     server.use(
