@@ -18,6 +18,7 @@ import { AuditoriaExpediente } from './AuditoriaExpediente';
 import { CambiarSupervisor } from './CambiarSupervisor';
 import { EditarExpediente } from './EditarExpediente';
 import { EditarSupervisor } from './EditarSupervisor';
+import { EnviarEnlace } from './EnviarEnlace';
 import { HistorialSemanas } from './HistorialSemanas';
 import { RestablecerContrasenaButton } from './RestablecerContrasenaButton';
 
@@ -110,6 +111,7 @@ function DatosExpediente({ expediente }: { expediente: ExpedienteDetalle }) {
         />
       )}
       {reenvio && <AvisoReenvio key={reenvio.n} reenvio={reenvio.r} />}
+      <EnviarEnlace expediente={expediente} />
     </section>
   );
 }

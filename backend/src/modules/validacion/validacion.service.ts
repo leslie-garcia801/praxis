@@ -21,8 +21,14 @@ const TIMEOUT_TRANSACCION_MS = 20_000;
 
 // RF-21, RF-21a: creates a link for the weeks in `semanaIds` (all must belong to students of `supervisorId`) and
 // emails it to the supervisor's current address. Returns the link id. A sending failure is thrown and nothing is
-// stored. `ahora` is injectable for tests.
-export async function enviarEnlaceValidacion(supervisorId: string, semanaIds: string[], ahora: () => Date = () => new Date()) {
+// stored. `ahora` is injectable for tests; `alGuardar` writes inside the same transaction (for example the audit entry),
+// so it is rolled back too when the email fails.
+export async function enviarEnlaceValidacion(
+  supervisorId: string,
+  semanaIds: string[],
+  ahora: () => Date = () => new Date(),
+  alGuardar?: (tx: Prisma.TransactionClient) => Promise<unknown>,
+) {
   const ids = [...new Set(semanaIds)];
   if (ids.length === 0) throw new Error('Un enlace de validación necesita al menos una semana.');
 
@@ -50,6 +56,7 @@ export async function enviarEnlaceValidacion(supervisorId: string, semanaIds: st
           semanas: { create: semanas.map((s) => ({ semanaId: s.id })) },
         },
       });
+      await alGuardar?.(tx);
       await enviarCorreo({
         para: supervisor.correo,
         ...correoDeValidacion({

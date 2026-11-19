@@ -15,6 +15,7 @@ import {
   cambiarEstado,
   confirmarExpediente,
   editarExpediente,
+  enviarEnlaceAhora,
   listarExpedientes,
   obtenerAvance,
   obtenerExpediente,
@@ -87,6 +88,12 @@ expedientesRouter.post('/:id/confirmar', requireSession(), requireRol('VINCULACI
 expedientesRouter.patch('/:id/estado', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
   const { id } = expedienteIdParamsSchema.parse(req.params);
   res.json({ expediente: await cambiarEstado(getAuth(req).user, id, cambiarEstadoSchema.parse(req.body)) });
+});
+
+// RF-21, RF-21a: email the supervisor's validation link now instead of waiting for the Monday job.
+expedientesRouter.post('/:id/enlace-validacion', requireSession(), requireRol('VINCULACION', 'ADMIN'), async (req, res) => {
+  const { id } = expedienteIdParamsSchema.parse(req.params);
+  res.json(await enviarEnlaceAhora(getAuth(req).user, id));
 });
 
 // RN-12: move to another institution, keeping the validated hours or not.

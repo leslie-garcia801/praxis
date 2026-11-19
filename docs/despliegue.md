@@ -75,6 +75,8 @@ El servicio se despliega una vez al crearse y después solo corre los lunes. La 
 
 ### Disparar el correo sin esperar al lunes (pruebas y demo)
 
+Para un alumno, lo más sencillo es el botón **Enviar enlace al supervisor** en su detalle (vinculación): manda en ese momento todas las semanas pendientes de ese supervisor. El comando de abajo hace lo mismo para todos los supervisores a la vez.
+
 Con el CLI de Railway enlazado al proyecto (`railway link`, servicio de la API), desde cualquier carpeta:
 
 ```bash

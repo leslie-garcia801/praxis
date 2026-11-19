@@ -191,6 +191,16 @@ export function useCambiarSupervisor(expedienteId: string) {
   });
 }
 
+// RF-21, RF-21a: POST /api/expedientes/:id/enlace-validacion emails the supervisor's pending weeks now instead of
+// waiting for the Monday job. 409 SIN_SUPERVISOR / SIN_SEMANAS_POR_VALIDAR, 502 CORREO_NO_ENVIADO.
+export function useEnviarEnlace(expedienteId: string) {
+  const invalidar = useInvalidarDetalle();
+  return useMutation({
+    mutationFn: () => apiFetch<{ semanas: number }>(`/api/expedientes/${expedienteId}/enlace-validacion`, { method: 'POST' }),
+    onSuccess: invalidar,
+  });
+}
+
 export function useAuditoria(id: string) {
   return useQuery({
     queryKey: detalleKeys.auditoria(id),

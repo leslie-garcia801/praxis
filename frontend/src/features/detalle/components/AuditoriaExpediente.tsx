@@ -14,6 +14,7 @@ const TEXTO_ACCION: Record<string, string> = {
   ASIGNAR_PROGRAMA: 'Programa asignado',
   ENVIAR_SEMANA: 'Semana enviada por el alumno',
   ENVIAR_SEMANA_AUTOMATICO: 'Semana enviada automáticamente',
+  ENVIAR_ENLACE_VALIDACION: 'Enlace de validación enviado al supervisor',
   VALIDAR_SEMANA: 'Semana validada',
   RECHAZAR_SEMANA: 'Semana rechazada',
   VALIDAR_SEMANA_VINCULACION: 'Semana validada por vinculación en nombre del supervisor',

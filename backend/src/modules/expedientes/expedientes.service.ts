@@ -22,6 +22,7 @@ import { prisma } from '../../lib/prisma.js';
 import { fechaLocal } from '../../lib/tiempo.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import { aRespuestaSupervisor } from '../supervisores/supervisores.service.js';
+import { enviarEnlaceValidacion, SEMANAS_POR_VALIDAR } from '../validacion/validacion.service.js';
 import {
   CAMPOS_SOLO_PRACTICAS,
   CAMPOS_SOLO_SERVICIO,
@@ -624,4 +625,44 @@ export async function listarCandidatos(user: AuthUser) {
       tipoAsignable,
     };
   });
+}
+
+// RF-21, RF-21a: the office emails the supervisor's link now instead of waiting for the Monday job. The link carries
+// every week the supervisor has pending (one email per supervisor), and the Monday job then skips them for 12 hours.
+// The audit entry is written in the link's transaction, so a failed email leaves neither.
+export async function enviarEnlaceAhora(user: AuthUser, id: string) {
+  const expediente = await cargar(prisma, user, id);
+  const { supervisor } = expediente;
+  if (!supervisor) throw new AppError(409, 'SIN_SUPERVISOR', 'El expediente no tiene supervisor asignado.');
+
+  const propias = await prisma.semanaBitacora.count({ where: { ...SEMANAS_POR_VALIDAR, expedienteId: id } });
+  if (propias === 0) {
+    throw new AppError(409, 'SIN_SEMANAS_POR_VALIDAR', 'Este alumno no tiene semanas pendientes de validar.');
+  }
+  const semanas = await prisma.semanaBitacora.findMany({
+    where: { ...SEMANAS_POR_VALIDAR, expediente: { ...SEMANAS_POR_VALIDAR.expediente, supervisorId: supervisor.id } },
+    select: { id: true },
+  });
+
+  try {
+    await enviarEnlaceValidacion(
+      supervisor.id,
+      semanas.map((s) => s.id),
+      undefined,
+      (tx) =>
+        tx.auditLog.create({
+          data: {
+            usuarioId: user.id,
+            accion: 'ENVIAR_ENLACE_VALIDACION',
+            entidad: 'Expediente',
+            entidadId: id,
+            despues: { supervisorId: supervisor.id, correo: supervisor.correo, semanas: semanas.length },
+          },
+        }),
+    );
+  } catch (error) {
+    console.error(`No se pudo enviar el enlace al supervisor ${supervisor.id}.`, error);
+    throw new AppError(502, 'CORREO_NO_ENVIADO', 'No se pudo enviar el correo al supervisor. Intenta de nuevo en unos minutos.');
+  }
+  return { semanas: semanas.length };
 }

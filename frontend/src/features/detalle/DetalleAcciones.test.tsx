@@ -466,6 +466,39 @@ describe('/vinculacion/expedientes/:id office actions (RF-12, RF-22, RN-12, RN-0
     });
   });
 
+  describe('RF-21a: enviar enlace al supervisor ahora', () => {
+    it('sends the link and tells the office how many weeks went to which address', async () => {
+      mockDetalle('EN_PROCESO');
+      const cuerpos = capturar('post', `*/api/expedientes/${ID}/enlace-validacion`, { semanas: 2 });
+      const { user } = renderApp(RUTA);
+      await esperarDetalle();
+
+      await user.click(screen.getByRole('button', { name: 'Enviar enlace al supervisor' }));
+
+      await waitFor(() => expect(cuerpos).toHaveLength(1));
+      expect(await screen.findByText('Se envió el enlace a laura@hospital.test con 2 semanas pendientes de validar.')).toHaveAttribute(
+        'role',
+        'status',
+      );
+    });
+
+    it('shows the API error when there is nothing to send', async () => {
+      mockDetalle('EN_PROCESO');
+      capturar(
+        'post',
+        `*/api/expedientes/${ID}/enlace-validacion`,
+        { error: { code: 'SIN_SEMANAS_POR_VALIDAR', message: 'Este alumno no tiene semanas pendientes de validar.' } },
+        409,
+      );
+      const { user } = renderApp(RUTA);
+      await esperarDetalle();
+
+      await user.click(screen.getByRole('button', { name: 'Enviar enlace al supervisor' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Este alumno no tiene semanas pendientes de validar.');
+    });
+  });
+
   it('RF-09: the supervisor form validates the required fields and shows API errors', async () => {
     mockDetalle('EN_PROCESO');
     server.use(
