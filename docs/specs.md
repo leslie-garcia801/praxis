@@ -287,7 +287,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 
 **RF-21 Envío al supervisor.** Al cerrar la semana, o cuando el alumno la envía, el supervisor recibe un correo con un enlace válido por 14 días. El enlace muestra los turnos y la bitácora, con botones **Validar** y **Rechazar** (este último con comentario obligatorio). No requiere cuenta. Si se corrige el correo del supervisor, los enlaces anteriores se anulan y las semanas pendientes se reenvían a la nueva dirección (RN-20).
 
-**RF-21a Validación en lote.** Si un supervisor tiene varios alumnos (por ejemplo, la jefa de Escolares del propio plantel), recibe **un solo correo semanal** con todas sus semanas pendientes y puede validarlas todas a la vez o una por una.
+**RF-21a Validación en lote.** Si un supervisor tiene varios alumnos (por ejemplo, la jefa de Escolares del propio plantel), recibe **un solo correo semanal** con todas sus semanas pendientes y puede validarlas todas a la vez o una por una. El correo sale el lunes; vinculación puede adelantarlo desde el detalle del alumno con **Enviar enlace al supervisor**, que manda en ese momento todas las semanas pendientes del supervisor, queda en la auditoría y hace que el envío del lunes lo omita si ocurrió en las 12 horas previas.
 
 **RF-22** Una semana rechazada vuelve al alumno para corregir. Vinculación puede validar en nombre del supervisor en casos especiales, y eso queda en la auditoría.
 
@@ -825,6 +825,7 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | POST | `/api/expedientes/:id/confirmar` | Vinculación / Admin | Confirmar institución y supervisor → `EN_PROCESO` |
 | PATCH | `/api/expedientes/:id/estado` | Vinculación / Admin | Suspender, reactivar, cancelar o finalizar (con motivo). Finalizar solo desde `EN_PROCESO` y con la meta de horas validada; si no, 409 `META_NO_ALCANZADA` con las horas que faltan |
 | POST | `/api/expedientes/:id/transferir` | Vinculación / Admin | Cambio de institución (RN-12) |
+| POST | `/api/expedientes/:id/enlace-validacion` | Vinculación / Admin | Envía ahora el enlace al supervisor con todas sus semanas pendientes → `{ semanas }`; 409 `SIN_SUPERVISOR` o `SIN_SEMANAS_POR_VALIDAR`, 502 `CORREO_NO_ENVIADO` (RF-21, RF-21a) |
 | GET | `/api/expedientes/:id/avance` | Alumno dueño / Vinculación / Admin | Horas, porcentaje y fecha estimada |
 | GET | `/api/expedientes/:id/auditoria` | Vinculación / Admin | Historial de cambios del expediente |
 | GET | `/api/expedientes/:id/reporte.pdf` | Alumno dueño / Vinculación / Admin | Reporte de horas y actividades |
