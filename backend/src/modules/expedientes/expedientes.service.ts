@@ -235,6 +235,21 @@ export async function editarExpediente(user: AuthUser, id: string, input: Editar
       throw new AppError(400, 'HORARIO_INVALIDO', 'La hora de entrada debe ser anterior a la hora de salida.');
     }
 
+    // RN-21: shifts before the start date would still count, so the start cannot move past the first one.
+    if (input.fechaInicio !== undefined) {
+      const primero = await tx.asistencia.findFirst({ where: { expedienteId: id }, orderBy: { entrada: 'asc' }, select: { entrada: true } });
+      const primerTurno = primero && fechaLocal(primero.entrada);
+      if (primerTurno && primerTurno < input.fechaInicio) {
+        const [y, m, d] = primerTurno.split('-');
+        throw new AppError(
+          409,
+          'TURNOS_ANTES_DEL_INICIO',
+          `Hay turnos registrados desde el ${d}/${m}/${y}. La fecha de inicio no puede ser posterior a esa fecha.`,
+          { primerTurno },
+        );
+      }
+    }
+
     const { fechaInicio: inicio, fechaTermino: termino, ...resto } = input;
     const nuevo = await tx.expediente.update({
       where: { id },

@@ -16,6 +16,7 @@ import { useExpedienteDetalle, type ExpedienteDetalle } from '../api';
 import { AccionesExpediente } from './AccionesExpediente';
 import { AuditoriaExpediente } from './AuditoriaExpediente';
 import { CambiarSupervisor } from './CambiarSupervisor';
+import { EditarExpediente } from './EditarExpediente';
 import { EditarSupervisor } from './EditarSupervisor';
 import { HistorialSemanas } from './HistorialSemanas';
 import { RestablecerContrasenaButton } from './RestablecerContrasenaButton';
@@ -99,6 +100,7 @@ function DatosExpediente({ expediente }: { expediente: ExpedienteDetalle }) {
         )}
         <Dato etiqueta="Meta">{formatHoras(expediente.metaHoras * 60)}</Dato>
       </dl>
+      <EditarExpediente expediente={expediente} />
       <CambiarSupervisor expediente={expediente} />
       {supervisor && (
         <EditarSupervisor

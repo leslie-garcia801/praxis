@@ -205,6 +205,7 @@ Prioridad: **M** = debe tener, **S** = debería tener, **C** = puede esperar.
 | RN-18 | Si el supervisor no valida en 7 días, la semana queda visible para vinculación como pendiente | Diseño | — |
 | RN-19 | Los turnos registrados en libreta antes de usar la app se capturan como turnos con origen `LIBRETA`, solo en semanas cerradas y sin turnos de QR, no cruzan medianoche, se envían al supervisor sin bitácora (excepción a RN-17) y solo cuentan al validarse (RN-11); aplican RN-04 y RN-09. *(Decisión de la responsable del proyecto el 2026-11-17.)* | Responsable del proyecto | Por confirmar con las oficinas |
 | RN-20 | Si vinculación o el admin cambian el correo de un supervisor, sus enlaces de validación vigentes quedan anulados (quien los abra recibe "Este enlace venció. Usa el del correo más reciente.") y sus semanas pendientes (`ENVIADA`, expediente no cancelado) se envían de inmediato en un enlace nuevo a la dirección corregida. Si el correo no sale, el cambio se guarda igual y el resumen semanal lo vuelve a intentar. *(Caso detectado en la demostración del 2026-11-18: un correo mal escrito después de enviar semanas.)* | Responsable del proyecto | — |
+| RN-21 | La fecha de inicio de un expediente no puede quedar después de su primer turno registrado (fecha local, RN-15): esos turnos seguirían contando horas. Al intentarlo, la API responde 409 `TURNOS_ANTES_DEL_INICIO` con la fecha del primer turno. Adelantarla, o moverla hasta el mismo día del primer turno, sí se permite. *(Decidido el 2026-11-18, al agregar la edición del expediente por vinculación.)* | Equipo de desarrollo | — |
 
 ---
 
@@ -820,7 +821,7 @@ Rutas implementadas en `backend/src/app.ts` y `backend/src/modules/*/*.routes.ts
 | GET | `/api/expedientes/candidatos` | Vinculación / Admin | Alumnos a los que la oficina puede asignar el siguiente programa (primer programa `FINALIZADO`, 6.º semestre, sin expediente activo; RN-03a, RN-03b) |
 | POST | `/api/expedientes/asignar` | Vinculación / Admin | Asignar tipo de programa (individual o en lote; 5.º y 6.º semestre) |
 | GET | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Detalle del expediente |
-| PATCH | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Completar institución, supervisor, periodo y horario |
+| PATCH | `/api/expedientes/:id` | Alumno dueño / Vinculación / Admin | Completar o corregir institución, supervisor, periodo y horario; vinculación lo edita desde el detalle del alumno mientras el expediente esté abierto (la fecha de inicio respeta RN-21) |
 | POST | `/api/expedientes/:id/confirmar` | Vinculación / Admin | Confirmar institución y supervisor → `EN_PROCESO` |
 | PATCH | `/api/expedientes/:id/estado` | Vinculación / Admin | Suspender, reactivar, cancelar o finalizar (con motivo). Finalizar solo desde `EN_PROCESO` y con la meta de horas validada; si no, 409 `META_NO_ALCANZADA` con las horas que faltan |
 | POST | `/api/expedientes/:id/transferir` | Vinculación / Admin | Cambio de institución (RN-12) |
